@@ -1,0 +1,24 @@
+# frozen_string_literal: true
+
+require './trace/listener'
+
+# Datadog instruments AWS Lambda functions with Datadog distributed tracing and
+# custom metrics
+module Datadog
+  @listener = nil
+
+  # Wrap the body of a lambda invocation
+  # @param event [Object] event sent to lambda
+  # @param context [Object] lambda context
+  # @param block [Proc] implementation of the handler function.
+  def self.wrap(event, context, &block)
+    @listener = Trace::Listener.new if @listener.nil?
+    @listener.on_start(event: event, context: context)
+    begin
+      res = block.call
+    ensure
+      @listener.on_end
+    end
+    res
+  end
+end
