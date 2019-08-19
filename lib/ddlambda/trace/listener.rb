@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Datadog
+module DDLambda
   module Trace
     # TraceListener tracks tracing context information
     class Listener

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require './trace/listener'
+require 'ddlambda/trace/listener'
 
 # Datadog instruments AWS Lambda functions with Datadog distributed tracing and
 # custom metrics
-module Datadog
+module DDLambda
   @listener = nil
 
   # Wrap the body of a lambda invocation
