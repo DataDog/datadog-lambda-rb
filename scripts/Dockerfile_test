@@ -1,7 +1,8 @@
 ARG image
 FROM $image
-COPY . .
+
+COPY . datadog-lambda-ruby
+WORKDIR /datadog-lambda-ruby
 RUN gem install bundler
 RUN bundle install
-RUN rake test
 RUN rubocop
