@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/BlockLength
+
 require 'ddlambda/trace/context'
 require 'ddlambda/trace/constants'
 require 'aws-xray-sdk'
@@ -81,13 +83,13 @@ describe DDLambda::Trace do
   end
 
   context 'convert_to_apm_trace_id' do
-    it 'converts an xray trace id to a Datadog trace ID' do
+    it 'converts an xray trace id to a APM trace ID' do
       xray_trace_id = '1-5ce31dc2-ffffffff390ce44db5e03875'
       trace_id = DDLambda::Trace.convert_to_apm_trace_id(xray_trace_id)
       expect(trace_id).to eq('4110911582297405557')
     end
 
-    it 'converts an xray trace id to a Datadog trace ID by only taking last 63 bits' do
+    it 'converts an xray trace id to a APM trace ID by taking last 63 bits' do
       # 64th bit is 1, (b -> [1]011), gets cropped off
       xray_trace_id = '1-5ce31dc2-ffffffffb90ce44db5e03875'
       trace_id = DDLambda::Trace.convert_to_apm_trace_id(xray_trace_id)
@@ -178,3 +180,5 @@ describe DDLambda::Trace do
     end
   end
 end
+
+# rubocop:enable Metrics/BlockLength

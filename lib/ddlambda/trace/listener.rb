@@ -12,7 +12,7 @@ module DDLambda
         puts 'Listener Initialized'
       end
 
-      def on_start(event:, context:)
+      def on_start(event:)
         @context = DDLambda::Trace.extract_trace_context(event)
       end
 

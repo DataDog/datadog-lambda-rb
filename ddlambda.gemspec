@@ -11,20 +11,21 @@ Gem::Specification.new do |spec|
   spec.authors               = ['Datadog, Inc.']
   spec.email                 = ['dev@datadoghq.com']
 
-  spec.summary     = 'Adds Datadog instrumentation to your Ruby AWS Lambda functions'
-  spec.description = <<-EOS.gsub(/^[\s]+/, '')
-    ddlambda is Datadog’s AWS Lambda integration for ruby. It is used to perform distributed
-    tracing between serverful and serverless environments, and send custom metrics to Datadog.
-  EOS
+  spec.summary     = 'Instruments your Ruby AWS Lambda functions with Datadog'
+  spec.description = <<-MSG.gsub(/^[\s]+/, '')
+    ddlambda is Datadog’s AWS Lambda integration for ruby. It is used to perform
+    distributed tracing between serverful and serverless environments, and send
+    custom metrics to Datadog.
+  MSG
 
   spec.homepage = 'https://github.com/DataDog/dd-lambda-rb'
   spec.license  = 'Apache-2.0'
 
-  if spec.respond_to?(:metadata)
-    spec.metadata['allowed_push_host'] = 'https://rubygems.org'
-  else
-    raise 'RubyGems 2.0 or newer is required to protect against public gem pushes.'
+  unless spec.respond_to?(:metadata)
+    raise 'RubyGems 2.0 or newer required to protect against public gem pushes.'
   end
+
+  spec.metadata['allowed_push_host'] = 'https://rubygems.org'
 
   spec.files         = Dir.glob('lib/**/*')
   spec.bindir        = 'exe'
