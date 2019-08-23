@@ -1,0 +1,7 @@
+ARG image
+FROM $image
+COPY . .
+RUN gem install bundler
+RUN bundle install
+RUN rake test
+RUN rubocop
