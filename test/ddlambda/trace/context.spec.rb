@@ -2,6 +2,7 @@
 
 require 'ddlambda/trace/context'
 require 'ddlambda/trace/constants'
+require 'aws-xray-sdk'
 
 describe DDLambda::Trace do
   context 'read_trace_context_from_event' do
@@ -104,15 +105,14 @@ describe DDLambda::Trace do
       trace_id = DDLambda::Trace.convert_to_apm_trace_id(xray_trace_id)
       expect(trace_id).to eq(nil)
     end
-  end
-
-  context 'convert_to_apm_trace_id' do
     it 'returns nil when xray trace id uses invalid characters' do
       xray_trace_id = '1-5ce31dc2-c779014b90ce44db5e03875;'
       trace_id = DDLambda::Trace.convert_to_apm_trace_id(xray_trace_id)
       expect(trace_id).to eq(nil)
     end
+  end
 
+  context 'convert_to_apm_trace_id' do
     it 'converts an xray parent ID to an APM parent ID' do
       xray_parent_id = '0b11cc4230d3e09e'
       parent_id = DDLambda::Trace.convert_to_apm_parent_id(xray_parent_id)
@@ -128,6 +128,53 @@ describe DDLambda::Trace do
       xray_parent_id = '5e03875'
       parent_id = DDLambda::Trace.convert_to_apm_parent_id(xray_parent_id)
       expect(parent_id).to eq(nil)
+    end
+  end
+
+  context 'read_trace_context_from_xray' do
+    it 'reads the parent id and trace id from X-Ray' do
+      segment = XRay::Segment.new(
+        trace_id: '1-5ce31dc2-ffffffff390ce44db5e03875',
+        parent_id: '0b11cc4230d3e09e'
+      )
+      allow(XRay.recorder).to receive(:current_segment).and_return(segment)
+      res = DDLambda::Trace.read_trace_context_from_xray
+      expect(res).to eq(
+        trace_id: '4110911582297405557',
+        parent_id: '797643193680388254',
+        sample_mode: DDLambda::Trace::SAMPLE_MODE_USER_KEEP
+      )
+    end
+  end
+
+  context 'extract_trace_context' do
+    it 'writes metadata to X-Ray if tracing headers are on event' do
+      segment = XRay::Segment.new(trace_id: '1234')
+      expect(XRay.recorder).to receive(:begin_subsegment)
+        .with(
+          name: DDLambda::Trace::DD_XRAY_SUBSEGMENT_NAME,
+          namespace: DDLambda::Trace::DD_XRAY_SUBSEGMENT_NAMESPACE
+        ).and_return(segment)
+      expect(XRay.recorder).to receive(:end_subsegment)
+
+      event = {
+        'headers' => {
+          'X-Datadog-Parent-Id' => '797643193680388254',
+          'X-Datadog-Sampling-Priority' => '2',
+          'X-Datadog-Trace-Id' => '4110911582297405557'
+        }
+      }
+      res = DDLambda::Trace.extract_trace_context(event)
+      expect(res).to eq(
+        trace_id: '4110911582297405557',
+        parent_id: '797643193680388254',
+        sample_mode: DDLambda::Trace::SAMPLE_MODE_USER_KEEP
+      )
+      expect(segment.metadata[DDLambda::Trace::DD_XRAY_SUBSEGMENT_KEY]).to eq(
+        'trace-id': '4110911582297405557',
+        'parent-id': '797643193680388254',
+        'sampling-priority': '2'
+      )
     end
   end
 end
