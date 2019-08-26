@@ -9,7 +9,7 @@ module DDLambda
   module Trace
     def self.extract_trace_context(event)
       context = read_trace_context_from_event(event)
-      if context
+      unless context.nil?
         begin
           add_trace_context_to_xray(context)
         rescue StandardError => e
@@ -22,20 +22,21 @@ module DDLambda
 
     def self.add_trace_context_to_xray(context)
       seg = XRay.recorder.begin_subsegment(
-        name: DD_XRAY_SUBSEGMENT_NAME,
+        DD_XRAY_SUBSEGMENT_NAME,
         namespace: DD_XRAY_SUBSEGMENT_NAMESPACE
       )
-      seg.metadata[DD_XRAY_SUBSEGMENT_KEY] = {
-        "trace-id": context[:trace_id],
+      data = {
         "parent-id": context[:parent_id],
-        "sampling-priority": context[:sample_mode].to_s
+        "sampling-priority": context[:sample_mode].to_s,
+        "trace-id": context[:trace_id]
       }
-
+      seg.metadata(namespace: DD_XRAY_SUBSEGMENT_NAMESPACE)
+         .update("#{DD_XRAY_SUBSEGMENT_KEY}": data)
       XRay.recorder.end_subsegment
     end
 
     def self.read_trace_context_from_xray
-      segment = XRay.recorder.current_segment
+      segment = XRay.recorder.current_entity
       parent_id = segment.instance_variable_get('@parent_id')
       mode = segment.sampled ? SAMPLE_MODE_USER_KEEP : SAMPLE_MODE_USER_REJECT
       {
@@ -52,6 +53,7 @@ module DDLambda
       return nil unless headers?(event)
 
       headers = event['headers'].transform_keys(&:downcase)
+
       return nil unless trace_headers_present?(headers)
 
       {
