@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/BlockLength
+
 require 'ddlambda/trace/context'
 require 'ddlambda/trace/constants'
 require 'aws-xray-sdk'
@@ -182,3 +184,5 @@ describe DDLambda::Trace do
     end
   end
 end
+
+# rubocop:enable Metrics/BlockLength

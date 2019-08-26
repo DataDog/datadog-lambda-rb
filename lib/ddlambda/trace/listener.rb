@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'ddlambda/trace/context'
-require 'ddlambda/trace/xray-patch'
+require 'ddlambda/trace/xray_lambda'
 require 'aws-xray-sdk'
 
 module DDLambda
