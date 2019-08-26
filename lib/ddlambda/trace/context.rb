@@ -35,6 +35,16 @@ module DDLambda
       XRay.recorder.end_subsegment
     end
 
+    def self.current_trace_context(trace_context)
+      entity = XRay.recorder.current_entity
+      parent_id = entity.instance_variable_get('@parent_id')
+      {
+        trace_id: trace_context[:trace_id],
+        parent_id: convert_to_apm_parent_id(parent_id),
+        sample_mode: trace_context[:sample_mode]
+      }
+    end
+
     def self.read_trace_context_from_xray
       segment = XRay.recorder.current_entity
       parent_id = segment.instance_variable_get('@parent_id')

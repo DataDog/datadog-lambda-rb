@@ -176,7 +176,7 @@ describe DDLambda::Trace do
       metadata = segment.metadata(
         namespace: DDLambda::Trace::DD_XRAY_SUBSEGMENT_NAMESPACE
       )
-      expect(metadata[:"#{DDLambda::Trace::DD_XRAY_SUBSEGMENT_KEY}"]).to eq(
+      expect(metadata[DDLambda::Trace::DD_XRAY_SUBSEGMENT_KEY.to_sym]).to eq(
         'trace-id': '4110911582297405557',
         'parent-id': '797643193680388254',
         'sampling-priority': '2'

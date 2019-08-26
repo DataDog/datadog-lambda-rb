@@ -2,14 +2,14 @@
 
 require 'ddlambda/trace/context'
 require 'ddlambda/trace/xray_lambda'
+require 'ddlambda/trace/patch_http'
+
 require 'aws-xray-sdk'
 
 module DDLambda
   module Trace
     # TraceListener tracks tracing context information
     class Listener
-      attr_accessor :context
-
       def initialize
         XRay.recorder.configure(
           patch: %I[net_http aws_sdk],
@@ -17,11 +17,12 @@ module DDLambda
           streamer: DDLambda::Trace::LambdaStreamer.new,
           emitter: DDLambda::Trace::LambdaEmitter.new
         )
-        puts 'Listener Initialized'
+        DDLambda::Trace.patch_http
       end
 
       def on_start(event:)
-        @context = DDLambda::Trace.extract_trace_context(event)
+        DDLambda::Trace.trace_context =
+          DDLambda::Trace.extract_trace_context(event)
       rescue StandardError => e
         puts "couldn't read tracing context #{e}"
       end
