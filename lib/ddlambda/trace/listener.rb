@@ -12,7 +12,7 @@ module DDLambda
     class Listener
       def initialize
         XRay.recorder.configure(
-          patch: %I[net_http aws_sdk],
+          patch: %I[aws_sdk],
           context: DDLambda::Trace::LambdaContext.new,
           streamer: DDLambda::Trace::LambdaStreamer.new,
           emitter: DDLambda::Trace::LambdaEmitter.new
