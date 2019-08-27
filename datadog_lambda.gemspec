@@ -6,7 +6,7 @@ require 'datadog_lambda/version'
 
 Gem::Specification.new do |spec|
   spec.name                  = 'datadog_lambda'
-  spec.version               = DDLambda::VERSION::STRING
+  spec.version               = Datadog::VERSION::STRING
   spec.required_ruby_version = '>= 2.5.0'
   spec.authors               = ['Datadog, Inc.']
   spec.email                 = ['dev@datadoghq.com']

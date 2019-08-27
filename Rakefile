@@ -10,7 +10,7 @@ task :build do
 end
 
 task release: :build do
-  system "gem push datadog_lambda-#{DDLambda::VERSION::STRING}"
+  system "gem push datadog_lambda-#{Datadog::VERSION::STRING}"
 end
 
 RSpec::Core::RakeTask.new(:test) do |t|

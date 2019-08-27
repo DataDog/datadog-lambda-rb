@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module DDLambda
+module Datadog
   module VERSION
     MAJOR = 0
     MINOR = 1

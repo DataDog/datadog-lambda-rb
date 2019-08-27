@@ -4,7 +4,7 @@ require 'aws-xray-sdk'
 require 'datadog_lambda/trace/constants'
 require 'datadog_lambda/utils/logger'
 
-module DDLambda
+module Datadog
   # Trace contains utilities related to reading/writing trace context from
   # lambda events/X-Ray
   module Trace
@@ -14,7 +14,7 @@ module DDLambda
         begin
           add_trace_context_to_xray(context)
         rescue StandardError => e
-          DDLambda::Utils.logger.error("couldn't add metadata to xray #{e}")
+          Datadog::Utils.logger.error("couldn't add metadata to xray #{e}")
         end
         return context
       end
@@ -56,7 +56,7 @@ module DDLambda
         sample_mode: mode
       }
     rescue StandardError => e
-      DDLambda::Utils.logger.error("couldn't read xray trace header #{e}")
+      Datadog::Utils.logger.error("couldn't read xray trace header #{e}")
       nil
     end
 

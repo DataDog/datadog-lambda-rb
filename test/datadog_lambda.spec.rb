@@ -4,12 +4,12 @@
 
 require 'datadog_lambda'
 
-describe DDLambda do
+describe Datadog::Lambda do
   context 'wrap' do
     it 'should return the same value as returned by the block' do
       event = '1'
       context = '2'
-      res = DDLambda.wrap(event, context) do
+      res = Datadog::Lambda.wrap(event, context) do
         { result: 100 }
       end
       expect(res[:result]).to be 100
@@ -17,7 +17,7 @@ describe DDLambda do
     it 'should raise an error if the block raises an error' do
       error_raised = false
       begin
-        DDLambda.wrap(event, context) do
+        Datadog::Lambda.wrap(event, context) do
           raise 'Error'
         end
       rescue StandardError
@@ -36,10 +36,10 @@ describe DDLambda do
         }
       }
       context = '2'
-      DDLambda.wrap(event, context) do
+      Datadog::Lambda.wrap(event, context) do
         { result: 100 }
       end
-      expect(DDLambda.trace_context).to eq(
+      expect(Datadog::Lambda.trace_context).to eq(
         trace_id: '12345',
         parent_id: '45678',
         sample_mode: 2
@@ -50,17 +50,17 @@ describe DDLambda do
   context 'metric' do
     it 'prints a custom metric' do
       now = Time.utc(2008, 7, 8, 9, 10)
-      output = '{"e":121550820000,"m":"m1","t":["t.a:value","t.b:v2"],"v":100}'
+      output = '{"e":121550820000,"m":"m1","t":["t.a:val","t.b:v2"],"v":100}'
       expect(Time).to receive(:now).and_return(now)
       expect do
-        DDLambda.metric('m1', 100, "t.a": 'value', "t.b": 'v2')
+        Datadog::Lambda.metric('m1', 100, "t.a": 'val', "t.b": 'v2')
       end.to output("#{output}\n").to_stdout
     end
     it 'prints a custom metric with a custom timestamp' do
       now = Time.utc(2008, 7, 8, 9, 10)
-      output = '{"e":121550820000,"m":"m1","t":["t.a:value","t.b:v2"],"v":100}'
+      output = '{"e":121550820000,"m":"m1","t":["t.a:val","t.b:v2"],"v":100}'
       expect do
-        DDLambda.metric('m1', 100, time: now, "t.a": 'value', "t.b": 'v2')
+        Datadog::Lambda.metric('m1', 100, time: now, "t.a": 'val', "t.b": 'v2')
       end.to output("#{output}\n").to_stdout
     end
   end

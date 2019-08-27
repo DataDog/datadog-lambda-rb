@@ -2,7 +2,7 @@
 
 require 'aws-xray-sdk'
 
-module DDLambda
+module Datadog
   module Trace
     # Workaround to XRay not being supported in Lambda
     # https://github.com/aws/aws-xray-sdk-ruby/issues/20

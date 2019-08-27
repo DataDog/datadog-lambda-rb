@@ -2,7 +2,7 @@
 
 require 'logger'
 
-module DDLambda
+module Datadog
   # Utils contains utility functions shared between modules
   module Utils
     def self.logger

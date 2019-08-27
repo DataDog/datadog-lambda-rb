@@ -2,7 +2,7 @@
 
 require 'net/http'
 
-module DDLambda
+module Datadog
   # Trace contains methods to help with patching Net/HTTP
   module Trace
     def self.trace_context
@@ -22,16 +22,16 @@ module DDLambda
     # NetExtensions contains patches which add tracing context to http calls
     module NetExtensions
       def request(req, body = nil, &block)
-        logger = DDLambda::Utils.logger
+        logger = Datadog::Utils.logger
         begin
-          context = DDLambda::Trace.current_trace_context(
-            DDLambda::Trace.trace_context
+          context = Datadog::Trace.current_trace_context(
+            Datadog::Trace.trace_context
           )
 
-          req[DDLambda::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] =
+          req[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] =
             context[:sample_mode]
-          req[DDLambda::Trace::DD_PARENT_ID_HEADER.to_sym] = context[:parent_id]
-          req[DDLambda::Trace::DD_TRACE_ID_HEADER.to_sym] = context[:trace_id]
+          req[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = context[:parent_id]
+          req[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = context[:trace_id]
           logger.debug("added context #{context} to request")
         rescue StandardError => e
           logger.error(

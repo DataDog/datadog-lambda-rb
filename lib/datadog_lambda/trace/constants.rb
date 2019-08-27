@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module DDLambda
+module Datadog
   module Trace
     SAMPLE_MODE_USER_REJECT = -1
     SAMPLE_MODE_AUTO_REJECT = 0
