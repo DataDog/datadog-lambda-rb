@@ -101,7 +101,7 @@ If your Lambda function is associated with a VPC, you need to ensure it has acce
 
 ## Distributed Tracing
 
-[Distributed tracing](https://docs.datadoghq.com/tracing/guide/distributed_tracing/?tab=ruby) allows you to propagate a trace context from a service running on a host to a service running on AWS Lambda, and vice versa, so you can see performance end-to-end. Linking is implemented by injecting Datadog trace context into the HTTP request headers.
+[Distributed tracing](https://docs.datadoghq.com/tracing/) allows you to propagate a trace context from a service running on a host to a service running on AWS Lambda, and vice versa, so you can see performance end-to-end. Linking is implemented by injecting Datadog trace context into the HTTP request headers.
 
 Distributed tracing headers are language agnostic, e.g., a trace can be propagated between a Java service running on a host to a Lambda function written in Ruby.
 

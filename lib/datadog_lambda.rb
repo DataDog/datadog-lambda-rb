@@ -42,7 +42,7 @@ module Datadog
       raise 'value must be a number' unless value.is_a?(Numeric)
 
       time ||= Time.now
-      tag_list = []
+      tag_list = ['dd_lambda_layer:datadog-ruby25']
       tags.each do |tag|
         tag_list.push("#{tag[0]}:#{tag[1]}")
       end
