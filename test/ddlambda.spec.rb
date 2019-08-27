@@ -5,25 +5,48 @@
 require 'ddlambda'
 
 describe DDLambda do
-  it 'should return the same value as returned by wrap' do
-    event = '1'
-    context = '2'
-    res = DDLambda.wrap(event, context) do
-      { result: 100 }
-    end
-    expect(res[:result]).to be 100
-  end
-  it 'should raise an error if the block raises an error' do
-    error_raised = false
-    begin
-      DDLambda.wrap(event, context) do
-        raise 'Error'
+  context 'wrap' do
+    it 'should return the same value as returned by the block' do
+      event = '1'
+      context = '2'
+      res = DDLambda.wrap(event, context) do
+        { result: 100 }
       end
-    rescue StandardError
-      error_raised = true
+      expect(res[:result]).to be 100
     end
-    expect(error_raised).to be true
+    it 'should raise an error if the block raises an error' do
+      error_raised = false
+      begin
+        DDLambda.wrap(event, context) do
+          raise 'Error'
+        end
+      rescue StandardError
+        error_raised = true
+      end
+      expect(error_raised).to be true
+    end
   end
+  context 'trace_context' do
+    it 'should return the last trace context' do
+      event = {
+        'headers' => {
+          'x-datadog-trace-id' => '12345',
+          'x-datadog-parent-id' => '45678',
+          'x-datadog-sampling-priority' => '2'
+        }
+      }
+      context = '2'
+      DDLambda.wrap(event, context) do
+        { result: 100 }
+      end
+      expect(DDLambda.trace_context).to eq(
+        trace_id: '12345',
+        parent_id: '45678',
+        sample_mode: 2
+      )
+    end
+  end
+
   context 'metric' do
     it 'prints a custom metric' do
       now = Time.utc(2008, 7, 8, 9, 10)

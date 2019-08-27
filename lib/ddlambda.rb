@@ -2,14 +2,13 @@
 
 require 'ddlambda/trace/listener'
 require 'ddlambda/utils/logger'
+require 'ddlambda/trace/patch_http'
 require 'json'
 require 'time'
 
 # Datadog instruments AWS Lambda functions with Datadog distributed tracing and
 # custom metrics
 module DDLambda
-  @listener = nil
-
   # Wrap the body of a lambda invocation
   # @param event [Object] event sent to lambda
   # @param context [Object] lambda context
@@ -17,7 +16,7 @@ module DDLambda
   def self.wrap(event, _context, &block)
     DDLambda::Utils.update_log_level
 
-    @listener = Trace::Listener.new if @listener.nil?
+    @listener ||= Trace::Listener.new
     @listener.on_start(event: event)
     begin
       res = block.call
