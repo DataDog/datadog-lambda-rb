@@ -4,9 +4,9 @@ jobs:
   verify_build:
     working_directory: ~/repo
     docker:
-      - image: circleci/ruby:<< parameters.python >>
+      - image: circleci/ruby:<< parameters.ruby >>
     parameters:
-      python:
+      ruby:
         type: string
     steps:
       - checkout
