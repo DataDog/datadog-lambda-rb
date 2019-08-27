@@ -1,39 +1,23 @@
-# Example Usage
-
-```ruby
-require 'datadog_lambda'
-require 'json'
-
-def handler(event:, context:)
-    Datadog.wrap(event, context) do
-        # Implement your logic here
-        return { statusCode: 200, body: JSON.generate('Hello World') }
-    end
-end
-```
-
 # datadog-lambda-layer-rb
 
 ![CircleCI](https://img.shields.io/circleci/build/github/DataDog/datadog-lambda-layer-rb)
 [![Code Coverage](https://img.shields.io/codecov/c/github/DataDog/datadog-lambda-layer-rb)](https://codecov.io/gh/DataDog/datadog-lambda-layer-rb)
-[![NPM](https://img.shields.io/npm/v/datadog-lambda)](https://rubygems.org/gems/datadog-lambda)
+[![NPM](https://img.shields.io/gem/v/datadog-lambda)](https://rubygems.org/gems/datadog-lambda)
 [![Slack](https://img.shields.io/badge/slack-%23serverless-blueviolet?logo=slack)](https://datadoghq.slack.com/channels/serverless/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/DataDog/datadog-lambda-layer-rb/blob/master/LICENSE)
 
-Datadog's Lambda node client library enables distributed tracing between serverful and serverless environments, as well as letting you send custom metrics to the Datadog API.
+Datadog's Lambda ruby client library enables distributed tracing between serverful and serverless environments, as well as letting you send custom metrics to the Datadog API.
 
 ## Installation
 
-This library is provided both as an AWS Lambda Layer, and a NPM package. If you want to get off the ground quickly and don't need to
-bundle your dependencies locally, the Lambda Layer method is the recommended approach.
+This library is provided both as an AWS Lambda Layer, and a gem. If you want to get off the ground quickly and don't need to bundle your dependencies locally, the Lambda Layer method is the recommended approach.
 
-### NPM method
+### Gem method
 
-You can install the package library locally with one of the following commands. Keep in mind, you will need to bundle this package with your function manually.
+You can install the package library locally by adding the following line to your Gemfile
 
-```bash
-yarn add datadog-lambda-js # Yarn users
-npm install datadog-lambda-js # NPM users
+```gemfile
+gem 'datadog_lambda'
 ```
 
 ### Lambda Layer Method
@@ -41,12 +25,12 @@ npm install datadog-lambda-js # NPM users
 Datadog Lambda Layer can be added to a Lambda function via AWS Lambda console, [AWS CLI](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html#configuration-layers-using) or [Serverless Framework](https://serverless.com/framework/docs/providers/aws/guide/layers/#using-your-layers) using the following ARN.
 
 ```
-arn:aws:lambda:<AWS_REGION>:464622532012:layer:Datadog-Node10-x:<VERSION>
+arn:aws:lambda:<AWS_REGION>:464622532012:layer:Datadog-Ruby2-5:<VERSION>
 # OR
-arn:aws:lambda:<AWS_REGION>:464622532012:layer:Datadog-Node8-10:<VERSION>
+arn:aws:lambda:<AWS_REGION>:464622532012:layer:Datadog-Ruby2-5:<VERSION>
 ```
 
-Replace `<AWS_REGION>` with the region where your Lambda function lives, and `<VERSION>` with the desired (or the latest) version that can be found from [CHANGELOG](https://github.com/DataDog/datadog-lambda-layer-js/releases).
+Replace `<AWS_REGION>` with the region where your Lambda function lives, and `<VERSION>` with the desired (or the latest) version that can be found from [CHANGELOG](https://github.com/DataDog/datadog-lambda-layer-rb/releases).
 
 ### The Serverless Framework
 
@@ -55,7 +39,7 @@ If your Lambda function is deployed using the Serverless Framework, refer to thi
 ```yaml
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: ruby2.5
   tracing:
     lambda: true
     apiGateway: true
@@ -68,68 +52,47 @@ functions:
           path: hello
           method: get
     layers:
-      - arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Node10-x:1
-    environment:
-      DD_API_KEY: xxx
+      - arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Rube2-5:1
 ```
 
 ## Environment Variables
 
 You can set the following environment variables via the AWS CLI or Serverless Framework
 
-### DD_API_KEY or DD_KMS_API_KEY (if encrypted by KMS)
-
-Your datadog API key
-
-### DD_SITE
-
-Which Datadog site to use. Set this to `datadoghq.eu` to send your data to the Datadog EU site. Defaults to `datadoghq.com`.
-
 ### DD_LOG_LEVEL
 
-How much logging datadog-lambda-layer-js should do. Set this to "debug" for extensive logs.
-
-### DD_FLUSH_TO_LOG
-
-If you have the Datadog Lambda Log forwarder enabled and are sending custom metrics, set this to true so your metrics will be sent via logs, (instead of being sent at the end of your lambda invocation).
+How much logging datadog-lambda-layer-rb should do. Set this to "debug" for extensive logs.
 
 ## Usage
 
 Datadog needs to be able to read headers from the incoming Lambda event.
 
-```typescript
-import { datadog } from "datadog-lambda-js";
+```ruby
+require 'datadog_lambda'
 
-async function myHandler(event, context) {
-  return {
-    statusCode: 200,
-    body: "hello, dog!"
-  };
-}
-// Wrap your handler function like this
-exports.exports.myHandler = datadog(myHandler);
-/* OR with manual configuration options
-exports.exports.myHandler = datadog(myHandler, {
-    apiKey: "my-api-key"
-});
-*/
+def handler(event:, context:)
+    Datadog::Lambda.wrap(event, context) do
+        # Implement your logic here
+        return { statusCode: 200, body: 'Hello World' }
+    end
+end
 ```
 
 ## Custom Metrics
 
-Custom metrics can be submitted using the `sendDistributionMetric` function. The metrics are submitted as [distribution metrics](https://docs.datadoghq.com/graphing/metrics/distributions/).
+Custom metrics can be submitted using the `metric` function. The metrics are submitted as [distribution metrics](https://docs.datadoghq.com/graphing/metrics/distributions/).
 
 **IMPORTANT NOTE:** If you have already been submitting the same custom metric as non-distribution metric (e.g., gauge, count, or histogram) without using the Datadog Lambda Layer, you MUST pick a new metric name to use for `sendDistributionMetric`. Otherwise that existing metric will be converted to a distribution metric and the historical data prior to the conversion will be no longer queryable.
 
-```typescript
-import { sendDistributionMetric } from "datadog-lambda-js";
+```ruby
+require 'datadog_lambda'
 
-sendDistributionMetric(
-  "coffee_house.order_value", // Metric name
-  12.45, // The Value
-  "product:latte",
-  "order:online" // Associated tags
-);
+Datadog::Lambda.metric(
+  'coffee_house.order_value',
+  12.45,
+  "product":"latte",
+  "order":"online"
+)
 ```
 
 ### VPC
@@ -138,31 +101,13 @@ If your Lambda function is associated with a VPC, you need to ensure it has acce
 
 ## Distributed Tracing
 
-[Distributed tracing](https://docs.datadoghq.com/tracing/guide/distributed_tracing/?tab=nodejs) allows you to propagate a trace context from a service running on a host to a service running on AWS Lambda, and vice versa, so you can see performance end-to-end. Linking is implemented by injecting Datadog trace context into the HTTP request headers.
+[Distributed tracing](https://docs.datadoghq.com/tracing/guide/distributed_tracing/?tab=ruby) allows you to propagate a trace context from a service running on a host to a service running on AWS Lambda, and vice versa, so you can see performance end-to-end. Linking is implemented by injecting Datadog trace context into the HTTP request headers.
 
-Distributed tracing headers are language agnostic, e.g., a trace can be propagated between a Java service running on a host to a Lambda function written in Node.
+Distributed tracing headers are language agnostic, e.g., a trace can be propagated between a Java service running on a host to a Lambda function written in Ruby.
 
 Because the trace context is propagated through HTTP request headers, the Lambda function needs to be triggered by AWS API Gateway or AWS Application Load Balancer.
 
 To enable this feature wrap your handler functions using the `datadog` function.
-
-### Patching
-
-By default, requests made using node's inbuilt `http` and `https` libraries, (and libraries which depend on them, such as axios), will be patched with Datadog's tracing context headers. If you would rather add these headers manually on a per request basic, you can disable patching using the autoPatchHTTP option.
-
-```typescript
-import http from "http";
-import { sendDistributionMetric } from "datadog-lambda-js";
-
-async function myHandler(event, context) {
-  // Add the headers to your request
-  const headers = getTraceHeaders();
-  http.get("http://www.example.com", { headers });
-}
-
-// Explicitly disable auto patching
-exports.exports.myHandler = datadog(myHandler, { autoPatchHTTP: false });
-```
 
 ### Sampling
 
@@ -231,13 +176,13 @@ If your Lambda function is deployed by the Serverless Framework, such a mapping 
 
 If you encounter a bug with this package, we want to hear about it. Before opening a new issue, search the existing issues to avoid duplicates.
 
-When opening an issue, include the Datadog Lambda Layer version, Node version, and stack trace if available. In addition, include the steps to reproduce when appropriate.
+When opening an issue, include the Datadog Lambda Layer version, Ruby version, and stack trace if available. In addition, include the steps to reproduce when appropriate.
 
 You can also open an issue for a feature request.
 
 ## Contributing
 
-If you find an issue with this package and have a fix, please feel free to open a pull request following the [procedures](https://github.com/DataDog/dd-lambda-layer-js/blob/master/CONTRIBUTING.md).
+If you find an issue with this package and have a fix, please feel free to open a pull request following the [procedures](https://github.com/DataDog/dd-lambda-layer-rb/blob/master/CONTRIBUTING.md).
 
 ## License
 
