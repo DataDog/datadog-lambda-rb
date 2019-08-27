@@ -22,4 +22,21 @@ describe DDLambda do
     end
     expect(error_raised).to be true
   end
+  context 'metric' do
+    it 'prints a custom metric' do
+      now = Time.utc(2008, 7, 8, 9, 10)
+      output = '{"e":121550820000,"m":"m1","t":["t.a:value","t.b:v2"],"v":100}'
+      expect(Time).to receive(:now).and_return(now)
+      expect do
+        DDLambda.metric('m1', 100, "t.a": 'value', "t.b": 'v2')
+      end.to output("#{output}\n").to_stdout
+    end
+    it 'prints a custom metric with a custom timestamp' do
+      now = Time.utc(2008, 7, 8, 9, 10)
+      output = '{"e":121550820000,"m":"m1","t":["t.a:value","t.b:v2"],"v":100}'
+      expect do
+        DDLambda.metric('m1', 100, time: now, "t.a": 'value', "t.b": 'v2')
+      end.to output("#{output}\n").to_stdout
+    end
+  end
 end

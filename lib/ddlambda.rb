@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require 'ddlambda/trace/listener'
+require 'json'
+require 'time'
 
 # Datadog instruments AWS Lambda functions with Datadog distributed tracing and
 # custom metrics
@@ -24,6 +26,25 @@ module DDLambda
 
   # Gets the current tracing context
   def self.trace_context
-    @listener&.context
+    DDLambda::Trace.trace_context
+  end
+
+  # Send a custom distribution metric
+  # @param name [String] name of the metric
+  # @param value [Numeric] value of the metric
+  # @param time [Time] the time of the metric, should be in the past
+  # @param tags [Hash] hash of tags, must be in "my.tag.name":"value" format
+  def self.metric(name, value, time: nil, **tags)
+    raise 'name must be a string' unless name.is_a?(String)
+    raise 'value must be a number' unless value.is_a?(Numeric)
+
+    time ||= Time.now
+    tag_list = []
+    tags.each do |tag|
+      tag_list.push("#{tag[0]}:#{tag[1]}")
+    end
+    time_ms = (time.to_f * 100).to_i
+    metric = { e: time_ms, m: name, t: tag_list, v: value }.to_json
+    puts metric
   end
 end
