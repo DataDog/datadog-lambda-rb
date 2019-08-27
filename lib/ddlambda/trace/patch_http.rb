@@ -22,6 +22,7 @@ module DDLambda
     # NetExtensions contains patches which add tracing context to http calls
     module NetExtensions
       def request(req, body = nil, &block)
+        logger = DDLambda::Utils.logger
         begin
           context = DDLambda::Trace.current_trace_context(
             DDLambda::Trace.trace_context
@@ -31,8 +32,11 @@ module DDLambda
             context[:sample_mode]
           req[DDLambda::Trace::DD_PARENT_ID_HEADER.to_sym] = context[:parent_id]
           req[DDLambda::Trace::DD_TRACE_ID_HEADER.to_sym] = context[:trace_id]
+          logger.debug("added context #{context} to request")
         rescue StandardError => e
-          puts "failed to add tracing context #{context} to request #{e}"
+          logger.error(
+            "couldn't add tracing context #{context} to request #{e}"
+          )
         end
         super(req, body, &block)
       end

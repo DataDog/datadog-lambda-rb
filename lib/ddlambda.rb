@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'ddlambda/trace/listener'
+require 'ddlambda/utils/logger'
 require 'json'
 require 'time'
 
@@ -14,6 +15,8 @@ module DDLambda
   # @param context [Object] lambda context
   # @param block [Proc] implementation of the handler function.
   def self.wrap(event, _context, &block)
+    DDLambda::Utils.update_log_level
+
     @listener = Trace::Listener.new if @listener.nil?
     @listener.on_start(event: event)
     begin

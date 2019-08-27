@@ -2,6 +2,7 @@
 
 require 'aws-xray-sdk'
 require 'ddlambda/trace/constants'
+require 'ddlambda/utils/logger'
 
 module DDLambda
   # Trace contains utilities related to reading/writing trace context from
@@ -13,7 +14,7 @@ module DDLambda
         begin
           add_trace_context_to_xray(context)
         rescue StandardError => e
-          puts "couldn't add metadata to xray #{e}"
+          DDLambda::Utils.logger.error("couldn't add metadata to xray #{e}")
         end
         return context
       end
@@ -55,7 +56,7 @@ module DDLambda
         sample_mode: mode
       }
     rescue StandardError => e
-      puts "couldn't read xray trace header #{e}"
+      DDLambda::Utils.logger.error("couldn't read xray trace header #{e}")
       nil
     end
 

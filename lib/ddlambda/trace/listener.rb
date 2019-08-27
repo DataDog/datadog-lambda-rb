@@ -21,10 +21,11 @@ module DDLambda
       end
 
       def on_start(event:)
-        DDLambda::Trace.trace_context =
-          DDLambda::Trace.extract_trace_context(event)
+        trace_context = DDLambda::Trace.extract_trace_context(event)
+        DDLambda::Trace.trace_context = trace_context
+        DDLambda::Utils.logger.debug "extracted trace context #{trace_context}"
       rescue StandardError => e
-        puts "couldn't read tracing context #{e}"
+        DDLambda::Utils.logger.error "couldn't read tracing context #{e}"
       end
 
       def on_end; end

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/BlockLength
+
 require 'ddlambda'
 
 describe DDLambda do
@@ -40,3 +42,5 @@ describe DDLambda do
     end
   end
 end
+
+# rubocop:enable Metrics/BlockLength
