@@ -1,7 +1,6 @@
 # datadog-lambda-layer-rb
 
 [![CircleCI](https://img.shields.io/circleci/build/github/DataDog/datadog-lambda-layer-rb)](https://circleci.com/gh/DataDog/workflows/datadog-lambda-layer-rb)
-[![Code Coverage](https://img.shields.io/codecov/c/github/DataDog/datadog-lambda-layer-rb)](https://codecov.io/gh/DataDog/datadog-lambda-layer-rb)
 [![NPM](https://img.shields.io/gem/v/datadog-lambda)](https://rubygems.org/gems/datadog-lambda)
 [![Slack](https://img.shields.io/badge/slack-%23serverless-blueviolet?logo=slack)](https://datadoghq.slack.com/channels/serverless/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/DataDog/datadog-lambda-layer-rb/blob/master/LICENSE)
