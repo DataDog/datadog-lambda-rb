@@ -2,8 +2,8 @@
 
 # rubocop:disable Metrics/BlockLength
 
-require 'ddlambda/trace/context'
-require 'ddlambda/trace/constants'
+require 'datadog_lambda/trace/context'
+require 'datadog_lambda/trace/constants'
 require 'aws-xray-sdk'
 
 describe DDLambda::Trace do

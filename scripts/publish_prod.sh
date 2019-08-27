@@ -26,10 +26,10 @@ gem signin
 
 ./scripts/run_tests.sh
 
-PACKAGE_VERSION=$(gem build ddlambda | grep Version | sed -n -e 's/^.*Version: //p')
+PACKAGE_VERSION=$(gem build datadog_lambda | grep Version | sed -n -e 's/^.*Version: //p')
 
 echo 'Publishing to RubyGems'
-gem push ddlambda
+gem push datadog_lambda
 
 echo 'Tagging Release'
 git tag "v$PACKAGE_VERSION"

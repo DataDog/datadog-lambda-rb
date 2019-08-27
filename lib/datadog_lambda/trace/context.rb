@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require 'aws-xray-sdk'
-require 'ddlambda/trace/constants'
-require 'ddlambda/utils/logger'
+require 'datadog_lambda/trace/constants'
+require 'datadog_lambda/utils/logger'
 
 module DDLambda
   # Trace contains utilities related to reading/writing trace context from

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'ddlambda/trace/context'
-require 'ddlambda/trace/xray_lambda'
-require 'ddlambda/trace/patch_http'
+require 'datadog_lambda/trace/context'
+require 'datadog_lambda/trace/xray_lambda'
+require 'datadog_lambda/trace/patch_http'
 
 require 'aws-xray-sdk'
 

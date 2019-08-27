@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'ddlambda/trace/listener'
-require 'ddlambda/utils/logger'
-require 'ddlambda/trace/patch_http'
+require 'datadog_lambda/trace/listener'
+require 'datadog_lambda/utils/logger'
+require 'datadog_lambda/trace/patch_http'
 require 'json'
 require 'time'
 

@@ -2,10 +2,10 @@
 
 lib = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'ddlambda/version'
+require 'datadog_lambda/version'
 
 Gem::Specification.new do |spec|
-  spec.name                  = 'ddlambda'
+  spec.name                  = 'datadog_lambda'
   spec.version               = DDLambda::VERSION::STRING
   spec.required_ruby_version = '>= 2.5.0'
   spec.authors               = ['Datadog, Inc.']
@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
 
   spec.summary     = 'Instruments your Ruby AWS Lambda functions with Datadog'
   spec.description = <<-MSG.gsub(/^[\s]+/, '')
-    ddlambda is Datadog’s AWS Lambda integration for ruby. It is used to perform
+    datadog_lambda is Datadog’s AWS Lambda integration for ruby. It is used to perform
     distributed tracing between serverful and serverless environments, and send
     custom metrics to Datadog.
   MSG
