@@ -8,9 +8,9 @@
 # Copyright 2019 Datadog, Inc.
 #
 
-require 'datadog_lambda/trace/context'
-require 'datadog_lambda/trace/xray_lambda'
-require 'datadog_lambda/trace/patch_http'
+require 'datadog/lambda/trace/context'
+require 'datadog/lambda/trace/xray_lambda'
+require 'datadog/lambda/trace/patch_http'
 
 require 'aws-xray-sdk'
 

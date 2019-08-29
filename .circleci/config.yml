@@ -12,7 +12,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - v1-dependencies-<< parameters.ruby >>-{{ checksum "datadog_lambda.gemspec" }}
+            - v1-dependencies-<< parameters.ruby >>-{{ checksum "datadog-lambda.gemspec" }}
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-<< parameters.ruby >>--
       - run:
@@ -31,7 +31,7 @@ jobs:
       - save_cache:
           paths:
             - ./venv
-          key: v1-dependencies-<< parameters.ruby >>-{{ checksum "datadog_lambda.gemspec" }}
+          key: v1-dependencies-<< parameters.ruby >>-{{ checksum "datadog-lambda.gemspec" }}
 
 workflows:
   ruby-v2.5:

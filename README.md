@@ -16,7 +16,7 @@ This library is provided both as an AWS Lambda Layer, and a gem. If you want to 
 You can install the package library locally by adding the following line to your Gemfile
 
 ```gemfile
-gem 'datadog_lambda'
+gem 'datadog-lambda'
 ```
 
 ### Lambda Layer Method
@@ -67,7 +67,7 @@ How much logging datadog-lambda-layer-rb should do. Set this to "debug" for exte
 Datadog needs to be able to read headers from the incoming Lambda event.
 
 ```ruby
-require 'datadog_lambda'
+require 'datadog-lambda'
 
 def handler(event:, context:)
     Datadog::Lambda.wrap(event, context) do
@@ -84,7 +84,7 @@ Custom metrics can be submitted using the `metric` function. The metrics are sub
 **IMPORTANT NOTE:** If you have already been submitting the same custom metric as non-distribution metric (e.g., gauge, count, or histogram) without using the Datadog Lambda Layer, you MUST pick a new metric name to use for `sendDistributionMetric`. Otherwise that existing metric will be converted to a distribution metric and the historical data prior to the conversion will be no longer queryable.
 
 ```ruby
-require 'datadog_lambda'
+require 'datadog-lambda'
 
 Datadog::Lambda.metric(
   'coffee_house.order_value',

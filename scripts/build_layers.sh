@@ -9,7 +9,7 @@
 set -e
 
 LAYER_DIR=".layers"
-LAYER_FILES_PREFIX="datadog_lambda_ruby"
+LAYER_FILES_PREFIX="datadog-lambda_ruby"
 RUBY_VERSIONS=("2.5")
 
 function make_path_absolute {

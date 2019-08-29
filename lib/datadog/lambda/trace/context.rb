@@ -9,8 +9,8 @@
 #
 
 require 'aws-xray-sdk'
-require 'datadog_lambda/trace/constants'
-require 'datadog_lambda/utils/logger'
+require 'datadog/lambda/trace/constants'
+require 'datadog/lambda/utils/logger'
 
 module Datadog
   # Trace contains utilities related to reading/writing trace context from

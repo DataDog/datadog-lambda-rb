@@ -2,7 +2,7 @@
 
 # rubocop:disable Metrics/BlockLength
 
-require 'datadog_lambda'
+require 'datadog/lambda'
 
 describe Datadog::Lambda do
   context 'wrap' do

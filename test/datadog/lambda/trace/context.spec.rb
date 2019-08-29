@@ -2,8 +2,8 @@
 
 # rubocop:disable Metrics/BlockLength
 
-require 'datadog_lambda/trace/context'
-require 'datadog_lambda/trace/constants'
+require 'datadog/lambda/trace/context'
+require 'datadog/lambda/trace/constants'
 require 'aws-xray-sdk'
 
 describe Datadog::Trace do

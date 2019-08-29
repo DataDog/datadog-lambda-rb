@@ -8,9 +8,9 @@
 # Copyright 2019 Datadog, Inc.
 #
 
-require 'datadog_lambda/trace/listener'
-require 'datadog_lambda/utils/logger'
-require 'datadog_lambda/trace/patch_http'
+require 'datadog/lambda/trace/listener'
+require 'datadog/lambda/utils/logger'
+require 'datadog/lambda/trace/patch_http'
 require 'json'
 require 'time'
 
