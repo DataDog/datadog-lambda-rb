@@ -35,7 +35,7 @@ gem signin
 PACKAGE_VERSION=$(gem build datadog-lambda | grep Version | sed -n -e 's/^.*Version: //p')
 
 echo 'Publishing to RubyGems'
-gem push datadog-lambda
+gem push "datadog-lambda-${PACKAGE_VERSION}"
 
 echo 'Tagging Release'
 git tag "v$PACKAGE_VERSION"
