@@ -5,25 +5,22 @@
 require 'datadog/lambda'
 
 describe Datadog::Lambda do
-  context 'wrap' do
+  context 'with a succesful handler' do
+    subject { Datadog::Lambda.wrap(event, context) { { result: 100 } } }
+    let(:event) { '1' }
+    let(:context) { '2' }
+
     it 'should return the same value as returned by the block' do
-      event = '1'
-      context = '2'
-      res = Datadog::Lambda.wrap(event, context) do
-        { result: 100 }
-      end
-      expect(res[:result]).to be 100
+      expect(subject[:result]).to be 100
     end
+  end
+  context 'with a handler that raises an error' do
+    subject { Datadog::Lambda.wrap(event, context) { raise 'Error' } }
+    let(:event) { '1' }
+    let(:context) { '2' }
+
     it 'should raise an error if the block raises an error' do
-      error_raised = false
-      begin
-        Datadog::Lambda.wrap(event, context) do
-          raise 'Error'
-        end
-      rescue StandardError
-        error_raised = true
-      end
-      expect(error_raised).to be true
+      expect { subject }.to raise_error
     end
   end
   context 'trace_context' do
