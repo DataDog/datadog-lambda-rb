@@ -5,4 +5,4 @@ COPY . datadog-lambda-ruby
 WORKDIR /datadog-lambda-ruby
 RUN gem install bundler
 RUN bundle install
-RUN rubocop
+RUN rubocop lib/ test/ datadog-lambda.gemspec
