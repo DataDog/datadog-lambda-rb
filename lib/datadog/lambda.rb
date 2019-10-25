@@ -54,7 +54,7 @@ module Datadog
       tags.each do |tag|
         tag_list.push("#{tag[0]}:#{tag[1]}")
       end
-      time_ms = (time.to_f * 1000).to_i
+      time_ms = (time.to_f).to_i
       metric = { e: time_ms, m: name, t: tag_list, v: value }.to_json
       puts metric
     end
