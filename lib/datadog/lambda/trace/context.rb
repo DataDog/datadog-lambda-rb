@@ -47,7 +47,7 @@ module Datadog
 
       def current_trace_context(trace_context)
         entity = XRay.recorder.current_entity
-        parent_id = entity.instance_variable_get('@parent_id')
+        parent_id = entity.id
         {
           trace_id: trace_context[:trace_id],
           parent_id: convert_to_apm_parent_id(parent_id),
@@ -57,7 +57,7 @@ module Datadog
 
       def read_trace_context_from_xray
         segment = XRay.recorder.current_entity
-        parent_id = segment.instance_variable_get('@parent_id')
+        parent_id = segment.id
         mode = segment.sampled ? SAMPLE_MODE_USER_KEEP : SAMPLE_MODE_USER_REJECT
         {
           trace_id: convert_to_apm_trace_id(segment.trace_id),
