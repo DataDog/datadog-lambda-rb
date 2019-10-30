@@ -42,8 +42,9 @@ module Datadog
           req[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = context[:trace_id]
           logger.debug("added context #{context} to request")
         rescue StandardError => e
-          logger.error(
-            "couldn't add tracing context #{context} to request #{e}"
+          trace = e.backtrace.join("\n ")
+          logger.debug(
+            "couldn't add tracing context #{context} to request #{e}:\n#{trace}"
           )
         end
         super(req, body, &block)
