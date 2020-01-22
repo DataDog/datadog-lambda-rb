@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'aws-xray-sdk', '~> 0.11'
+  spec.add_dependency 'ddtrace', '~>0.32'
 
   # Development dependencies
   spec.add_development_dependency 'rake', '~> 12.3'
