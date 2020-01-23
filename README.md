@@ -51,7 +51,7 @@ functions:
           path: hello
           method: get
     layers:
-      - arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Rube2-5:1
+      - arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Ruby2-5:1
 ```
 
 ## Environment Variables
