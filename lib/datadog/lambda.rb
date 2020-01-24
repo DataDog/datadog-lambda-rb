@@ -14,6 +14,10 @@ require 'datadog/lambda/trace/patch_http'
 require 'json'
 require 'time'
 
+# rubocop:disable Style/GlobalVars
+$IS_COLD_START = true
+# rubocop:enable Style/GlobalVars
+
 module Datadog
   # Instruments AWS Lambda functions with Datadog distributed tracing and
   # custom metrics
@@ -22,16 +26,22 @@ module Datadog
     # @param event [Object] event sent to lambda
     # @param context [Object] lambda context
     # @param block [Proc] implementation of the handler function.
-    def self.wrap(event, _context, &block)
+    def self.wrap(event, context, &block)
       Datadog::Utils.update_log_level
-
       @listener ||= Trace::Listener.new
       @listener.on_start(event: event)
+      record_enhanced('invocations', context)
       begin
         res = block.call
+      rescue StandardError => e
+        record_enhanced('errors', context)
+        raise e
       ensure
         @listener.on_end
       end
+      # rubocop:disable Style/GlobalVars
+      $IS_COLD_START = false
+      # rubocop:enable Style/GlobalVars
       res
     end
 
@@ -57,6 +67,25 @@ module Datadog
       time_ms = time.to_f.to_i
       metric = { e: time_ms, m: name, t: tag_list, v: value }.to_json
       puts metric
+    end
+
+    def self.gen_enhanced_tags(context)
+      arn_parts = context.invoked_function_arn.split(':')
+      {
+        functionname: context.function_name,
+        region: arn_parts[3],
+        account_id: arn_parts[4],
+        memorysize: context.memory_limit_in_mb,
+        # rubocop:disable Style/GlobalVars
+        cold_start: $IS_COLD_START,
+        # rubocop:enable Style/GlobalVars
+        runtime: "Ruby #{RUBY_VERSION}"
+      }
+    end
+
+    def self.record_enhanced(metric_name, context)
+      etags = gen_enhanced_tags(context)
+      metric(metric_name, 1, etags)
     end
   end
 end
