@@ -38,10 +38,10 @@ module Datadog
         raise e
       ensure
         @listener.on_end
+        # rubocop:disable Style/GlobalVars
+        $IS_COLD_START = false
+        # rubocop:enable Style/GlobalVars
       end
-      # rubocop:disable Style/GlobalVars
-      $IS_COLD_START = false
-      # rubocop:enable Style/GlobalVars
       res
     end
 

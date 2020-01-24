@@ -12,15 +12,6 @@ describe Datadog::Lambda do
       expect(Datadog::Lambda.gen_enhanced_tags(ctx)[:cold_start]).to eq(true)
     end
   end
-  context 'with a succesful handler' do
-    subject { Datadog::Lambda.wrap(event, context) { { result: 100 } } }
-    let(:event) { '1' }
-    let(:context) { ctx }
-
-    it 'should return the same value as returned by the block' do
-      expect(subject[:result]).to be 100
-    end
-  end
   context 'with a handler that raises an error' do
     subject { Datadog::Lambda.wrap(event, context) { raise 'Error' } }
     let(:event) { '1' }
@@ -28,6 +19,20 @@ describe Datadog::Lambda do
 
     it 'should raise an error if the block raises an error' do
       expect { subject }.to raise_error
+    end
+  end
+  context 'enhanced tags' do
+    it 'recognizes an error as having warmed the environment' do
+      expect(Datadog::Lambda.gen_enhanced_tags(ctx)[:cold_start]).to eq(false)
+    end
+  end
+  context 'with a succesful handler' do
+    subject { Datadog::Lambda.wrap(event, context) { { result: 100 } } }
+    let(:event) { '1' }
+    let(:context) { ctx }
+
+    it 'should return the same value as returned by the block' do
+      expect(subject[:result]).to be 100
     end
   end
   context 'trace_context' do
