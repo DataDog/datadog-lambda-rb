@@ -77,7 +77,9 @@ module Datadog
         cold_start: @is_cold_start,
         runtime: "Ruby #{RUBY_VERSION}"
       }
-    rescue StandardError => _e
+    rescue StandardError => e
+      Datadog::Utils.logger.error 'Unable to parse Lambda context' \
+      "#{context}: #{e}"
       {}
     end
 
