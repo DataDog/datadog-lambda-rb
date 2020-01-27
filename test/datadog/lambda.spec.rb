@@ -89,6 +89,34 @@ describe Datadog::Lambda do
       # rubocop:enable Metrics/LineLength
     end
   end
+  context 'enhanced metrics' do
+    it 'correctly reads the DD_ENHANCED_METRICS env var' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('true')
+      expect(Datadog::Lambda.do_enhanced_metrics?).to eq(true)
+    end
+    it 'correctly reads the DD_ENHANCED_METRICS env var regardless of case' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('True')
+      expect(Datadog::Lambda.do_enhanced_metrics?).to eq(true)
+    end
+    it 'correctly reads false DD_ENHANCED_METRICS as false' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('false')
+      expect(Datadog::Lambda.do_enhanced_metrics?).to eq(false)
+    end
+    it 'correctly reads lack of DD_ENHANCED_METRICS as false' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('false')
+      expect(Datadog::Lambda.do_enhanced_metrics?).to eq(false)
+    end
+  end
+  context 'enhanced metrics' do
+    it 'does not submit enhanced metrics if DD_ENHANCED_METRICS is false' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('false')
+      expect(Datadog::Lambda.record_enhanced('foo', ctx)).to eq(false)
+    end
+    it 'submits enhanced metrics if DD_ENHANCED_METRICS is true' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('true')
+      expect(Datadog::Lambda.record_enhanced('foo', ctx)).to eq(true)
+    end
+  end
 end
 
 # rubocop:enable Metrics/BlockLength

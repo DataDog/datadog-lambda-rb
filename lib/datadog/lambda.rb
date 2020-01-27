@@ -84,8 +84,18 @@ module Datadog
     end
 
     def self.record_enhanced(metric_name, context)
+      return false unless do_enhanced_metrics?
+
       etags = gen_enhanced_tags(context)
       metric("aws.lambda.enhanced.#{metric_name}", 1, etags)
+      true
+    end
+
+    def self.do_enhanced_metrics?
+      dd_enhanced_metrics = ENV['DD_ENHANCED_METRICS']
+      return false if dd_enhanced_metrics.nil?
+
+      dd_enhanced_metrics.downcase == 'true'
     end
   end
 end
