@@ -85,7 +85,7 @@ module Datadog
 
     def self.record_enhanced(metric_name, context)
       etags = gen_enhanced_tags(context)
-      metric(metric_name, 1, etags)
+      metric("aws.lambda.enhanced.#{metric_name}", 1, etags)
     end
   end
 end
