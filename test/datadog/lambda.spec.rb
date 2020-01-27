@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 # rubocop:disable Metrics/BlockLength
-
 require 'datadog/lambda'
 require_relative './lambdacontext'
 
@@ -89,6 +88,7 @@ describe Datadog::Lambda do
       # rubocop:enable Metrics/LineLength
     end
   end
+
   context 'enhanced metrics' do
     it 'correctly reads the DD_ENHANCED_METRICS env var' do
       allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('true')
@@ -115,6 +115,16 @@ describe Datadog::Lambda do
     it 'submits enhanced metrics if DD_ENHANCED_METRICS is true' do
       allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('true')
       expect(Datadog::Lambda.record_enhanced('foo', ctx)).to eq(true)
+    end
+  end
+  context 'enhanced metrics output' do
+    it 'prints enhanced metrics to the logs' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('true')
+      # rubocop:disable Metrics/LineLength
+      expect do
+        Datadog::Lambda.record_enhanced('invocations', ctx)
+      end.to output(/"dd_lambda_layer:datadog-ruby25","functionname:hello-dog-ruby-dev-helloRuby25","region:us-east-1","account_id:172597598159","memorysize:128",/).to_stdout
+      # rubocop:enable Metrics/LineLength
     end
   end
 end
