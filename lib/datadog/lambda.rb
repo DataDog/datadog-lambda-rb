@@ -77,6 +77,8 @@ module Datadog
         cold_start: @is_cold_start,
         runtime: "Ruby #{RUBY_VERSION}"
       }
+    rescue StandardError => _e
+      {}
     end
 
     # Format and add tags to enhanced metrics
