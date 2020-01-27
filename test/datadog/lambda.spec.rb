@@ -1,17 +1,14 @@
 # frozen_string_literal: true
 
 # rubocop:disable Metrics/BlockLength
-
 require 'datadog/lambda'
+require_relative './lambdacontext'
 
 describe Datadog::Lambda do
-  context 'with a succesful handler' do
-    subject { Datadog::Lambda.wrap(event, context) { { result: 100 } } }
-    let(:event) { '1' }
-    let(:context) { '2' }
-
-    it 'should return the same value as returned by the block' do
-      expect(subject[:result]).to be 100
+  ctx = LambdaContext.new
+  context 'enhanced tags' do
+    it 'recognizes a cold start' do
+      expect(Datadog::Lambda.gen_enhanced_tags(ctx)[:cold_start]).to eq(true)
     end
   end
   context 'with a handler that raises an error' do
@@ -23,6 +20,20 @@ describe Datadog::Lambda do
       expect { subject }.to raise_error
     end
   end
+  context 'enhanced tags' do
+    it 'recognizes an error as having warmed the environment' do
+      expect(Datadog::Lambda.gen_enhanced_tags(ctx)[:cold_start]).to eq(false)
+    end
+  end
+  context 'with a succesful handler' do
+    subject { Datadog::Lambda.wrap(event, context) { { result: 100 } } }
+    let(:event) { '1' }
+    let(:context) { '2' }
+
+    it 'should return the same value as returned by the block' do
+      expect(subject[:result]).to be 100
+    end
+  end
   context 'trace_context' do
     it 'should return the last trace context' do
       event = {
@@ -32,8 +43,7 @@ describe Datadog::Lambda do
           'x-datadog-sampling-priority' => '2'
         }
       }
-      context = '2'
-      Datadog::Lambda.wrap(event, context) do
+      Datadog::Lambda.wrap(event, ctx) do
         { result: 100 }
       end
       expect(Datadog::Lambda.trace_context).to eq(
@@ -43,7 +53,19 @@ describe Datadog::Lambda do
       )
     end
   end
-
+  context 'enhanced tags' do
+    it 'makes tags from a Lambda context' do
+      ctx = LambdaContext.new
+      expect(Datadog::Lambda.gen_enhanced_tags(ctx)).to eq(
+        account_id: '172597598159',
+        cold_start: false,
+        functionname: 'hello-dog-ruby-dev-helloRuby25',
+        memorysize: 128,
+        region: 'us-east-1',
+        runtime: 'Ruby 2.5.7'
+      )
+    end
+  end
   context 'metric' do
     it 'prints a custom metric' do
       now = Time.utc(2008, 7, 8, 9, 10)
@@ -57,13 +79,52 @@ describe Datadog::Lambda do
       end.to output("#{output}\n").to_stdout
     end
     it 'prints a custom metric with a custom timestamp' do
-      now = Time.utc(2008, 7, 8, 9, 10)
+      custom_time = Time.utc(2008, 7, 8, 9, 11)
       # rubocop:disable Metrics/LineLength
-      output = '{"e":1215508200,"m":"m1","t":["dd_lambda_layer:datadog-ruby25","t.a:val","t.b:v2"],"v":100}'
-      # rubocop:enable Metrics/LineLength
+      output = '{"e":1215508260,"m":"m1","t":["dd_lambda_layer:datadog-ruby25","t.a:val","t.b:v2"],"v":100}'
       expect do
-        Datadog::Lambda.metric('m1', 100, time: now, "t.a": 'val', "t.b": 'v2')
+        Datadog::Lambda.metric('m1', 100, time: custom_time, "t.a": 'val', "t.b": 'v2')
       end.to output("#{output}\n").to_stdout
+      # rubocop:enable Metrics/LineLength
+    end
+  end
+
+  context 'enhanced metrics' do
+    it 'correctly reads the DD_ENHANCED_METRICS env var' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('true')
+      expect(Datadog::Lambda.do_enhanced_metrics?).to eq(true)
+    end
+    it 'correctly reads the DD_ENHANCED_METRICS env var regardless of case' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('True')
+      expect(Datadog::Lambda.do_enhanced_metrics?).to eq(true)
+    end
+    it 'correctly reads false DD_ENHANCED_METRICS as false' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('false')
+      expect(Datadog::Lambda.do_enhanced_metrics?).to eq(false)
+    end
+    it 'correctly reads lack of DD_ENHANCED_METRICS as false' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('false')
+      expect(Datadog::Lambda.do_enhanced_metrics?).to eq(false)
+    end
+  end
+  context 'enhanced metrics' do
+    it 'does not submit enhanced metrics if DD_ENHANCED_METRICS is false' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('false')
+      expect(Datadog::Lambda.record_enhanced('foo', ctx)).to eq(false)
+    end
+    it 'submits enhanced metrics if DD_ENHANCED_METRICS is true' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('true')
+      expect(Datadog::Lambda.record_enhanced('foo', ctx)).to eq(true)
+    end
+  end
+  context 'enhanced metrics output' do
+    it 'prints enhanced metrics to the logs' do
+      allow(ENV).to receive(:[]).with('DD_ENHANCED_METRICS').and_return('true')
+      # rubocop:disable Metrics/LineLength
+      expect do
+        Datadog::Lambda.record_enhanced('invocations', ctx)
+      end.to output(/"dd_lambda_layer:datadog-ruby25","functionname:hello-dog-ruby-dev-helloRuby25","region:us-east-1","account_id:172597598159","memorysize:128",/).to_stdout
+      # rubocop:enable Metrics/LineLength
     end
   end
 end
