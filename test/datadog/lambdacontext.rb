@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 # This is an example of the lambda context provided to a Ruby-runtimed lambda
+# c.f. https://docs.aws.amazon.com/lambda/latest/dg/ruby-context.html
 # Use dot-notation to access these properties
 class LambdaContext
   def function_name
