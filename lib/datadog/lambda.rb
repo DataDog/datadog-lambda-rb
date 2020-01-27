@@ -14,14 +14,11 @@ require 'datadog/lambda/trace/patch_http'
 require 'json'
 require 'time'
 
-# rubocop:disable Style/GlobalVars
-$IS_COLD_START = true
-# rubocop:enable Style/GlobalVars
-
 module Datadog
   # Instruments AWS Lambda functions with Datadog distributed tracing and
   # custom metrics
   module Lambda
+    @is_cold_start = true
     # Wrap the body of a lambda invocation
     # @param event [Object] event sent to lambda
     # @param context [Object] lambda context
@@ -38,9 +35,7 @@ module Datadog
         raise e
       ensure
         @listener.on_end
-        # rubocop:disable Style/GlobalVars
-        $IS_COLD_START = false
-        # rubocop:enable Style/GlobalVars
+        @is_cold_start = false
       end
       res
     end
@@ -79,9 +74,7 @@ module Datadog
         region: arn_parts[3],
         account_id: arn_parts[4],
         memorysize: context.memory_limit_in_mb,
-        # rubocop:disable Style/GlobalVars
-        cold_start: $IS_COLD_START,
-        # rubocop:enable Style/GlobalVars
+        cold_start: @is_cold_start,
         runtime: "Ruby #{RUBY_VERSION}"
       }
     end
