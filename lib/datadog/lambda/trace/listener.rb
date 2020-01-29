@@ -60,11 +60,11 @@ module Datadog
             resource_names: request_context.function_name
           }
         }
-        if Datadog::Trace.trace_context.nil?
+        unless Datadog::Trace.trace_context.nil?
           trace_id = Datadog::Trace.trace_context['trace_id']
           span_id = Datadog::Trace.trace_context['parent_id']
           context = Datadog::Context.new(trace_id: trace_id, span_id: span_id)
-          options.child_of = context
+          options['child_of'] = context
         end
 
         Datadog.tracer.trace('aws.lambda', options) do |_span|
