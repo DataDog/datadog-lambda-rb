@@ -18,21 +18,26 @@ module Datadog
   # Instruments AWS Lambda functions with Datadog distributed tracing and
   # custom metrics
   module Lambda
+    @is_cold_start = true
     # Wrap the body of a lambda invocation
     # @param event [Object] event sent to lambda
     # @param context [Object] lambda context
     # @param block [Proc] implementation of the handler function.
     def self.wrap(event, context, &block)
       Datadog::Utils.update_log_level
-
       @listener ||= Trace::Listener.new
       @listener.on_start(event: event)
+      record_enhanced('invocations', context)
       begin
         res = @listener.on_wrap(request_context: context) do
           block.call
         end
+      rescue StandardError => e
+        record_enhanced('errors', context)
+        raise e
       ensure
         @listener.on_end
+        @is_cold_start = false
       end
       res
     end
@@ -59,6 +64,52 @@ module Datadog
       time_ms = time.to_f.to_i
       metric = { e: time_ms, m: name, t: tag_list, v: value }.to_json
       puts metric
+    end
+
+    # Generate tags for enhanced metrics
+    # @param context [Object] https://docs.aws.amazon.com/lambda/latest/dg/ruby-context.html
+    # @return [hash] a hash of the enhanced metrics tags
+    def self.gen_enhanced_tags(context)
+      arn_parts = context.invoked_function_arn.split(':')
+      {
+        functionname: context.function_name,
+        region: arn_parts[3],
+        account_id: arn_parts[4],
+        memorysize: context.memory_limit_in_mb,
+        cold_start: @is_cold_start,
+        runtime: "Ruby #{RUBY_VERSION}"
+      }
+    rescue StandardError => e
+      Datadog::Utils.logger.error 'Unable to parse Lambda context' \
+      "#{context}: #{e}"
+      {}
+    end
+
+    # Format and add tags to enhanced metrics
+    # This method wraps the metric method, checking the DD_ENHANCED_METRICS
+    # environment variable, adding 'aws.lambda.enhanced' to the metric name,
+    # and adding the enhanced metric tags to the enhanced metrics.
+    # @param metric_name [String] basic name of the metric
+    # @param context [Object] AWS Ruby Lambda Context
+    # @return [boolean] false if the metric was not added for some reason,
+    #   true otherwise (for ease of testing)
+
+    def self.record_enhanced(metric_name, context)
+      return false unless do_enhanced_metrics?
+
+      etags = gen_enhanced_tags(context)
+      metric("aws.lambda.enhanced.#{metric_name}", 1, etags)
+      true
+    end
+
+    # Check the DD_ENHANCED_METRICS environment variable
+    # @reurn [boolean] true if this lambda should have
+    # enhanced metrics
+    def self.do_enhanced_metrics?
+      dd_enhanced_metrics = ENV['DD_ENHANCED_METRICS']
+      return false if dd_enhanced_metrics.nil?
+
+      dd_enhanced_metrics.downcase == 'true'
     end
   end
 end
