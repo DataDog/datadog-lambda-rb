@@ -29,7 +29,8 @@ module Datadog
       @listener.on_start(event: event)
       record_enhanced('invocations', context)
       begin
-        res = @listener.on_wrap(request_context: context) do
+        cold = @is_cold_start
+        res = @listener.on_wrap(request_context: context, cold_start: cold) do
           block.call
         end
       rescue StandardError => e

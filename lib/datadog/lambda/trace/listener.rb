@@ -19,7 +19,6 @@ module Datadog
     # TraceListener tracks tracing context information
     class Listener
       def initialize
-        @cold_start = true
         Datadog::Trace.patch_http
 
         # Use the IO transport, and the sync writer to guarantee the trace will
@@ -38,14 +37,12 @@ module Datadog
         Datadog::Utils.logger.error "couldn't read tracing context #{e}"
       end
 
-      def on_end
-        @cold_start = false
-      end
+      def on_end; end
 
-      def on_wrap(request_context:, &block)
+      def on_wrap(request_context:, cold_start:, &block)
         options = {
           tags: {
-            cold_start: @cold_start,
+            cold_start: cold_start,
             function_arn: request_context.invoked_function_arn,
             request_id: request_context.aws_request_id,
             resource_names: request_context.function_name
