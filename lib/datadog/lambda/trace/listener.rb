@@ -9,10 +9,7 @@
 #
 
 require 'datadog/lambda/trace/context'
-require 'datadog/lambda/trace/xray_lambda'
 require 'datadog/lambda/trace/patch_http'
-
-require 'aws-xray-sdk'
 
 require 'ddtrace'
 require 'ddtrace/sync_writer'
@@ -23,12 +20,6 @@ module Datadog
     class Listener
       def initialize
         @cold_start = true
-        XRay.recorder.configure(
-          patch: %I[aws_sdk],
-          context: Datadog::Trace::LambdaContext.new,
-          streamer: Datadog::Trace::LambdaStreamer.new,
-          emitter: Datadog::Trace::LambdaEmitter.new
-        )
         Datadog::Trace.patch_http
 
         # Use the IO transport, and the sync writer to guarantee the trace will

@@ -3,9 +3,8 @@
 # rubocop:disable Metrics/BlockLength
 
 require 'datadog/lambda/trace/context'
-require 'datadog/lambda/trace/xray_lambda'
 require 'datadog/lambda/trace/constants'
-require 'aws-xray-sdk'
+require 'aws-xray-sdk/lambda/facade_segment'
 
 describe Datadog::Trace do
   context 'read_trace_context_from_event' do
@@ -136,7 +135,7 @@ describe Datadog::Trace do
 
   context 'read_trace_context_from_xray' do
     it 'reads the parent id and trace id from X-Ray' do
-      segment = Datadog::Trace::FacadeSegment.new(
+      segment = XRay::FacadeSegment.new(
         trace_id: '1-5ce31dc2-ffffffff390ce44db5e03875',
         id: '0b11cc4230d3e09e'
       )
