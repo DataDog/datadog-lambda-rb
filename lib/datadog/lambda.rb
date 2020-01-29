@@ -22,13 +22,15 @@ module Datadog
     # @param event [Object] event sent to lambda
     # @param context [Object] lambda context
     # @param block [Proc] implementation of the handler function.
-    def self.wrap(event, _context, &block)
+    def self.wrap(event, context, &block)
       Datadog::Utils.update_log_level
 
       @listener ||= Trace::Listener.new
       @listener.on_start(event: event)
       begin
-        res = block.call
+        res = @listener.on_wrap(request_context: context) do
+          block.call
+        end
       ensure
         @listener.on_end
       end

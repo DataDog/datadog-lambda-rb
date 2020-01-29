@@ -14,11 +14,15 @@ require 'datadog/lambda/trace/patch_http'
 
 require 'aws-xray-sdk'
 
+require 'ddtrace'
+require 'ddtrace/sync_writer'
+
 module Datadog
   module Trace
     # TraceListener tracks tracing context information
     class Listener
       def initialize
+        @cold_start = true
         XRay.recorder.configure(
           patch: %I[aws_sdk],
           context: Datadog::Trace::LambdaContext.new,
@@ -26,6 +30,13 @@ module Datadog
           emitter: Datadog::Trace::LambdaEmitter.new
         )
         Datadog::Trace.patch_http
+
+        # Use the IO transport, and the sync writer to guarantee the trace will
+        # be written to logs immediately after being closed.
+        Datadog.configure do |c|
+          transport = Datadog::Transport::IO.default
+          c.tracer writer: Datadog::SyncWriter.new(transport: transport)
+        end
       end
 
       def on_start(event:)
@@ -36,7 +47,30 @@ module Datadog
         Datadog::Utils.logger.error "couldn't read tracing context #{e}"
       end
 
-      def on_end; end
+      def on_end
+        @cold_start = false
+      end
+
+      def on_wrap(request_context:, &block)
+        options = {
+          tags: {
+            cold_start: @cold_start,
+            function_arn: request_context.invoked_function_arn,
+            request_id: request_context.aws_request_id,
+            resource_names: request_context.function_name
+          }
+        }
+        if Datadog::Trace.trace_context.nil?
+          trace_id = Datadog::Trace.trace_context['trace_id']
+          span_id = Datadog::Trace.trace_context['parent_id']
+          context = Datadog::Context.new(trace_id: trace_id, span_id: span_id)
+          options.child_of = context
+        end
+
+        Datadog.tracer.trace('aws.lambda', options) do |_span|
+          block.call
+        end
+      end
     end
   end
 end
