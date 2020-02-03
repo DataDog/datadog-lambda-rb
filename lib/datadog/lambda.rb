@@ -25,7 +25,10 @@ module Datadog
     # @param block [Proc] implementation of the handler function.
     def self.wrap(event, context, &block)
       Datadog::Utils.update_log_level
-      @listener ||= Trace::Listener.new
+      handler = ENV['_HANDLER'].nil? ? 'handler' : ENV['_HANDLER']
+      function = ENV['AWS_LAMBDA_FUNCTION_NAME']
+      @listener ||= Trace::Listener.new(handler_name: handler,
+                                        function_name: function)
       @listener.on_start(event: event)
       record_enhanced('invocations', context)
       begin

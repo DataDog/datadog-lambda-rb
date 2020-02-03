@@ -18,9 +18,11 @@ module Datadog
   module Trace
     # TraceListener tracks tracing context information
     class Listener
-      def initialize
-        Datadog::Trace.patch_http
+      def initialize(handler_name:, function_name:)
+        @handler_name = handler_name
+        @function_name = function_name
 
+        Datadog::Trace.patch_http
         # Use the IO transport, and the sync writer to guarantee the trace will
         # be written to logs immediately after being closed.
         Datadog.configure do |c|
@@ -54,7 +56,9 @@ module Datadog
           context = Datadog::Context.new(trace_id: trace_id, span_id: span_id)
           options['child_of'] = context
         end
-
+        options[:resource] = @handler_name
+        options[:service] =  @function_name
+        options[:span_type] = 'serverless'
         Datadog.tracer.trace('aws.lambda', options) do |_span|
           block.call
         end
