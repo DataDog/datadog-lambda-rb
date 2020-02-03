@@ -12,7 +12,6 @@ require 'datadog/lambda/trace/context'
 require 'datadog/lambda/trace/patch_http'
 
 require 'ddtrace'
-require 'ddtrace/sync_writer'
 
 module Datadog
   module Trace
@@ -23,12 +22,6 @@ module Datadog
         @function_name = function_name
 
         Datadog::Trace.patch_http
-        # Use the IO transport, and the sync writer to guarantee the trace will
-        # be written to logs immediately after being closed.
-        Datadog.configure do |c|
-          transport = Datadog::Transport::IO.default
-          c.tracer writer: Datadog::SyncWriter.new(transport: transport)
-        end
       end
 
       def on_start(event:)

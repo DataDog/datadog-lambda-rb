@@ -19,6 +19,22 @@ module Datadog
   # custom metrics
   module Lambda
     @is_cold_start = true
+
+    # Configures APM tracer with lambda specific defaults.
+    # Same options can be given as Datadog.configure in tracer
+    # See https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md#quickstart-for-ruby-applications
+    def self.configure_apm
+      require 'ddtrace'
+      require 'ddtrace/sync_writer'
+
+      Datadog.configure do |c|
+        c.tracer writer: Datadog::SyncWriter.new(
+          transport: Datadog::Transport::IO.default
+        )
+        yield(c) if block_given?
+      end
+    end
+
     # Wrap the body of a lambda invocation
     # @param event [Object] event sent to lambda
     # @param context [Object] lambda context
