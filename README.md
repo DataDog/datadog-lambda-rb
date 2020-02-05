@@ -169,6 +169,41 @@ The file content for `datadog-sampling-priority-2.json`:
 }
 ```
 
+## Datadog Tracer (**Experimental**)
+
+You can now trace Lambda functions using Datadog APM's tracing libraries ([dd-trace-rb](https://github.com/DataDog/dd-trace-rb)).
+
+1. If you are using the Lambda layer, upgrade it to at least version 6.
+1. If you are using the npm package `datadog-lambda-rb`, upgrade it to at least version `v0.6.0`. You also need to install the latest version of the datadog tracer: `gem install ddtrace`.
+1. Install (or update to) the latest version of [Datadog forwarder Lambda function](https://docs.datadoghq.com/integrations/amazon_web_services/?tab=allpermissions#set-up-the-datadog-lambda-function). Ensure the trace forwarding layer is attached to the forwarder, e.g., ARN for Python 3.7 `arn:aws:lambda:<AWS_REGION>:464622532012:layer:Datadog-Trace-Forwarder-Python37:4`.
+1. To initialise the tracer, call `Datadog::Lambda.configure_apm`. It takes the same arguments as [Datadog.configure](https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md#quickstart-for-ruby-applications), except with defaults that enable lambda tracing
+
+```ruby
+require 'ddtrace'
+require 'datadog/lambda'
+
+Datadog::Lambda.configure_apm do |c|
+# Enable instrumentation here
+end
+
+def handler(event:, context:)
+  Datadog::Lambda::wrap(event, context) do
+    # Your function code here
+    some_operation()
+  end
+end
+
+# Instrument the rest of your code using ddtrace
+
+def some_operation()
+    Datadog.tracer.trace('some_operation') do |span|
+        # Do something here
+    end
+end
+```
+
+1. You can also use `ddtrace` and the X-Ray tracer together and merge the traces into one, by setting the environment variable `DD_MERGE_DATADOG_XRAY_TRACES` to true
+
 ## Non-proxy integration
 
 If your Lambda function is triggered by API Gateway via the non-proxy integration, then you have to set up a mapping template, which passes the Datadog trace context from the incoming HTTP request headers to the Lambda function via the event object.
@@ -192,3 +227,7 @@ If you find an issue with this package and have a fix, please feel free to open 
 Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
 
 This product includes software developed at Datadog (https://www.datadoghq.com/). Copyright 2019 Datadog, Inc.
+
+```
+
+```
