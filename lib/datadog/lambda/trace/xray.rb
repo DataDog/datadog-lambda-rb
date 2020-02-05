@@ -92,7 +92,7 @@ module Datadog
       end
 
       def parse_xray_trace_context_header(header)
-        Datadog::Utils.logger.error("Reading trace context from env #{header}")
+        Datadog::Utils.logger.debug("Reading trace context from env #{header}")
         root, parent, sampled = header.split(';')
 
         trace_id = parse_assigned_value(root)

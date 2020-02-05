@@ -17,11 +17,11 @@ module Datadog
   module Trace
     # TraceListener tracks tracing context information
     class Listener
-      def initialize(handler_name:, function_name:)
+      def initialize(handler_name:, function_name:, patch_http:)
         @handler_name = handler_name
         @function_name = function_name
 
-        Datadog::Trace.patch_http
+        Datadog::Trace.patch_http if patch_http
       end
 
       def on_start(event:)
