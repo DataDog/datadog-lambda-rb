@@ -64,7 +64,9 @@ module Datadog
 
     # Gets the current tracing context
     def self.trace_context
-      Datadog::Trace.trace_context
+      context = Hash[Datadog::Trace.trace_context]
+      context.delete(:source)
+      context
     end
 
     # Send a custom distribution metric
