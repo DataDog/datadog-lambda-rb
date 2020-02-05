@@ -174,7 +174,7 @@ The file content for `datadog-sampling-priority-2.json`:
 You can now trace Lambda functions using Datadog APM's tracing libraries ([dd-trace-rb](https://github.com/DataDog/dd-trace-rb)).
 
 1. If you are using the Lambda layer, upgrade it to at least version 6.
-1. If you are using the npm package `datadog-lambda-rb`, upgrade it to at least version `v0.6.0`. You also need to install the latest version of the datadog tracer: `gem install ddtrace`.
+1. If you are using the npm package `datadog-lambda-rb`, upgrade it to at least version `v0.6.0`. You also need to install the latest version of the datadog tracer: `gem install ddtrace`. Keep in mind that ddtrace uses native extensions, which must be compiled for Amazon Linux before being packaged and uploaded to lambda. For this reason we recommend using the lambda layer.
 1. Install (or update to) the latest version of [Datadog forwarder Lambda function](https://docs.datadoghq.com/integrations/amazon_web_services/?tab=allpermissions#set-up-the-datadog-lambda-function). Ensure the trace forwarding layer is attached to the forwarder, e.g., ARN for Python 3.7 `arn:aws:lambda:<AWS_REGION>:464622532012:layer:Datadog-Trace-Forwarder-Python37:4`.
 1. To initialise the tracer, call `Datadog::Lambda.configure_apm`. It takes the same arguments as [Datadog.configure](https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md#quickstart-for-ruby-applications), except with defaults that enable lambda tracing
 
