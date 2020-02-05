@@ -68,6 +68,18 @@ module Datadog
         }.to_json
       end
 
+      def current_trace_context(trace_context)
+        trace_context = Hash[trace_context]
+        begin
+          # This will only succeed if the user has imported xray themselves
+          entity = XRay.recorder.current_entity
+          trace_context[:parent_id] = convert_to_apm_parent_id(entity.id)
+        rescue StandardError
+          Datadog::Utils.logger.debug("couldn't fetch xray entity")
+        end
+        trace_context
+      end
+
       def send_xray_daemon_data(data)
         xray_daemon_env = ENV[AWS_XRAY_DAEMON_ADDRESS_ENV_VAR]
         socket = XRAY_UDP_PORT

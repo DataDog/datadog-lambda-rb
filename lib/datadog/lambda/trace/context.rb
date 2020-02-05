@@ -30,17 +30,6 @@ module Datadog
         read_trace_context_from_xray
       end
 
-      def current_trace_context(trace_context)
-        entity = XRay.recorder.current_entity
-        parent_id = entity.id
-        {
-          trace_id: trace_context[:trace_id],
-          parent_id: convert_to_apm_parent_id(parent_id),
-          sample_mode: trace_context[:sample_mode],
-          source: SOURCE_XRAY
-        }
-      end
-
       def read_trace_context_from_event(event)
         return nil unless headers?(event)
 
