@@ -178,7 +178,7 @@ describe Datadog::Trace do
           'X-Datadog-Trace-Id' => '4110911582297405557'
         }
       }
-      res = Datadog::Trace.extract_trace_context(event)
+      res = Datadog::Trace.extract_trace_context(event, true)
       expect(res).to eq(
         trace_id: '4110911582297405557',
         parent_id: '797643193680388254',

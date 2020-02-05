@@ -29,6 +29,8 @@ module Datadog
       require 'ddtrace/sync_writer'
 
       @patch_http = false
+      # Needed to keep trace flushes on a single line
+      $stdout.sync = true
 
       Datadog.configure do |c|
         c.tracer writer: Datadog::SyncWriter.new(
@@ -46,9 +48,16 @@ module Datadog
       Datadog::Utils.update_log_level
       handler = ENV['_HANDLER'].nil? ? 'handler' : ENV['_HANDLER']
       function = ENV['AWS_LAMBDA_FUNCTION_NAME']
+      merge_xray_traces = false
+      unless ENV['DD_MERGE_DATADOG_XRAY_TRACES'].nil?
+        merge_xray_traces = ENV['DD_MERGE_DATADOG_XRAY_TRACES'].downcase == 'true'
+        Datadog::Utils.logger.debug("Setting merge traces #{merge_xray_traces}")
+      end
+
       @listener ||= Trace::Listener.new(handler_name: handler,
                                         function_name: function,
-                                        patch_http: @patch_http)
+                                        patch_http: @patch_http,
+                                        merge_xray_traces: merge_xray_traces)
       @listener.on_start(event: event)
       record_enhanced('invocations', context)
       begin

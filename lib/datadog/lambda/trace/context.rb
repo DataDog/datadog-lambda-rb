@@ -17,7 +17,7 @@ module Datadog
   # lambda events/X-Ray
   module Trace
     class << self
-      def extract_trace_context(event)
+      def extract_trace_context(event, merge_xray_traces)
         context = read_trace_context_from_event(event)
         unless context.nil?
           begin
@@ -27,6 +27,8 @@ module Datadog
           end
           return context
         end
+        return nil unless merge_xray_traces
+
         read_trace_context_from_xray
       end
 

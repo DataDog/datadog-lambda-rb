@@ -17,15 +17,18 @@ module Datadog
   module Trace
     # TraceListener tracks tracing context information
     class Listener
-      def initialize(handler_name:, function_name:, patch_http:)
+      def initialize(handler_name:, function_name:, patch_http:,
+                     merge_xray_traces:)
         @handler_name = handler_name
         @function_name = function_name
+        @merge_xray_traces = merge_xray_traces
 
         Datadog::Trace.patch_http if patch_http
       end
 
       def on_start(event:)
-        trace_context = Datadog::Trace.extract_trace_context(event)
+        trace_context = Datadog::Trace.extract_trace_context(event,
+                                                             @merge_xray_traces)
         Datadog::Trace.trace_context = trace_context
         Datadog::Utils.logger.debug "extracted trace context #{trace_context}"
       rescue StandardError => e
@@ -38,20 +41,25 @@ module Datadog
         options = {
           tags: {
             cold_start: cold_start,
-            function_arn: request_context.invoked_function_arn,
+            function_arn: request_context.invoked_function_arn.downcase,
             request_id: request_context.aws_request_id,
             resource_names: request_context.function_name
           }
         }
-        unless Datadog::Trace.trace_context.nil?
-          trace_id = Datadog::Trace.trace_context['trace_id']
-          span_id = Datadog::Trace.trace_context['parent_id']
-          context = Datadog::Context.new(trace_id: trace_id, span_id: span_id)
-          options['child_of'] = context
-        end
+
         options[:resource] = @handler_name
         options[:service] =  @function_name
         options[:span_type] = 'serverless'
+        unless Datadog::Trace.trace_context.nil?
+          trace_id = Datadog::Trace.trace_context[:trace_id].to_i
+          span_id = Datadog::Trace.trace_context[:parent_id].to_i
+          sampling_priority = Datadog::Trace.trace_context[:sample_mode]
+          Datadog.tracer.provider.context = Datadog::Context.new(
+            trace_id: trace_id,
+            span_id: span_id,
+            sampling_priority: sampling_priority
+          )
+        end
         Datadog.tracer.trace('aws.lambda', options) do |_span|
           block.call
         end
