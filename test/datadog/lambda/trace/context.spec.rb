@@ -165,7 +165,9 @@ describe Datadog::Trace do
 
       expect(UDPSocket).to receive(:open).and_return(socket)
       expect(socket).to receive(:send).with(
+        # rubocop:disable Metrics/LineLength
         include('parent-id":"797643193680388254","sampling-priority":"2","trace-id":"4110911582297405557"'),
+        # rubocop:enable Metrics/LineLength
         0,
         '127.0.0.1',
         2000
