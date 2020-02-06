@@ -46,18 +46,7 @@ module Datadog
     # @param block [Proc] implementation of the handler function.
     def self.wrap(event, context, &block)
       Datadog::Utils.update_log_level
-      handler = ENV['_HANDLER'].nil? ? 'handler' : ENV['_HANDLER']
-      function = ENV['AWS_LAMBDA_FUNCTION_NAME']
-      merge_xray_traces = false
-      unless ENV['DD_MERGE_DATADOG_XRAY_TRACES'].nil?
-        merge_xray_traces = ENV['DD_MERGE_DATADOG_XRAY_TRACES'].downcase == 'true'
-        Datadog::Utils.logger.debug("Setting merge traces #{merge_xray_traces}")
-      end
-
-      @listener ||= Trace::Listener.new(handler_name: handler,
-                                        function_name: function,
-                                        patch_http: @patch_http,
-                                        merge_xray_traces: merge_xray_traces)
+      @listener ||= initialize_listener
       @listener.on_start(event: event)
       record_enhanced('invocations', context)
       begin
@@ -145,6 +134,22 @@ module Datadog
       return false if dd_enhanced_metrics.nil?
 
       dd_enhanced_metrics.downcase == 'true'
+    end
+
+    def self.initialize_listener
+      handler = ENV['_HANDLER'].nil? ? 'handler' : ENV['_HANDLER']
+      function = ENV['AWS_LAMBDA_FUNCTION_NAME']
+      merge_xray_traces = false
+      merge_xray_traces_env = ENV['DD_MERGE_DATADOG_XRAY_TRACES']
+      unless merge_xray_traces_env.nil?
+        merge_xray_traces = merge_xray_traces_env.downcase == 'true'
+        Datadog::Utils.logger.debug("Setting merge traces #{merge_xray_traces}")
+      end
+
+      Trace::Listener.new(handler_name: handler,
+                          function_name: function,
+                          patch_http: @patch_http,
+                          merge_xray_traces: merge_xray_traces)
     end
   end
 end

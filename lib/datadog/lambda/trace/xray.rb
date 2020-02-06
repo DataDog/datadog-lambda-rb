@@ -26,7 +26,7 @@ module Datadog
         sample_mode = convert_to_sample_mode(segment[:xray_sample_mode])
 
         if trace_id.nil? || parent_id.nil? || sample_mode.nil?
-          Datadog::Utils.logger.error("couldn't read xray trace header #{header}")
+          Datadog::Utils.logger.error("couldn't read xray header #{header}")
           return nil
         end
         {
@@ -44,7 +44,6 @@ module Datadog
       end
 
       def generate_xray_metadata_subsegment(context)
-        time = Time.now.to_f
         header = ENV[XRAY_ENV_VAR]
         segment = parse_xray_trace_context_header(header)
 
@@ -53,8 +52,8 @@ module Datadog
           "trace_id": segment[:xray_trace_id],
           "parent_id": segment[:xray_parent_id],
           "name": DD_XRAY_SUBSEGMENT_NAME,
-          "start_time": time,
-          "end_time": time,
+          "start_time": Time.now.to_f,
+          "end_time": Time.now.to_f,
           "type": 'subsegment',
           "metadata": {
             "datadog": {
@@ -93,22 +92,19 @@ module Datadog
 
       def parse_xray_trace_context_header(header)
         Datadog::Utils.logger.debug("Reading trace context from env #{header}")
-        root, parent, sampled = header.split(';')
+        trace_id, parent_id, sampled = header.split(';')
+                                             .map { |v| parse_assignment(v) }
 
-        trace_id = parse_assigned_value(root)
-        parent_id = parse_assigned_value(parent)
-        sample_mode = parse_assigned_value(sampled)
-
-        return nil if trace_id.nil? || parent_id.nil? || sample_mode. nil?
+        return nil if trace_id.nil? || parent_id.nil? || sampled. nil?
 
         {
           xray_trace_id: trace_id,
           xray_parent_id: parent_id,
-          xray_sample_mode: sample_mode
+          xray_sample_mode: sampled
         }
       end
 
-      def parse_assigned_value(value)
+      def parse_assignment(value)
         return nil if value.nil?
 
         _, raw_value, * = value.split('=')

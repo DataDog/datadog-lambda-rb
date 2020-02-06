@@ -49,7 +49,7 @@ module Datadog
         options[:resource] = @handler_name
         options[:service] =  @function_name
         options[:span_type] = 'serverless'
-        Datadog::Trace.set_datadog_trace_context(Datadog::Trace.trace_context)
+        Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
         Datadog::Trace.wrap_datadog(options) do
           block.call
         end

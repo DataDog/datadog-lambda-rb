@@ -4,12 +4,14 @@
 begin
   require 'ddtrace'
 rescue LoadError
+  Datadog::Utils.logger.debug 'dd-trace unavailable'
 end
 
 module Datadog
+  # TraceListener tracks tracing context information
   module Trace
     class <<self
-      def set_datadog_trace_context(context)
+      def apply_datadog_trace_context(context)
         unless context.nil?
           trace_id = context[:trace_id].to_i
           span_id = context[:parent_id].to_i
@@ -19,7 +21,7 @@ module Datadog
             span_id: span_id,
             sampling_priority: sampling_priority
           )
-          end
+        end
       rescue StandardError
         Datadog::Utils.logger.debug 'dd-trace unavailable'
       end
@@ -30,6 +32,7 @@ module Datadog
           Datadog.tracer
           tracer_available = true
         rescue StandardError
+          Datadog::Utils.logger.debug 'dd-trace unavailable'
         end
         return block.call unless tracer_available
 
