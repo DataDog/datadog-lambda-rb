@@ -10,8 +10,7 @@
 
 require 'datadog/lambda/trace/context'
 require 'datadog/lambda/trace/patch_http'
-
-require 'ddtrace'
+require 'datadog/lambda/trace/ddtrace'
 
 module Datadog
   module Trace
@@ -50,17 +49,8 @@ module Datadog
         options[:resource] = @handler_name
         options[:service] =  @function_name
         options[:span_type] = 'serverless'
-        unless Datadog::Trace.trace_context.nil?
-          trace_id = Datadog::Trace.trace_context[:trace_id].to_i
-          span_id = Datadog::Trace.trace_context[:parent_id].to_i
-          sampling_priority = Datadog::Trace.trace_context[:sample_mode]
-          Datadog.tracer.provider.context = Datadog::Context.new(
-            trace_id: trace_id,
-            span_id: span_id,
-            sampling_priority: sampling_priority
-          )
-        end
-        Datadog.tracer.trace('aws.lambda', options) do |_span|
+        Datadog::Trace.set_datadog_trace_context(Datadog::Trace.trace_context)
+        Datadog::Trace.wrap_datadog(options) do
           block.call
         end
       end
