@@ -3,9 +3,8 @@
 # rubocop:disable Metrics/BlockLength
 
 require 'datadog/lambda/trace/context'
-require 'datadog/lambda/trace/xray_lambda'
 require 'datadog/lambda/trace/constants'
-require 'aws-xray-sdk'
+require 'socket'
 
 describe Datadog::Trace do
   context 'read_trace_context_from_event' do
@@ -21,7 +20,8 @@ describe Datadog::Trace do
       expect(res).to eq(
         trace_id: '4110911582297405557',
         parent_id: '797643193680388254',
-        sample_mode: Datadog::Trace::SAMPLE_MODE_USER_KEEP
+        sample_mode: Datadog::Trace::SAMPLE_MODE_USER_KEEP,
+        source: Datadog::Trace::SOURCE_EVENT
       )
     end
 
@@ -37,7 +37,8 @@ describe Datadog::Trace do
       expect(res).to eq(
         trace_id: '4110911582297405557',
         parent_id: '797643193680388254',
-        sample_mode: Datadog::Trace::SAMPLE_MODE_USER_KEEP
+        sample_mode: Datadog::Trace::SAMPLE_MODE_USER_KEEP,
+        source: Datadog::Trace::SOURCE_EVENT
       )
     end
 
@@ -135,31 +136,42 @@ describe Datadog::Trace do
   end
 
   context 'read_trace_context_from_xray' do
+    after(:all) { ENV.delete(Datadog::Trace::XRAY_ENV_VAR) }
     it 'reads the parent id and trace id from X-Ray' do
-      segment = Datadog::Trace::FacadeSegment.new(
-        trace_id: '1-5ce31dc2-ffffffff390ce44db5e03875',
-        id: '0b11cc4230d3e09e'
-      )
-      allow(XRay.recorder).to receive(:current_entity).and_return(segment)
+      trace_id = '1-5ce31dc2-ffffffff390ce44db5e03875'
+      parent_id = '0b11cc4230d3e09e'
+      ENV[Datadog::Trace::XRAY_ENV_VAR] =
+        "Root=#{trace_id};Parent=#{parent_id};Sampled=1"
       res = Datadog::Trace.read_trace_context_from_xray
       expect(res).to eq(
         trace_id: '4110911582297405557',
         parent_id: '797643193680388254',
-        sample_mode: Datadog::Trace::SAMPLE_MODE_USER_KEEP
+        sample_mode: Datadog::Trace::SAMPLE_MODE_USER_KEEP,
+        source: Datadog::Trace::SOURCE_XRAY
       )
     end
   end
 
   context 'extract_trace_context' do
+    after(:all) { ENV.delete(Datadog::Trace::XRAY_ENV_VAR) }
+
     it 'writes metadata to X-Ray if tracing headers are on event' do
-      segment = XRay::Segment.new(trace_id: '1234')
-      expect(XRay.recorder).to receive(:begin_subsegment)
-        .with(
-          Datadog::Trace::DD_XRAY_SUBSEGMENT_NAME,
-          namespace: Datadog::Trace::DD_XRAY_SUBSEGMENT_NAMESPACE
-        ).and_return(segment)
-      expect(XRay.recorder).to receive(:end_subsegment)
-      expect(segment)
+      trace_id = '1-5ce31dc2-ffffffff390ce44db5e03875'
+      parent_id = '0b11cc4230d3e09e'
+      ENV[Datadog::Trace::XRAY_ENV_VAR] =
+        "Root=#{trace_id};Parent=#{parent_id};Sampled=1"
+
+      socket = UDPSocket.open
+
+      expect(UDPSocket).to receive(:open).and_return(socket)
+      expect(socket).to receive(:send).with(
+        # rubocop:disable Metrics/LineLength
+        include('parent-id":"797643193680388254","sampling-priority":"2","trace-id":"4110911582297405557"'),
+        # rubocop:enable Metrics/LineLength
+        0,
+        '127.0.0.1',
+        2000
+      )
 
       event = {
         'headers' => {
@@ -168,19 +180,12 @@ describe Datadog::Trace do
           'X-Datadog-Trace-Id' => '4110911582297405557'
         }
       }
-      res = Datadog::Trace.extract_trace_context(event)
+      res = Datadog::Trace.extract_trace_context(event, true)
       expect(res).to eq(
         trace_id: '4110911582297405557',
         parent_id: '797643193680388254',
-        sample_mode: Datadog::Trace::SAMPLE_MODE_USER_KEEP
-      )
-      metadata = segment.metadata(
-        namespace: Datadog::Trace::DD_XRAY_SUBSEGMENT_NAMESPACE
-      )
-      expect(metadata[Datadog::Trace::DD_XRAY_SUBSEGMENT_KEY.to_sym]).to eq(
-        'trace-id': '4110911582297405557',
-        'parent-id': '797643193680388254',
-        'sampling-priority': '2'
+        sample_mode: Datadog::Trace::SAMPLE_MODE_USER_KEEP,
+        source: Datadog::Trace::SOURCE_EVENT
       )
     end
   end

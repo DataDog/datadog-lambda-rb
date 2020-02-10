@@ -9,27 +9,25 @@
 #
 
 require 'datadog/lambda/trace/context'
-require 'datadog/lambda/trace/xray_lambda'
 require 'datadog/lambda/trace/patch_http'
-
-require 'aws-xray-sdk'
+require 'datadog/lambda/trace/ddtrace'
 
 module Datadog
   module Trace
     # TraceListener tracks tracing context information
     class Listener
-      def initialize
-        XRay.recorder.configure(
-          patch: %I[aws_sdk],
-          context: Datadog::Trace::LambdaContext.new,
-          streamer: Datadog::Trace::LambdaStreamer.new,
-          emitter: Datadog::Trace::LambdaEmitter.new
-        )
-        Datadog::Trace.patch_http
+      def initialize(handler_name:, function_name:, patch_http:,
+                     merge_xray_traces:)
+        @handler_name = handler_name
+        @function_name = function_name
+        @merge_xray_traces = merge_xray_traces
+
+        Datadog::Trace.patch_http if patch_http
       end
 
       def on_start(event:)
-        trace_context = Datadog::Trace.extract_trace_context(event)
+        trace_context = Datadog::Trace.extract_trace_context(event,
+                                                             @merge_xray_traces)
         Datadog::Trace.trace_context = trace_context
         Datadog::Utils.logger.debug "extracted trace context #{trace_context}"
       rescue StandardError => e
@@ -37,6 +35,25 @@ module Datadog
       end
 
       def on_end; end
+
+      def on_wrap(request_context:, cold_start:, &block)
+        options = {
+          tags: {
+            cold_start: cold_start,
+            function_arn: request_context.invoked_function_arn.downcase,
+            request_id: request_context.aws_request_id,
+            resource_names: request_context.function_name
+          }
+        }
+
+        options[:resource] = @handler_name
+        options[:service] =  @function_name
+        options[:span_type] = 'serverless'
+        Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
+        Datadog::Trace.wrap_datadog(options) do
+          block.call
+        end
+      end
     end
   end
 end

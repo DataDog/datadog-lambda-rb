@@ -25,14 +25,14 @@ function docker_build_zip {
     # between different ruby runtimes.
     temp_dir=$(mktemp -d)
     docker build -t datadog-lambda-layer-ruby:$1 . --no-cache \
-        --build-arg "image=ruby:${1}-alpine" --build-arg "runtime=${1}.0"
+        --build-arg "image=lambci/lambda:build-ruby${1}" --build-arg "runtime=${1}.0"
 
     # Run the image by runtime tag, tar its generatd `ruby` directory to sdout,
     # then extract it to a temp directory.
-    docker run --rm datadog-lambda-layer-ruby:$1 tar cf - /ruby | tar -xf - -C $temp_dir
+    docker run --rm datadog-lambda-layer-ruby:$1 tar cf - /opt/ruby | tar -xf - -C $temp_dir
 
     # Zip to destination, and keep directory structure as based in $temp_dir
-    (cd $temp_dir && zip -q -r $destination ./)
+    (cd $temp_dir/opt/ && zip -q -r $destination ./)
 
     rm -rf $temp_dir
     echo "Done creating archive $destination"

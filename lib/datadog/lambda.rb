@@ -19,17 +19,41 @@ module Datadog
   # custom metrics
   module Lambda
     @is_cold_start = true
+    @patch_http = true
+
+    # Configures Datadog's APM tracer with lambda specific defaults.
+    # Same options can be given as Datadog.configure in tracer
+    # See https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md#quickstart-for-ruby-applications
+    def self.configure_apm
+      require 'ddtrace'
+      require 'ddtrace/sync_writer'
+
+      @patch_http = false
+      # Needed to keep trace flushes on a single line
+      $stdout.sync = true
+
+      Datadog.configure do |c|
+        c.tracer writer: Datadog::SyncWriter.new(
+          transport: Datadog::Transport::IO.default
+        )
+        yield(c) if block_given?
+      end
+    end
+
     # Wrap the body of a lambda invocation
     # @param event [Object] event sent to lambda
     # @param context [Object] lambda context
     # @param block [Proc] implementation of the handler function.
     def self.wrap(event, context, &block)
       Datadog::Utils.update_log_level
-      @listener ||= Trace::Listener.new
+      @listener ||= initialize_listener
       @listener.on_start(event: event)
       record_enhanced('invocations', context)
       begin
-        res = block.call
+        cold = @is_cold_start
+        res = @listener.on_wrap(request_context: context, cold_start: cold) do
+          block.call
+        end
       rescue StandardError => e
         record_enhanced('errors', context)
         raise e
@@ -42,7 +66,9 @@ module Datadog
 
     # Gets the current tracing context
     def self.trace_context
-      Datadog::Trace.trace_context
+      context = Hash[Datadog::Trace.trace_context]
+      context.delete(:source)
+      context
     end
 
     # Send a custom distribution metric
@@ -108,6 +134,22 @@ module Datadog
       return false if dd_enhanced_metrics.nil?
 
       dd_enhanced_metrics.downcase == 'true'
+    end
+
+    def self.initialize_listener
+      handler = ENV['_HANDLER'].nil? ? 'handler' : ENV['_HANDLER']
+      function = ENV['AWS_LAMBDA_FUNCTION_NAME']
+      merge_xray_traces = false
+      merge_xray_traces_env = ENV['DD_MERGE_DATADOG_XRAY_TRACES']
+      unless merge_xray_traces_env.nil?
+        merge_xray_traces = merge_xray_traces_env.downcase == 'true'
+        Datadog::Utils.logger.debug("Setting merge traces #{merge_xray_traces}")
+      end
+
+      Trace::Listener.new(handler_name: handler,
+                          function_name: function,
+                          patch_http: @patch_http,
+                          merge_xray_traces: merge_xray_traces)
     end
   end
 end

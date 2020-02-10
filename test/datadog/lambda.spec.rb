@@ -14,10 +14,10 @@ describe Datadog::Lambda do
   context 'with a handler that raises an error' do
     subject { Datadog::Lambda.wrap(event, context) { raise 'Error' } }
     let(:event) { '1' }
-    let(:context) { '2' }
+    let(:context) { ctx }
 
     it 'should raise an error if the block raises an error' do
-      expect { subject }.to raise_error
+      expect { subject }.to raise_error 'Error'
     end
   end
   context 'enhanced tags' do
@@ -28,7 +28,7 @@ describe Datadog::Lambda do
   context 'with a succesful handler' do
     subject { Datadog::Lambda.wrap(event, context) { { result: 100 } } }
     let(:event) { '1' }
-    let(:context) { '2' }
+    let(:context) { ctx }
 
     it 'should return the same value as returned by the block' do
       expect(subject[:result]).to be 100
@@ -56,13 +56,13 @@ describe Datadog::Lambda do
   context 'enhanced tags' do
     it 'makes tags from a Lambda context' do
       ctx = LambdaContext.new
-      expect(Datadog::Lambda.gen_enhanced_tags(ctx)).to eq(
+      expect(Datadog::Lambda.gen_enhanced_tags(ctx)).to include(
         account_id: '172597598159',
         cold_start: false,
         functionname: 'hello-dog-ruby-dev-helloRuby25',
         memorysize: 128,
         region: 'us-east-1',
-        runtime: 'Ruby 2.5.7'
+        runtime: include('Ruby 2.5.')
       )
     end
   end

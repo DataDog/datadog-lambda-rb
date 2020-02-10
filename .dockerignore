@@ -1,0 +1,7 @@
+*
+!test
+!lib
+!datadog-lambda.gemspec
+!Gemfile
+!Gemfile.lock
+!Rakefile

@@ -32,7 +32,10 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'aws-xray-sdk', '~> 0.11'
+  spec.add_dependency 'aws-xray-sdk', '~> 0.11.3'
+  # We don't add this as a direct dependency, because it has
+  # native modules that are difficult to package for lambda
+  spec.add_development_dependency 'ddtrace', '~>0.32'
 
   # Development dependencies
   spec.add_development_dependency 'rake', '~> 12.3'
