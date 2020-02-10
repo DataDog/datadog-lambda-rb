@@ -33,7 +33,7 @@ Replace `<AWS_REGION>` with the region where your Lambda function lives, and `<V
 
 ### The Serverless Framework
 
-If your Lambda function is deployed using the Serverless Framework, refer to this sample `serverless.yml`.
+If your Lambda function is deployed using the Serverless Framework, refer to this sample `serverless.yml`. Make sure to replace `<VERSION>` with the [latest release](https://github.com/DataDog/datadog-lambda-layer-rb/releases/latest) of the layer.
 
 ```yaml
 provider:
@@ -51,7 +51,7 @@ functions:
           path: hello
           method: get
     layers:
-      - arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Ruby2-5:1
+      - arn:aws:lambda:us-east-1:464622532012:layer:Datadog-Ruby2-5:<VERSION>
 ```
 
 ## Environment Variables
