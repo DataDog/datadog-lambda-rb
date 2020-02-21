@@ -1,5 +1,3 @@
 job:
         script: scripts/run_tests.sh
-        rules:
-                - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"'
 
