@@ -1,3 +1,19 @@
-job:
-        script: scripts/run_tests.sh
+variables:
+        CURRENT_CI_IMAGE: 1
+
+stages:
+        - ci-image
+
+ci-image:
+        stage: ci-image
+        when: manual
+        except: [tags, schedules]
+        tags: ["runner:docker", "size:large"]
+        image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/docker:18.03.1
+        script:
+                - docker build --tag 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE -f scripts/Dockerfile_test . --build-arg image=ruby:2.5
+                - docker push 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE .
+
+                  #run_tests:
+                  #        script: scripts/run_tests.sh
 
