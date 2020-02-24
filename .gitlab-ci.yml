@@ -11,7 +11,7 @@ ci-image:
         tags: ["runner:docker", "size:large"]
         image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/docker:18.03.1
         script:
-                - docker build --tag 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE  --build-arg image=ruby:2.5 -f scrips/Dockerfile_test .
+                - docker build --tag 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE  --build-arg image=ruby:2.5 -f scripts/Dockerfile_test .
                 - docker push 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE
 
                   #run_tests:
