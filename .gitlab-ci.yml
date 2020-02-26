@@ -3,7 +3,7 @@ variables:
 
 stages:
         - ci-image
-        - run-test
+        - run-tests
 
 run-tests:
         stage: run-tests
