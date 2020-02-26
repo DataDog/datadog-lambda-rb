@@ -25,6 +25,7 @@ function docker_build_zip {
     # between different ruby runtimes.
     temp_dir=$(mktemp -d)
     docker build -t datadog-lambda-layer-ruby:$1 . --no-cache \
+	-f Dockerfile.build \
         --build-arg "image=lambci/lambda:build-ruby${1}" --build-arg "runtime=${1}.0"
 
     # Run the image by runtime tag, tar its generatd `ruby` directory to sdout,
