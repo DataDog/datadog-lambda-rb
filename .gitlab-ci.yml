@@ -3,8 +3,8 @@ variables:
 
 stages:
         - ci-image
-        - run-tests
         - build-rc
+        - run-tests
 
 run-tests:
         stage: run-tests
@@ -28,6 +28,7 @@ ci-image:
 
 build-deploy-env:
         stage: build-rc
+        when: manual
         image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE
         tags: ["runner:main", "size:large"]
         script:

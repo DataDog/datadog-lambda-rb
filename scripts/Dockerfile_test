@@ -3,6 +3,8 @@ FROM $image
 
 COPY . datadog-lambda-ruby
 WORKDIR /datadog-lambda-ruby
+RUN apt-get update && apt-get install -y python-pip
+run pip install aws-cli
 RUN gem install bundler
 RUN bundle install
 RUN rubocop lib/ test/ datadog-lambda.gemspec
