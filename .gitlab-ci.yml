@@ -10,6 +10,8 @@ run-tests:
         image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE
         tags: ["runner:main", "size:large"]
         script: 
+                - bundle install
+                - rubocop lib/ test/ datadog-lambda.gemspec
                 - rake test
 
 ci-image:
