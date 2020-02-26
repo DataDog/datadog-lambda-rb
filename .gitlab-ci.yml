@@ -7,13 +7,10 @@ stages:
 
 run-tests:
         stage: run-tests
-        image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/docker:18.03.1
+        image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE
         tags: ["runner:main", "size:large"]
         script: 
-                - docker build --tag 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE  --build-arg image=ruby:2.5 -f scripts/Dockerfile_test .
-                - docker run --rm -v `pwd`:/datadog-lambda-layer-ruby -w /datadog-lambda-layer-ruby datadog-lambda-layer-ruby-test:$ruby_version rake test
-
- 
+                - rake test
 
 ci-image:
         stage: ci-image
