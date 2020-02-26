@@ -4,6 +4,7 @@ variables:
 stages:
         - ci-image
         - run-tests
+        - build-rc
 
 run-tests:
         stage: run-tests
@@ -24,6 +25,13 @@ ci-image:
                 - docker build --tag 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE  --build-arg image=ruby:2.5 -f scripts/Dockerfile_test .
                 - docker push 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE
 
-                  #run_tests:
-                  #        script: scripts/run_tests.sh
+
+build-deploy-env:
+        stage: build-rc
+        image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE
+        tags: ["runner:main", "size:large"]
+        script:
+                - pip install awscli
+                - aws ssm get-parameter --region us-east-1 --name ci.datadog-lambda-layer-rb.rubygems-api-key --with-decryption --query "Parameter.Value" --out text > ~/.gem/credentials 
+                  #- ./scripts/push_prod.sh
 
