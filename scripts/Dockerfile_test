@@ -3,7 +3,7 @@ FROM $image
 
 COPY . datadog-lambda-ruby
 WORKDIR /datadog-lambda-ruby
-RUN apt-get update && apt-get install -y python-pip
+RUN apt-get update && apt-get install -y python-pip jq
 RUN pip install awscli
 RUN gem install bundler
 RUN bundle install

@@ -33,5 +33,6 @@ deploy-gem-and-lambdalayer:
         script:
                 - ./scripts/check_version.sh
                 - aws ssm get-parameter --region us-east-1 --name ci.datadog-lambda-layer-rb.rubygems-api-key --with-decryption --query "Parameter.Value" --out text > ~/.gem/credentials 
+                - echo "about to publish..."
                   #- ./scripts/publish_prod.sh
 
