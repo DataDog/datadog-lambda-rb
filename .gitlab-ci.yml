@@ -25,12 +25,13 @@ ci-image:
                 - docker push 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE
 
 
-build-deploy-env:
+deploy-gem-and-lambdalayer:
         stage: manual-steps
         when: manual
         image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE
         tags: ["runner:main", "size:large"]
         script:
+                - ./scripts/check_version.sh
                 - aws ssm get-parameter --region us-east-1 --name ci.datadog-lambda-layer-rb.rubygems-api-key --with-decryption --query "Parameter.Value" --out text > ~/.gem/credentials 
-                - ./scripts/publish_prod.sh
+                  #- ./scripts/publish_prod.sh
 
