@@ -2,9 +2,8 @@ variables:
         CURRENT_CI_IMAGE: 1
 
 stages:
-        - ci-image
-        - build-rc
         - run-tests
+        - manual-steps
 
 run-tests:
         stage: run-tests
@@ -16,7 +15,7 @@ run-tests:
                 - rake test
 
 ci-image:
-        stage: ci-image
+        stage: manual-steps
         when: manual
         except: [tags, schedules]
         tags: ["runner:docker", "size:large"]
@@ -27,12 +26,11 @@ ci-image:
 
 
 build-deploy-env:
-        stage: build-rc
+        stage: manual-steps
         when: manual
         image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-lambda-layer-rb:$CURRENT_CI_IMAGE
         tags: ["runner:main", "size:large"]
         script:
-                - pip install awscli
                 - aws ssm get-parameter --region us-east-1 --name ci.datadog-lambda-layer-rb.rubygems-api-key --with-decryption --query "Parameter.Value" --out text > ~/.gem/credentials 
-                  #- ./scripts/push_prod.sh
+                - ./scripts/publish_prod.sh
 
