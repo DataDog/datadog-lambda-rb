@@ -122,7 +122,7 @@ module Datadog
       return false unless do_enhanced_metrics?
 
       etags = gen_enhanced_tags(context)
-      metric("aws.lambda.enhanced.#{metric_name}", 1, etags)
+      metric("aws.lambda.enhanced.#{metric_name}", 1, **etags)
       true
     end
 

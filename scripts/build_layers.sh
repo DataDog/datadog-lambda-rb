@@ -10,7 +10,7 @@ set -e
 
 LAYER_DIR=".layers"
 LAYER_FILES_PREFIX="datadog-lambda_ruby"
-RUBY_VERSIONS=("2.5")
+RUBY_VERSIONS=("2.5" "2.7")
 
 function make_path_absolute {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
