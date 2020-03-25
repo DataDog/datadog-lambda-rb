@@ -62,7 +62,7 @@ describe Datadog::Lambda do
         functionname: 'hello-dog-ruby-dev-helloRuby25',
         memorysize: 128,
         region: 'us-east-1',
-        runtime: include('Ruby 2.5.')
+        runtime: include('Ruby 2.')
       )
     end
   end

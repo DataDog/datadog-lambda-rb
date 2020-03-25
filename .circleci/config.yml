@@ -38,3 +38,7 @@ workflows:
     jobs:
       - verify_build:
           ruby: "2.5"
+  ruby-v2.7:
+    jobs:
+      - verify_build:
+          ruby: "2.7"

@@ -10,10 +10,10 @@
 # Specifying the region arg will publish the layer for the single specified region
 set -e
 
-RUBY_VERSIONS_FOR_AWS_CLI=("ruby2.5")
-LAYER_PATHS=(".layers/datadog-lambda_ruby2.5.zip")
-LAYER_NAMES=("Datadog-Ruby2-5")
-AVAILABLE_REGIONS=(us-east-2 us-east-1 us-west-1 us-west-2 ap-south-1 ap-northeast-2 ap-southeast-1 ap-southeast-2 ap-northeast-1 ca-central-1 eu-north-1 eu-central-1 eu-west-1 eu-west-2 eu-west-3 sa-east-1)
+RUBY_VERSIONS_FOR_AWS_CLI=("ruby2.5" "ruby2.7")
+LAYER_PATHS=(".layers/datadog-lambda_ruby2.5.zip" ".layers/datadog-lambda_ruby2.7.zip")
+LAYER_NAMES=("Datadog-Ruby2-5" "Datadog-Ruby2-7")
+AVAILABLE_REGIONS=(us-east-2 us-east-1 us-west-1 us-west-2 ap-east-1 ap-south-1 ap-northeast-2 ap-southeast-1 ap-southeast-2 ap-northeast-1 ca-central-1 eu-north-1 eu-central-1 eu-west-1 eu-west-2 eu-west-3 sa-east-1)
 
 # Check that the layer files exist
 for layer_file in "${LAYER_PATHS[@]}"

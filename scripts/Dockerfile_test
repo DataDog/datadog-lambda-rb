@@ -3,6 +3,8 @@ FROM $image
 
 COPY . datadog-lambda-ruby
 WORKDIR /datadog-lambda-ruby
+ENV GEM_HOME="/usr/local/bundle"
+ENV PATH $GEM_HOME/bin:$GEM_HOME/gems/bin:$PATH
 RUN gem install bundler
 RUN bundle install
-RUN rubocop lib/ test/ datadog-lambda.gemspec
+RUN bundle exec rubocop lib/ test/ datadog-lambda.gemspec

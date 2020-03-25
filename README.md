@@ -26,7 +26,7 @@ Datadog Lambda Layer can be added to a Lambda function via AWS Lambda console, [
 ```
 arn:aws:lambda:<AWS_REGION>:464622532012:layer:Datadog-Ruby2-5:<VERSION>
 # OR
-arn:aws:lambda:<AWS_REGION>:464622532012:layer:Datadog-Ruby2-5:<VERSION>
+arn:aws:lambda:<AWS_REGION>:464622532012:layer:Datadog-Ruby2-7:<VERSION>
 ```
 
 Replace `<AWS_REGION>` with the region where your Lambda function lives, and `<VERSION>` with the desired (or the latest) version that can be found from [CHANGELOG](https://github.com/DataDog/datadog-lambda-layer-rb/releases).
