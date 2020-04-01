@@ -131,7 +131,7 @@ module Datadog
     # enhanced metrics
     def self.do_enhanced_metrics?
       dd_enhanced_metrics = ENV['DD_ENHANCED_METRICS']
-      return false if dd_enhanced_metrics.nil?
+      return true if dd_enhanced_metrics.nil?
 
       dd_enhanced_metrics.downcase == 'true'
     end
