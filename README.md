@@ -64,7 +64,7 @@ How much logging datadog-lambda-layer-rb should do. Set this to "debug" for exte
 
 ### DD_ENHANCED_METRICS
 
-If you set the value of this variable to "true" then the Lambda layer will increment a Lambda integration metric called `aws.lambda.enhanced.invocations` with each invocation and `aws.lambda.enhanced.errors` if the invocation results in an error. These metrics are tagged with the function name, region, account, runtime, memorysize, and `cold_start:true|false`.
+When enabled then Lambda layer will increment a Lambda integration metric called `aws.lambda.enhanced.invocations` with each invocation and `aws.lambda.enhanced.errors` if the invocation results in an error. These metrics are tagged with the function name, region, account, runtime, memorysize, and `cold_start:true|false`. Use the DD_ENHANCED_METRICS environment variable to toggle this on or off, (defaults to true).
 
 ## Usage
 
