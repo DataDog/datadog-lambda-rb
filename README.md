@@ -169,7 +169,7 @@ The file content for `datadog-sampling-priority-2.json`:
 }
 ```
 
-## Datadog Tracer (**Experimental**)
+## Datadog Tracer (**Beta**)
 
 You can now trace Lambda functions using Datadog APM's tracing libraries ([dd-trace-rb](https://github.com/DataDog/dd-trace-rb)).
 
