@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
     custom metrics to Datadog.
   MSG
 
-  spec.homepage = 'https://github.com/DataDog/dd-lambda-rb'
+  spec.homepage = 'https://github.com/DataDog/datadog-lambda-layer-rb'
   spec.license  = 'Apache-2.0'
 
   unless spec.respond_to?(:metadata)
