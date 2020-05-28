@@ -70,9 +70,7 @@ describe Datadog::Lambda do
     it 'prints a custom metric' do
       now = Time.utc(2008, 7, 8, 9, 10)
 
-      # rubocop:disable Metrics/LineLength
       output = '{"e":1215508200,"m":"m1","t":["dd_lambda_layer:datadog-ruby25","t.a:val","t.b:v2"],"v":100}'
-      # rubocop:enable Metrics/LineLength
       expect(Time).to receive(:now).and_return(now)
       expect do
         Datadog::Lambda.metric('m1', 100, "t.a": 'val', "t.b": 'v2')
@@ -80,12 +78,10 @@ describe Datadog::Lambda do
     end
     it 'prints a custom metric with a custom timestamp' do
       custom_time = Time.utc(2008, 7, 8, 9, 11)
-      # rubocop:disable Metrics/LineLength
       output = '{"e":1215508260,"m":"m1","t":["dd_lambda_layer:datadog-ruby25","t.a:val","t.b:v2"],"v":100}'
       expect do
         Datadog::Lambda.metric('m1', 100, time: custom_time, "t.a": 'val', "t.b": 'v2')
       end.to output("#{output}\n").to_stdout
-      # rubocop:enable Metrics/LineLength
     end
   end
 
