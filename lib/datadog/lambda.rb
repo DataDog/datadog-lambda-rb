@@ -7,6 +7,7 @@
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2019 Datadog, Inc.
 #
+# rubocop:disable Metrics/ModuleLength
 
 require 'datadog/lambda/trace/listener'
 require 'datadog/lambda/utils/logger'
@@ -93,22 +94,41 @@ module Datadog
     # Generate tags for enhanced metrics
     # @param context [Object] https://docs.aws.amazon.com/lambda/latest/dg/ruby-context.html
     # @return [hash] a hash of the enhanced metrics tags
+    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     def self.gen_enhanced_tags(context)
       arn_parts = context.invoked_function_arn.split(':')
-      {
+      # Check if we have an alias or version
+      function_alias = arn_parts[7].nil? ? nil : arn_parts[7]
+
+      tags = {
         functionname: context.function_name,
         region: arn_parts[3],
         account_id: arn_parts[4],
         memorysize: context.memory_limit_in_mb,
         cold_start: @is_cold_start,
-        runtime: "Ruby #{RUBY_VERSION}"
+        runtime: "Ruby #{RUBY_VERSION}",
+        resource: context.function_name
       }
+      # If we have an alias...
+      unless function_alias.nil?
+        # If the alis version is $Latest, drop the $ for ddog tag convention.
+        if function_alias.start_with?('$')
+          function_alias[0] = ''
+        # If the alias is not a version number add the executed version tag
+        elsif not_numeric?(function_alias)
+          tags[:tagexecutedversion] = context.function_version
+        end
+        # Append the alias to the resource tag
+        tags[:resource] = context.function_name + ':' + function_alias
+      end
+
+      tags
     rescue StandardError => e
       Datadog::Utils.logger.error 'Unable to parse Lambda context' \
       "#{context}: #{e}"
       {}
     end
-
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
     # Format and add tags to enhanced metrics
     # This method wraps the metric method, checking the DD_ENHANCED_METRICS
     # environment variable, adding 'aws.lambda.enhanced' to the metric name,
@@ -151,5 +171,12 @@ module Datadog
                           patch_http: @patch_http,
                           merge_xray_traces: merge_xray_traces)
     end
+
+    def not_numeric?(str)
+      true if Integer(str)
+    rescue StandardError
+      false
+    end
   end
 end
+# rubocop:enable Metrics/ModuleLength
