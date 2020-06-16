@@ -114,9 +114,9 @@ module Datadog
         # If the alis version is $Latest, drop the $ for ddog tag convention.
         if function_alias.start_with?('$')
           function_alias[0] = ''
-        # If the alias is not a version number add the executed version tag
-        elsif not_numeric?(function_alias)
-          tags[:tagexecutedversion] = context.function_version
+          # If the alias is not a version number add the executed version tag
+        elsif function_alias.to_i.zero?
+          tags[:executedversion] = context.function_version
         end
         # Append the alias to the resource tag
         tags[:resource] = context.function_name + ':' + function_alias
@@ -170,12 +170,6 @@ module Datadog
                           function_name: function,
                           patch_http: @patch_http,
                           merge_xray_traces: merge_xray_traces)
-    end
-
-    def not_numeric?(str)
-      true if Integer(str)
-    rescue StandardError
-      false
     end
   end
 end
