@@ -115,7 +115,7 @@ module Datadog
         if function_alias.start_with?('$')
           function_alias[0] = ''
           # If the alias is not a version number add the executed version tag
-        elsif function_alias.to_i.zero?
+        elsif !/\A\d+\z/.match(function_alias)
           tags[:executedversion] = context.function_version
         end
         # Append the alias to the resource tag
@@ -128,6 +128,7 @@ module Datadog
       "#{context}: #{e}"
       {}
     end
+
     # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
     # Format and add tags to enhanced metrics
     # This method wraps the metric method, checking the DD_ENHANCED_METRICS
@@ -136,7 +137,7 @@ module Datadog
     # @param metric_name [String] basic name of the metric
     # @param context [Object] AWS Ruby Lambda Context
     # @return [boolean] false if the metric was not added for some reason,
-    #   true otherwise (for ease of testing)
+    #   true otherwise (for ease of testing
 
     def self.record_enhanced(metric_name, context)
       return false unless do_enhanced_metrics?
