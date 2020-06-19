@@ -3,6 +3,8 @@
 # rubocop:disable Metrics/BlockLength
 require 'datadog/lambda'
 require_relative './lambdacontext'
+require_relative './lambdacontextversion'
+require_relative './lambdacontextalias'
 
 describe Datadog::Lambda do
   ctx = LambdaContext.new
@@ -62,7 +64,37 @@ describe Datadog::Lambda do
         functionname: 'hello-dog-ruby-dev-helloRuby25',
         memorysize: 128,
         region: 'us-east-1',
-        runtime: include('Ruby 2.')
+        runtime: include('Ruby 2.'),
+        resource: 'hello-dog-ruby-dev-helloRuby25'
+      )
+    end
+  end
+  context 'enhanced tags Version' do
+    it 'makes tags from a Lambda context with $Latest' do
+      ctxv = LambdaContextVersion.new
+      expect(Datadog::Lambda.gen_enhanced_tags(ctxv)).to include(
+        { account_id: '172597598159',
+          cold_start: false,
+          functionname: 'ruby-test',
+          memorysize: 128,
+          region: 'us-east-1',
+          resource: 'ruby-test:Latest',
+          runtime: include('Ruby 2.') }
+      )
+    end
+  end
+  context 'enhanced tags with an alias' do
+    it 'makes tags from a Lambda context with an alias' do
+      ctxa = LambdaContextAlias.new
+      expect(Datadog::Lambda.gen_enhanced_tags(ctxa)).to include(
+        { account_id: '172597598159',
+          cold_start: false,
+          functionname: 'ruby-test',
+          memorysize: 128,
+          region: 'us-east-1',
+          resource: 'ruby-test:my-alias',
+          executedversion: '1',
+          runtime: include('Ruby 2.') }
       )
     end
   end
