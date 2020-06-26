@@ -22,6 +22,17 @@ describe Datadog::Lambda do
       expect { subject }.to raise_error 'Error'
     end
   end
+  context 'with a handler that raises a NoMemoryError' do
+    subject { Datadog::Lambda.wrap(event, context) { raise NoMemoryError } }
+    let(:event) { '1' }
+    let(:context) { ctx }
+
+    it 'should raise a NoMemoryError error and print an error message if the block raises a NoMemoryError' do
+      expect { subject }
+        .to raise_error(NoMemoryError)
+        .and output(/from Datadog Lambda Layer\: failed to allocate memory \(NoMemoryError\)/).to_stdout
+    end
+  end
   context 'enhanced tags' do
     it 'recognizes an error as having warmed the environment' do
       expect(Datadog::Lambda.gen_enhanced_tags(ctx)[:cold_start]).to eq(false)

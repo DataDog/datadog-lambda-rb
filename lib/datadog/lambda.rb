@@ -55,6 +55,11 @@ module Datadog
         res = @listener.on_wrap(request_context: context, cold_start: cold) do
           block.call
         end
+      rescue NoMemoryError => e
+        # As of June 2020, AWS does not print NoMemoryError stack traces in Ruby
+        # So, we print the error string to logs so it can be handled by the logs forwarder
+        puts 'from Datadog Lambda Layer: failed to allocate memory (NoMemoryError)'
+        raise e
       rescue StandardError => e
         record_enhanced('errors', context)
         raise e
@@ -111,7 +116,7 @@ module Datadog
       }
       # If we have an alias...
       unless function_alias.nil?
-        # If the alis version is $Latest, drop the $ for ddog tag convention.
+        # If the alias version is $Latest, drop the $ for ddog tag convention.
         if function_alias.start_with?('$')
           function_alias[0] = ''
           # If the alias is not a version number add the executed version tag
@@ -148,7 +153,7 @@ module Datadog
     end
 
     # Check the DD_ENHANCED_METRICS environment variable
-    # @reurn [boolean] true if this lambda should have
+    # @return [boolean] true if this lambda should have
     # enhanced metrics
     def self.do_enhanced_metrics?
       dd_enhanced_metrics = ENV['DD_ENHANCED_METRICS']
