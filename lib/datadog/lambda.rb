@@ -58,7 +58,7 @@ module Datadog
       rescue NoMemoryError => e
         # As of June 2020, AWS does not print NoMemoryError stack traces in Ruby
         # So, we print the error string to logs so it can be handled by the logs forwarder
-        puts 'from Datadog Lambda Layer: failed to allocate memory (NoMemoryError)'
+        puts 'failed to allocate memory (NoMemoryError)'
         raise e
       rescue StandardError => e
         record_enhanced('errors', context)

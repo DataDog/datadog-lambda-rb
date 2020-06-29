@@ -30,7 +30,7 @@ describe Datadog::Lambda do
     it 'should raise a NoMemoryError error and print an error message if the block raises a NoMemoryError' do
       expect { subject }
         .to raise_error(NoMemoryError)
-        .and output(/from Datadog Lambda Layer\: failed to allocate memory \(NoMemoryError\)/).to_stdout
+        .and output(/failed to allocate memory \(NoMemoryError\)/).to_stdout
     end
   end
   context 'enhanced tags' do
