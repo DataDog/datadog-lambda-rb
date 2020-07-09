@@ -21,9 +21,7 @@ Gem::Specification.new do |spec|
   spec.homepage = 'https://github.com/DataDog/datadog-lambda-layer-rb'
   spec.license  = 'Apache-2.0'
 
-  unless spec.respond_to?(:metadata)
-    raise 'RubyGems 2.0 or newer required to protect against public gem pushes.'
-  end
+  raise 'RubyGems 2.0 or newer required to protect against public gem pushes.' unless spec.respond_to?(:metadata)
 
   spec.metadata['allowed_push_host'] = 'https://rubygems.org'
 
