@@ -45,6 +45,11 @@ module Datadog
             resource_names: request_context.function_name
           }
         }
+        tokens = options[:tags][:function_arn].split(":")
+        if tokens.length() > 7
+          options[:tags][:function_arn] = tokens[0, 7].join(":")
+          options[:tags][:function_version] = tokens[7]
+        end
 
         options[:resource] = @handler_name
         options[:service] =  @function_name
