@@ -37,6 +37,22 @@ module Datadog
       def on_end; end
 
       def on_wrap(request_context:, cold_start:, &block)
+        options = get_option_tags(
+          request_context: request_context,
+          cold_start: cold_start
+        )
+        options[:resource] = @handler_name
+        options[:service] =  @function_name
+        options[:span_type] = 'serverless'
+        Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
+        Datadog::Trace.wrap_datadog(options) do
+          block.call
+        end
+      end
+
+      private
+
+      def get_option_tags(request_context:, cold_start:)
         options = {
           tags: {
             cold_start: cold_start,
@@ -45,19 +61,12 @@ module Datadog
             resource_names: request_context.function_name
           }
         }
-        tokens = options[:tags][:function_arn].split(":")
-        if tokens.length() > 7
-          options[:tags][:function_arn] = tokens[0, 7].join(":")
+        tokens = options[:tags][:function_arn].split(':')
+        if tokens.length > 7
+          options[:tags][:function_arn] = tokens[0, 7].join(':')
           options[:tags][:function_version] = tokens[7]
         end
-
-        options[:resource] = @handler_name
-        options[:service] =  @function_name
-        options[:span_type] = 'serverless'
-        Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
-        Datadog::Trace.wrap_datadog(options) do
-          block.call
-        end
+        options
       end
     end
   end
