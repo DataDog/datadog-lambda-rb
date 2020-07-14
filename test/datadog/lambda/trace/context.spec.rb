@@ -4,7 +4,11 @@
 
 require 'datadog/lambda/trace/context'
 require 'datadog/lambda/trace/constants'
+require 'datadog/lambda/trace/listener'
 require 'socket'
+require_relative '../../lambdacontext'
+require_relative '../../lambdacontextversion'
+require_relative '../../lambdacontextalias'
 
 describe Datadog::Trace do
   context 'read_trace_context_from_event' do
@@ -184,6 +188,71 @@ describe Datadog::Trace do
         parent_id: '797643193680388254',
         sample_mode: Datadog::Trace::SAMPLE_MODE_USER_KEEP,
         source: Datadog::Trace::SOURCE_EVENT
+      )
+    end
+  end
+
+  context 'get_option_tags_for_function' do
+    ctx = LambdaContext.new
+    listener = Datadog::Trace::Listener.new(
+      handler_name: 'foo',
+      function_name: 'bar',
+      patch_http: true,
+      merge_xray_traces: false
+    )
+    it 'gets tags for function with no alias or version' do
+      res = listener.send(:get_option_tags, request_context: ctx, cold_start: false)
+      expect(res).to eq(
+        tags: {
+          cold_start: false,
+          function_arn: 'arn:aws:lambda:us-east-1:172597598159:function:hello-dog-ruby-dev-hello',
+          request_id: 'dcbfed85-c904-4367-bd54-984ca201ef47',
+          resource_names: 'hello-dog-ruby-dev-helloRuby25'
+        }
+      )
+    end
+  end
+
+  context 'get_option_tags_for_function_with_version' do
+    ctx = LambdaContextVersion.new
+    listener = Datadog::Trace::Listener.new(
+      handler_name: 'foo',
+      function_name: 'bar',
+      patch_http: true,
+      merge_xray_traces: false
+    )
+    it 'gets tags for function with specific version' do
+      res = listener.send(:get_option_tags, request_context: ctx, cold_start: false)
+      expect(res).to eq(
+        tags: {
+          cold_start: false,
+          function_arn: 'arn:aws:lambda:us-east-1:172597598159:function:ruby-test',
+          request_id: 'dcbfed85-c904-4367-bd54-984ca201ef47',
+          resource_names: 'ruby-test',
+          function_version: '$latest'
+        }
+      )
+    end
+  end
+
+  context 'get_option_tags_for_function_with_alias' do
+    ctx = LambdaContextAlias.new
+    listener = Datadog::Trace::Listener.new(
+      handler_name: 'foo',
+      function_name: 'bar',
+      patch_http: true,
+      merge_xray_traces: false
+    )
+    it 'gets tags for function with alias' do
+      res = listener.send(:get_option_tags, request_context: ctx, cold_start: false)
+      expect(res).to eq(
+        tags: {
+          cold_start: false,
+          function_arn: 'arn:aws:lambda:us-east-1:172597598159:function:ruby-test',
+          request_id: 'dcbfed85-c904-4367-bd54-984ca201ef47',
+          resource_names: 'ruby-test',
+          function_version: 'my-alias'
+        }
       )
     end
   end
