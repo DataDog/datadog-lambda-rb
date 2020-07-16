@@ -53,19 +53,19 @@ module Datadog
       private
 
       def get_option_tags(request_context:, cold_start:)
+        function_arn = request_context.invoked_function_arn.downcase
+        tk = function_arn.split(':')
+        function_arn = tk.length > 7 ? tk[0, 7].join(':') : function_arn
+        function_version = tk.length > 7 ? tk[7] : '$Latest'
         options = {
           tags: {
             cold_start: cold_start,
-            function_arn: request_context.invoked_function_arn.downcase,
+            function_arn: function_arn,
+            function_version: function_version,
             request_id: request_context.aws_request_id,
             resource_names: request_context.function_name
           }
         }
-        tokens = options[:tags][:function_arn].split(':')
-        if tokens.length > 7
-          options[:tags][:function_arn] = tokens[0, 7].join(':')
-          options[:tags][:function_version] = tokens[7]
-        end
         options
       end
     end
