@@ -56,7 +56,7 @@ module Datadog
         function_arn = request_context.invoked_function_arn.downcase
         tk = function_arn.split(':')
         function_arn = tk.length > 7 ? tk[0, 7].join(':') : function_arn
-        function_version = tk.length > 7 ? tk[7] : '$Latest'
+        function_version = tk.length > 7 ? tk[7] : '$LATEST'
         options = {
           tags: {
             cold_start: cold_start,
