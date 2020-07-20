@@ -208,7 +208,7 @@ describe Datadog::Trace do
           function_arn: 'arn:aws:lambda:us-east-1:172597598159:function:hello-dog-ruby-dev-hello',
           request_id: 'dcbfed85-c904-4367-bd54-984ca201ef47',
           resource_names: 'hello-dog-ruby-dev-helloRuby25',
-          function_version: '$Latest'
+          function_version: '$LATEST'
         }
       )
     end
