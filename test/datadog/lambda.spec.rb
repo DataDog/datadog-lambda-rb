@@ -78,7 +78,7 @@ describe Datadog::Lambda do
           functionname: 'ruby-test',
           memorysize: 128,
           region: 'us-east-1',
-          resource: 'ruby-test:Latest',
+          resource: 'ruby-test:1',
           runtime: include('Ruby 2.') }
       )
     end

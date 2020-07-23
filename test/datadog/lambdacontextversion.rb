@@ -9,11 +9,11 @@ class LambdaContextVersion
   end
 
   def function_version
-    '$Latest'
+    1
   end
 
   def invoked_function_arn
-    'arn:aws:lambda:us-east-1:172597598159:function:ruby-test:$Latest'
+    'arn:aws:lambda:us-east-1:172597598159:function:ruby-test:1'
   end
 
   def memory_limit_in_mb
