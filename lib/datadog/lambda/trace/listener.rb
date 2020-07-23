@@ -37,15 +37,10 @@ module Datadog
       def on_end; end
 
       def on_wrap(request_context:, cold_start:, &block)
-        options = {
-          tags: {
-            cold_start: cold_start,
-            function_arn: request_context.invoked_function_arn.downcase,
-            request_id: request_context.aws_request_id,
-            resource_names: request_context.function_name
-          }
-        }
-
+        options = get_option_tags(
+          request_context: request_context,
+          cold_start: cold_start
+        )
         options[:resource] = @handler_name
         options[:service] =  @function_name
         options[:span_type] = 'serverless'
@@ -53,6 +48,25 @@ module Datadog
         Datadog::Trace.wrap_datadog(options) do
           block.call
         end
+      end
+
+      private
+
+      def get_option_tags(request_context:, cold_start:)
+        function_arn = request_context.invoked_function_arn.downcase
+        tk = function_arn.split(':')
+        function_arn = tk.length > 7 ? tk[0, 7].join(':') : function_arn
+        function_version = tk.length > 7 ? tk[7] : '$LATEST'
+        options = {
+          tags: {
+            cold_start: cold_start,
+            function_arn: function_arn,
+            function_version: function_version,
+            request_id: request_context.aws_request_id,
+            resource_names: request_context.function_name
+          }
+        }
+        options
       end
     end
   end
