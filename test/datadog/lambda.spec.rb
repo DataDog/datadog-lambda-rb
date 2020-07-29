@@ -51,7 +51,8 @@ describe Datadog::Lambda do
       expect(Datadog::Lambda.trace_context).to eq(
         trace_id: '12345',
         parent_id: '45678',
-        sample_mode: 2
+        sample_mode: 2,
+        source: 'EVENT'
       )
     end
   end

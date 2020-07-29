@@ -37,6 +37,7 @@ module Datadog
         c.tracer writer: Datadog::SyncWriter.new(
           transport: Datadog::Transport::IO.default
         )
+        c.tags = { "_dd.origin": 'lambda' }
         yield(c) if block_given?
       end
     end
@@ -68,7 +69,6 @@ module Datadog
     # Gets the current tracing context
     def self.trace_context
       context = Hash[Datadog::Trace.trace_context]
-      context.delete(:source)
       context
     end
 
