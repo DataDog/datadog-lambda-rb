@@ -2,6 +2,7 @@
 
 # rubocop:disable Metrics/BlockLength
 require 'datadog/lambda'
+require 'datadog/lambda/trace/constants'
 require_relative './lambdacontext'
 require_relative './lambdacontextversion'
 require_relative './lambdacontextalias'
@@ -52,7 +53,7 @@ describe Datadog::Lambda do
         trace_id: '12345',
         parent_id: '45678',
         sample_mode: 2,
-        source: 'EVENT'
+        source: Datadog::Trace::SOURCE_EVENT
       )
     end
   end
