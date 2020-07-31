@@ -1,4 +1,4 @@
-<!--- Please remember to review the [contribution guidelines](https://github.com/DataDog/datadog-lambda-layer-rb/blob/master/CONTRIBUTING.md) if you have not yet done so._  --->
+<!--- Please remember to review the [contribution guidelines](https://github.com/DataDog/datadog-lambda-rb/blob/master/CONTRIBUTING.md) if you have not yet done so._  --->
 
 ### What does this PR do?
 
