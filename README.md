@@ -9,7 +9,23 @@ Datadog Lambda Library for Ruby (2.5 and 2.7) enables enhanced Lambda metrics, d
 
 ## Installation
 
-Check out our [installation instructions for Ruby](https://docs.datadoghq.com/serverless/installation/ruby/).
+Follow the [installation instructions](https://docs.datadoghq.com/serverless/installation/ruby/), and view your function's enhanced metrics, traces and logs in Datadog.
+
+## Custom Metrics
+
+Once [installed](#installation), you should be able to submit custom metrics from your Lambda function.
+
+Check out the instructions for [submitting custom metrics from AWS Lambda functions](https://docs.datadoghq.com/integrations/amazon_lambda/?tab=ruby#custom-metrics).
+
+## Tracing
+
+Once [installed](#installation), you should be able to view your function's traces in Datadog, and your function's logs should be automatically connected to the traces.
+
+For additional details on trace collection, take a look at [collecting traces from AWS Lambda functions](https://docs.datadoghq.com/integrations/amazon_lambda/?tab=ruby#trace-collection).
+
+For additional details on the tracer, check out the [official documentation for Datadog trace client](https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md).
+
+For additional details on trace and log connection, see [connecting logs and traces](https://docs.datadoghq.com/tracing/connect_logs_and_traces/ruby/).
 
 ## Environment Variables
 
@@ -24,14 +40,6 @@ Generate enhanced Datadog Lambda integration metrics, such as, `aws.lambda.enhan
 ### DD_MERGE_DATADOG_XRAY_TRACES
 
 Set to `true` to merge the X-Ray trace and the Datadog trace, when using both the X-Ray and Datadog tracing. Defaults to `false`.
-
-## Custom Metrics
-
-Check out the instructions for [submitting custom metrics from AWS Lambda functions](https://docs.datadoghq.com/integrations/amazon_lambda/?tab=ruby#custom-metrics).
-
-## Tracing
-
-Check out the instructions for [collecting traces from AWS Lambda functions](https://docs.datadoghq.com/integrations/amazon_lambda/?tab=ruby#trace-collection), and the [official documentation for Datadog trace client](https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md).
 
 ## Opening Issues
 
