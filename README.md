@@ -31,7 +31,7 @@ For additional details on trace and log connection, see [connecting logs and tra
 
 ### DD_LOG_LEVEL
 
-Set to `debug` enable debug los from the Datadog Lambda Library. Defaults to `info`.
+Set to `debug` enable debug logs from the Datadog Lambda Library. Defaults to `info`.
 
 ### DD_ENHANCED_METRICS
 
