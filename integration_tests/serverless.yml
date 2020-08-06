@@ -1,0 +1,79 @@
+service: integration-tester
+
+provider:
+  name: aws
+  tracing:
+    lambda: true
+    apiGateway: true
+  environment:
+    DD_INTEGRATION_TEST: true
+    DD_API_KEY: ${env:DD_API_KEY}
+
+layers:
+  ruby25:
+    package:
+      artifact: ../.layers/datadog-lambda_ruby2.5.zip
+  ruby27:
+    package:
+      artifact: ../.layers/datadog-lambda_ruby2.7.zip
+
+functions:
+  # async-metrics
+  async-metrics_ruby25:
+    handler: send_metrics.handle
+    runtime: ruby2.5
+    layers:
+      - { Ref: Ruby25LambdaLayer }
+    environment:
+      DD_FLUSH_TO_LOG: true
+
+  async-metrics_ruby27:
+    handler: send_metrics.handle
+    runtime: ruby2.7
+    layers:
+      - { Ref: Ruby27LambdaLayer }
+    environment:
+      DD_FLUSH_TO_LOG: true
+
+  # sync-metrics
+  sync-metrics_ruby25:
+    handler: send_metrics.handle
+    runtime: ruby2.5
+    layers:
+      - { Ref: Ruby25LambdaLayer }
+
+  sync-metrics_ruby27:
+    handler: send_metrics.handle
+    runtime: ruby2.7
+    layers:
+      - { Ref: Ruby27LambdaLayer }
+
+  # http-requests
+  http-requests_ruby25:
+    handler: http_requests.handle
+    runtime: ruby2.5
+    layers:
+      - { Ref: Ruby25LambdaLayer }
+
+  http-requests_ruby27:
+    handler: http_requests.handle
+    runtime: ruby2.7
+    layers:
+      - { Ref: Ruby27LambdaLayer }
+
+  # process-input-traced
+  process-input-traced_ruby25:
+    handler: process_input_traced.handle
+    runtime: ruby2.5
+    layers:
+      - { Ref: Ruby25LambdaLayer }
+    environment:
+      DD_FLUSH_TO_LOG: true
+
+  process-input-traced_ruby27:
+    handler: process_input_traced.handle
+    runtime: ruby2.7
+    layers:
+      - { Ref: Ruby27LambdaLayer }
+    environment:
+      DD_FLUSH_TO_LOG: true
