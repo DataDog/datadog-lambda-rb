@@ -25,7 +25,7 @@ class LambdaContextVersion
   end
 
   def log_group_name
-    '/aws/lambda/hello-dog-ruby-dev-helloRuby25'
+    "/aws/lambda/hello-dog-ruby-dev-helloRuby#{RUBY_VERSION[0, 3].tr('.', '')}"
   end
 
   def log_stream_name
