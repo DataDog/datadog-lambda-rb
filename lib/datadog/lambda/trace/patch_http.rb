@@ -36,11 +36,7 @@ module Datadog
             Datadog::Trace.trace_context
           )
 
-          req[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] =
-            context[:sample_mode]
-          req[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = context[:parent_id]
-          req[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = context[:trace_id]
-          logger.debug("added context #{context} to request")
+          req = add_ctx_to_req(req, context)
         rescue StandardError => e
           trace = e.backtrace.join("\n ")
           logger.debug(
@@ -48,6 +44,17 @@ module Datadog
           )
         end
         super(req, body, &block)
+      end
+
+      private
+
+      def add_ctx_to_req(req, context)
+        req[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] =
+          context[:sample_mode]
+        req[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = context[:parent_id]
+        req[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = context[:trace_id]
+        logger.debug("added context #{context} to request")
+        req
       end
     end
   end

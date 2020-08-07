@@ -5,7 +5,7 @@
 # Use dot-notation to access these properties
 class LambdaContext
   def function_name
-    'hello-dog-ruby-dev-helloRuby25'
+    "hello-dog-ruby-dev-helloRuby#{RUBY_VERSION[0, 3].tr('.', '')}"
   end
 
   def function_version
@@ -25,7 +25,7 @@ class LambdaContext
   end
 
   def log_group_name
-    '/aws/lambda/hello-dog-ruby-dev-helloRuby25'
+    "/aws/lambda/hello-dog-ruby-dev-helloRuby#{RUBY_VERSION[0, 3].tr('.', '')}"
   end
 
   def log_stream_name

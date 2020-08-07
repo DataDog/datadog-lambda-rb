@@ -2,12 +2,14 @@
 
 # rubocop:disable Metrics/BlockLength
 require 'datadog/lambda'
+require 'datadog/lambda/trace/constants'
 require_relative './lambdacontext'
 require_relative './lambdacontextversion'
 require_relative './lambdacontextalias'
 
 describe Datadog::Lambda do
   ctx = LambdaContext.new
+  dd_lambda_layer_tag = RUBY_VERSION[0, 3].tr('.', '')
   context 'enhanced tags' do
     it 'recognizes a cold start' do
       expect(Datadog::Lambda.gen_enhanced_tags(ctx)[:cold_start]).to eq(true)
@@ -51,7 +53,8 @@ describe Datadog::Lambda do
       expect(Datadog::Lambda.trace_context).to eq(
         trace_id: '12345',
         parent_id: '45678',
-        sample_mode: 2
+        sample_mode: 2,
+        source: Datadog::Trace::SOURCE_EVENT
       )
     end
   end
@@ -61,11 +64,11 @@ describe Datadog::Lambda do
       expect(Datadog::Lambda.gen_enhanced_tags(ctx)).to include(
         account_id: '172597598159',
         cold_start: false,
-        functionname: 'hello-dog-ruby-dev-helloRuby25',
+        functionname: "hello-dog-ruby-dev-helloRuby#{dd_lambda_layer_tag}",
         memorysize: 128,
         region: 'us-east-1',
         runtime: include('Ruby 2.'),
-        resource: 'hello-dog-ruby-dev-helloRuby25'
+        resource: "hello-dog-ruby-dev-helloRuby#{dd_lambda_layer_tag}"
       )
     end
   end
@@ -102,7 +105,8 @@ describe Datadog::Lambda do
     it 'prints a custom metric' do
       now = Time.utc(2008, 7, 8, 9, 10)
 
-      output = '{"e":1215508200,"m":"m1","t":["dd_lambda_layer:datadog-ruby25","t.a:val","t.b:v2"],"v":100}'
+      output = '{"e":1215508200,"m":"m1","t":["dd_lambda_layer:datadog-ruby' + \
+               dd_lambda_layer_tag + '","t.a:val","t.b:v2"],"v":100}'
       expect(Time).to receive(:now).and_return(now)
       expect do
         Datadog::Lambda.metric('m1', 100, "t.a": 'val', "t.b": 'v2')
@@ -110,7 +114,8 @@ describe Datadog::Lambda do
     end
     it 'prints a custom metric with a custom timestamp' do
       custom_time = Time.utc(2008, 7, 8, 9, 11)
-      output = '{"e":1215508260,"m":"m1","t":["dd_lambda_layer:datadog-ruby25","t.a:val","t.b:v2"],"v":100}'
+      output = '{"e":1215508260,"m":"m1","t":["dd_lambda_layer:datadog-ruby' + \
+               dd_lambda_layer_tag + '","t.a:val","t.b:v2"],"v":100}'
       expect do
         Datadog::Lambda.metric('m1', 100, time: custom_time, "t.a": 'val', "t.b": 'v2')
       end.to output("#{output}\n").to_stdout
@@ -151,7 +156,7 @@ describe Datadog::Lambda do
       # rubocop:disable Metrics/LineLength
       expect do
         Datadog::Lambda.record_enhanced('invocations', ctx)
-      end.to output(/"dd_lambda_layer:datadog-ruby25","functionname:hello-dog-ruby-dev-helloRuby25","region:us-east-1","account_id:172597598159","memorysize:128",/).to_stdout
+      end.to output(/"dd_lambda_layer:datadog-ruby#{dd_lambda_layer_tag}","functionname:hello-dog-ruby-dev-helloRuby#{dd_lambda_layer_tag}","region:us-east-1","account_id:172597598159","memorysize:128",/).to_stdout
       # rubocop:enable Metrics/LineLength
     end
   end

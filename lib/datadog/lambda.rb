@@ -37,6 +37,7 @@ module Datadog
         c.tracer writer: Datadog::SyncWriter.new(
           transport: Datadog::Transport::IO.default
         )
+        c.tags = { "_dd.origin": 'lambda' }
         yield(c) if block_given?
       end
     end
@@ -68,7 +69,6 @@ module Datadog
     # Gets the current tracing context
     def self.trace_context
       context = Hash[Datadog::Trace.trace_context]
-      context.delete(:source)
       context
     end
 
@@ -82,13 +82,18 @@ module Datadog
       raise 'value must be a number' unless value.is_a?(Numeric)
 
       time ||= Time.now
-      tag_list = ['dd_lambda_layer:datadog-ruby25']
+      time_ms = time.to_f.to_i
+
+      tag_list = ["dd_lambda_layer:datadog-ruby#{dd_lambda_layer_tag}"]
       tags.each do |tag|
         tag_list.push("#{tag[0]}:#{tag[1]}")
       end
-      time_ms = time.to_f.to_i
-      metric = { e: time_ms, m: name, t: tag_list, v: value }.to_json
-      puts metric
+      metric = { e: time_ms, m: name, t: tag_list, v: value }
+      puts metric.to_json
+    end
+
+    def self.dd_lambda_layer_tag
+      RUBY_VERSION[0, 3].tr('.', '')
     end
 
     # Generate tags for enhanced metrics
