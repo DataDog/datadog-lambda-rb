@@ -54,6 +54,7 @@ module Datadog
         req[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = context[:parent_id]
         req[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = context[:trace_id]
         logger.debug("added context #{context} to request")
+        req
       end
     end
   end
