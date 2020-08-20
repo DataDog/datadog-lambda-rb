@@ -15,7 +15,7 @@ def handle(event:, context:)
 
     Net::HTTP.get_response('httpstat.us', '/400')
 
-    puts("Snapshot test http requests successfully made to URLs: #{urls}")
+    puts("Snapshot test http requests successfully made to URLs: https://httpstat.us/400")
     response_payload
   end
 end

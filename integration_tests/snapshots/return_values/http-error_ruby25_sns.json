@@ -1,18 +1,3 @@
- 
-  Serverless Error ---------------------------------------
- 
-  Function "http-error_ruby25" doesn't exist in this Service
- 
-  Get Support --------------------------------------------
-     Docs:          docs.serverless.com
-     Bugs:          github.com/serverless/serverless/issues
-     Issues:        forum.serverless.com
- 
-  Your Environment Information ---------------------------
-     Operating System:          darwin
-     Node Version:              14.6.0
-     Framework Version:         1.78.0
-     Plugin Version:            3.7.0
-     SDK Version:               2.3.1
-     Components Version:        2.33.2
- 
+{
+    "message": "hello, dog!"
+}

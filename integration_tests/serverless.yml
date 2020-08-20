@@ -77,3 +77,20 @@ functions:
       - { Ref: Ruby27LambdaLayer }
     environment:
       DD_FLUSH_TO_LOG: true
+
+  # http-error
+  http-error_ruby25:
+    handler: http_error.handle
+    runtime: ruby2.5
+    layers:
+      - { Ref: Ruby25LambdaLayer }
+    environment:
+      DD_FLUSH_TO_LOG: true
+
+  http-error_ruby27:
+    handler: http_error.handle
+    runtime: ruby2.7
+    layers:
+      - { Ref: Ruby27LambdaLayer }
+    environment:
+      DD_FLUSH_TO_LOG: true
