@@ -32,6 +32,9 @@ gem signin
 
 ./scripts/run_tests.sh
 
+echo 'Checking Regions'
+./scripts/list_layers.sh
+
 PACKAGE_VERSION=$(gem build datadog-lambda | grep Version | sed -n -e 's/^.*Version: //p')
 
 echo 'Publishing to RubyGems'
