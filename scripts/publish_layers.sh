@@ -13,7 +13,8 @@ set -e
 RUBY_VERSIONS_FOR_AWS_CLI=("ruby2.5" "ruby2.7")
 LAYER_PATHS=(".layers/datadog-lambda_ruby2.5.zip" ".layers/datadog-lambda_ruby2.7.zip")
 LAYER_NAMES=("Datadog-Ruby2-5" "Datadog-Ruby2-7")
-AVAILABLE_REGIONS=(us-east-2 us-east-1 us-west-1 us-west-2 ap-east-1 ap-south-1 ap-northeast-2 ap-southeast-1 ap-southeast-2 ap-northeast-1 ca-central-1 eu-north-1 eu-central-1 eu-west-1 eu-west-2 eu-west-3 sa-east-1)
+AVAILABLE_REGIONS=$(aws ec2 describe-regions | jq -r '.[] | .[] | .RegionName')
+
 
 # Check that the layer files exist
 for layer_file in "${LAYER_PATHS[@]}"
@@ -27,11 +28,11 @@ done
 # Check region arg
 if [ -z "$1" ]; then
     echo "Region parameter not specified, running for all available regions."
-    REGIONS=("${AVAILABLE_REGIONS[@]}")
+    REGIONS=$AVAILABLE_REGIONS
 else
     echo "Region parameter specified: $1"
-    if [[ ! " ${AVAILABLE_REGIONS[@]} " =~ " ${1} " ]]; then
-        echo "Could not find $1 in available regions: ${AVAILABLE_REGIONS[@]}"
+    if [[ ! "$AVAILABLE_REGIONS" == *"$1"* ]]; then
+        echo "Could not find $1 in available regions: $AVAILABLE_REGIONS"
         echo ""
         echo "EXITING SCRIPT."
         exit 1
@@ -39,9 +40,10 @@ else
     REGIONS=($1)
 fi
 
-echo "Starting publishing layers for regions: ${REGIONS[*]}"
+echo "Starting publishing layers for regions: $REGIONS"
 
-for region in "${REGIONS[@]}"
+
+for region in $REGIONS
 do
     echo "Starting publishing layer for region $region..."
 
