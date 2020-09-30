@@ -14,6 +14,7 @@ require 'datadog/lambda/utils/logger'
 require 'datadog/lambda/trace/patch_http'
 require 'json'
 require 'time'
+require 'datadog/lambda/version'
 
 module Datadog
   # Instruments AWS Lambda functions with Datadog distributed tracing and
@@ -112,7 +113,10 @@ module Datadog
         memorysize: context.memory_limit_in_mb,
         cold_start: @is_cold_start,
         runtime: "Ruby #{RUBY_VERSION}",
-        resource: context.function_name
+        resource: context.function_name,
+        dd_trace: Gem.loaded_specs['ddtrace'].version,
+        datadog_lambda: Datadog::Lambda::VERSION::STRING.to_sym
+
       }
       # If we have an alias...
       unless function_alias.nil?
