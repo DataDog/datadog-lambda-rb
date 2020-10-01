@@ -114,10 +114,13 @@ module Datadog
         cold_start: @is_cold_start,
         runtime: "Ruby #{RUBY_VERSION}",
         resource: context.function_name,
-        dd_trace: Gem.loaded_specs['ddtrace'].version,
         datadog_lambda: Datadog::Lambda::VERSION::STRING.to_sym
-
       }
+      begin
+        tags[:dd_trace] = Gem.loaded_specs['ddtrace'].version
+      rescue StandardError
+        Datadog::Utils.logger.debug 'dd-trace unavailable'
+      end
       # If we have an alias...
       unless function_alias.nil?
         # If the alis version is $Latest, drop the $ for ddog tag convention.
