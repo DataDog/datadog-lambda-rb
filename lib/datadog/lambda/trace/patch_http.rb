@@ -30,7 +30,6 @@ module Datadog
     # NetExtensions contains patches which add tracing context to http calls
     module NetExtensions
       def request(req, body = nil, &block)
-        logger = Datadog::Utils.logger
         begin
           context = Datadog::Trace.current_trace_context(
             Datadog::Trace.trace_context
@@ -39,7 +38,7 @@ module Datadog
           req = add_ctx_to_req(req, context)
         rescue StandardError => e
           trace = e.backtrace.join("\n ")
-          logger.debug(
+          Datadog::Utils.logger.debug(
             "couldn't add tracing context #{context} to request #{e}:\n#{trace}"
           )
         end
@@ -53,7 +52,7 @@ module Datadog
           context[:sample_mode]
         req[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = context[:parent_id]
         req[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = context[:trace_id]
-        logger.debug("added context #{context} to request")
+        Datadog::Utils.logger.debug("added context #{context} to request")
         req
       end
     end
