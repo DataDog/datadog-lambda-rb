@@ -28,5 +28,5 @@ jobs:
           bundle install
 
       - name: Lint
-        run: rubocop
+        run: bundle exec rubocop
 
