@@ -1,5 +1,5 @@
 # datadog-lambda-rb
-
+![Verify build](https://github.com/DataDog/datadog-lambda-rb/workflows/Verify%20build/badge.svg)
 [![RubyGem](https://img.shields.io/gem/v/datadog-lambda)](https://rubygems.org/gems/datadog-lambda)
 [![Slack](https://img.shields.io/badge/slack-%23serverless-blueviolet?logo=slack)](https://datadoghq.slack.com/channels/serverless/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/DataDog/datadog-lambda-rb/blob/master/LICENSE)
