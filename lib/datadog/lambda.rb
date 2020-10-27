@@ -39,6 +39,7 @@ module Datadog
           transport: Datadog::Transport::IO.default
         )
         c.tags = { "_dd.origin": 'lambda' }
+        c.use :action_cable, { "analytics_enabled": true }
         yield(c) if block_given?
       end
     end
