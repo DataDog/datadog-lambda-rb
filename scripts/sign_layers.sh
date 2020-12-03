@@ -8,7 +8,7 @@
 set -e
 
 LAYER_DIR=".layers"
-LAYER_FILES=( "datadog-lambda_ruby2.5.zip" "datadog_lambda_py2.7.zip")
+LAYER_FILES=( "datadog-lambda_ruby2.5.zip" "datadog-lambda_ruby2.7.zip")
 SIGNING_PROFILE_NAME="DatadogLambdaSigningProfile"
 
 # Check account parameter
