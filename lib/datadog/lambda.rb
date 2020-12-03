@@ -100,7 +100,7 @@ module Datadog
     # Generate tags for enhanced metrics
     # @param context [Object] https://docs.aws.amazon.com/lambda/latest/dg/ruby-context.html
     # @return [hash] a hash of the enhanced metrics tags
-    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/PerceivedComplexity
     def self.gen_enhanced_tags(context)
       arn_parts = context.invoked_function_arn.split(':')
       # Check if we have an alias or version
@@ -141,7 +141,7 @@ module Datadog
       {}
     end
 
-    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength, Metrics/PerceivedComplexity
     # Format and add tags to enhanced metrics
     # This method wraps the metric method, checking the DD_ENHANCED_METRICS
     # environment variable, adding 'aws.lambda.enhanced' to the metric name,
