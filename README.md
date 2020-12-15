@@ -2,7 +2,7 @@
 ![build](https://github.com/DataDog/datadog-lambda-rb/workflows/build/badge.svg)
 [![RubyGem](https://img.shields.io/gem/v/datadog-lambda)](https://rubygems.org/gems/datadog-lambda)
 [![Slack](https://img.shields.io/badge/slack-%23serverless-blueviolet?logo=slack)](https://datadoghq.slack.com/channels/serverless/)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/DataDog/datadog-lambda-rb/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/DataDog/datadog-lambda-rb/blob/main/LICENSE)
 
 Datadog Lambda Library for Ruby (2.5 and 2.7) enables enhanced Lambda metrics, distributed tracing, and custom metric submission from AWS Lambda functions.
 
@@ -22,7 +22,7 @@ Once [installed](#installation), you should be able to view your function's trac
 
 For additional details on trace collection, take a look at [collecting traces from AWS Lambda functions](https://docs.datadoghq.com/integrations/amazon_lambda/?tab=ruby#trace-collection).
 
-For additional details on the tracer, check out the [official documentation for Datadog trace client](https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md).
+For additional details on the tracer, check out the [official documentation for Datadog trace client](https://github.com/DataDog/dd-trace-rb/blob/main/docs/GettingStarted.md).
 
 For additional details on trace and log connection, see [connecting logs and traces](https://docs.datadoghq.com/tracing/connect_logs_and_traces/ruby/).
 
@@ -50,7 +50,7 @@ You can also open an issue for a feature request.
 
 ## Contributing
 
-If you find an issue with this package and have a fix, please feel free to open a pull request following the [procedures](https://github.com/DataDog/dd-lambda-layer-rb/blob/master/CONTRIBUTING.md).
+If you find an issue with this package and have a fix, please feel free to open a pull request following the [procedures](https://github.com/DataDog/dd-lambda-layer-rb/blob/main/CONTRIBUTING.md).
 
 ## License
 
