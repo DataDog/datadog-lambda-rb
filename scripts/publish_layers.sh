@@ -6,13 +6,13 @@
 # Copyright 2019 Datadog, Inc.
 
 # Publish the datadog ruby lambda layer across regions, using the AWS CLI
-# Usage: publish_layer.sh [region]
-# Specifying the region arg will publish the layer for the single specified region
+# Usage: VERSION=5 REGIONS=us-east-1 LAYERS=Datadog-Ruby2-7 publish_layers.sh
+# VERSION is required.
 set -e
 
 RUBY_VERSIONS_FOR_AWS_CLI=("ruby2.5" "ruby2.7")
 LAYER_PATHS=(".layers/datadog-lambda_ruby2.5.zip" ".layers/datadog-lambda_ruby2.7.zip")
-LAYER_NAMES=("Datadog-Ruby2-5" "Datadog-Ruby2-7")
+AVAILABLE_LAYERS=("Datadog-Ruby2-5" "Datadog-Ruby2-7")
 AVAILABLE_REGIONS=$(aws ec2 describe-regions | jq -r '.[] | .[] | .RegionName')
 
 
@@ -25,53 +25,116 @@ do
     fi
 done
 
-# Check region arg
-if [ -z "$1" ]; then
-    echo "Region parameter not specified, running for all available regions."
+# Determine the target regions
+if [ -z "$REGIONS" ]; then
+    echo "Region not specified, running for all available regions."
     REGIONS=$AVAILABLE_REGIONS
 else
-    echo "Region parameter specified: $1"
-    if [[ ! "$AVAILABLE_REGIONS" == *"$1"* ]]; then
-        echo "Could not find $1 in available regions: $AVAILABLE_REGIONS"
+    echo "Region specified: $REGIONS"
+    if [[ ! "$AVAILABLE_REGIONS" == *"$REGIONS"* ]]; then
+        echo "Could not find $REGIONS in available regions: $AVAILABLE_REGIONS"
         echo ""
         echo "EXITING SCRIPT."
         exit 1
     fi
-    REGIONS=($1)
 fi
 
-echo "Starting publishing layers for regions: $REGIONS"
+# Determine the target layers
+if [ -z "$LAYERS" ]; then
+    echo "Layer not specified, running for all layers."
+    LAYERS=("${AVAILABLE_LAYERS[@]}")
+else
+    echo "Layer specified: $LAYERS"
+    if [[ ! " ${AVAILABLE_LAYERS[@]} " =~ " ${LAYERS} " ]]; then
+        echo "Could not find $LAYERS in available layers: ${AVAILABLE_LAYERS[@]}"
+        echo ""
+        echo "EXITING SCRIPT."
+        exit 1
+    fi
+fi
 
+# Determine the target layer version
+if [ -z "$VERSION" ]; then
+    echo "Layer version not specified"
+    echo ""
+    echo "EXITING SCRIPT."
+    exit 1
+else
+    echo "Layer version specified: $VERSION"
+fi
+
+read -p "Ready to publish version $VERSION of layers ${LAYERS[*]} to regions ${REGIONS[*]} (y/n)?" CONT
+if [ "$CONT" != "y" ]; then
+    echo "Exiting"
+    exit 1
+fi
+
+index_of_layer() {
+    layer_name=$1
+    for i in "${!AVAILABLE_LAYERS[@]}"; do
+        if [[ "${AVAILABLE_LAYERS[$i]}" = "${layer_name}" ]]; then
+            echo "${i}";
+        fi
+    done
+}
+
+publish_layer() {
+    region=$1
+    layer_name=$2
+    aws_version_key=$3
+    layer_path=$4
+
+    version_nbr=$(aws lambda publish-layer-version --layer-name $layer_name \
+        --description "Datadog Lambda Layer for Ruby" \
+        --zip-file "fileb://$layer_path" \
+        --region $region \
+        --compatible-runtimes $aws_version_key \
+                        | jq -r '.Version')
+
+    permission=$(aws lambda add-layer-version-permission --layer-name $layer_name \
+        --version-number $version_nbr \
+        --statement-id "release-$version_nbr" \
+        --action lambda:GetLayerVersion --principal "*" \
+        --region $region)
+
+    echo $version_nbr
+}
 
 for region in $REGIONS
 do
     echo "Starting publishing layer for region $region..."
 
-    # Publish the layers for each version of ruby
-    i=0
-    for layer_name in "${LAYER_NAMES[@]}"; do
-        aws_version_key="${RUBY_VERSIONS_FOR_AWS_CLI[$i]}"
-        layer_path="${LAYER_PATHS[$i]}"
+    for layer_name in "${LAYERS[@]}"; do
+        latest_version=$(aws lambda list-layer-versions --region $region --layer-name $layer_name --query 'LayerVersions[0].Version || `0`')
+        if [ $latest_version -ge $VERSION ]; then
+            echo "Layer $layer_name version $VERSION already exists in region $region, skipping..."
+            continue
+        elif [ $latest_version -lt $((VERSION-1)) ]; then
+            read -p "WARNING: The latest version of layer $layer_name in region $region is $latest_version, publish all the missing versions including $VERSION or EXIT the script (y/n)?" CONT
+            if [ "$CONT" != "y" ]; then
+                echo "Exiting"
+                exit 1
+            fi
+        fi
 
-        version_nbr=$(aws lambda publish-layer-version --layer-name $layer_name \
-            --description "Datadog Lambda Layer for ruby" \
-            --zip-file "fileb://$layer_path" \
-            --region $region \
-            --compatible-runtimes $aws_version_key \
-                          | jq -r '.Version')
+        index=$(index_of_layer $layer_name)
+        aws_version_key="${RUBY_VERSIONS_FOR_AWS_CLI[$index]}"
+        layer_path="${LAYER_PATHS[$index]}"
 
-        aws lambda add-layer-version-permission --layer-name $layer_name \
-            --version-number $version_nbr \
-            --statement-id "release-$version_nbr" \
-            --action lambda:GetLayerVersion --principal "*" \
-            --region $region
+        while [ $latest_version -lt $VERSION ]; do
+            latest_version=$(publish_layer $region $layer_name $aws_version_key $layer_path)
+            echo "Published version $latest_version for layer $layer_name in region $region"
 
-        echo "Published layer for region $region, ruby version $aws_version_key, layer_name $layer_name, layer_version $version_nbr"
-
-        i=$(expr $i + 1)
-
+            # This shouldn't happen unless someone manually deleted the latest version, say 28, and
+            # then tries to republish 28 again. The published version would actually be 29, because
+            # Lambda layers are immutable and AWS will skip deleted version and use the next number. 
+            if [ $latest_version -gt $VERSION ]; then
+                echo "ERROR: Published version $latest_version is greater than the desired version $VERSION!"
+                echo "Exiting"
+                exit 1
+            fi
+        done
     done
-
 done
 
 echo "Done !"
