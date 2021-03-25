@@ -4,6 +4,8 @@
 # under the Apache License Version 2.0.
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2019 Datadog, Inc
+#
+# Use with `./publish_prod.sh <DESIRED_NEW_VERSION>
 
 set -e
 
@@ -11,44 +13,85 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [ $BRANCH != "main" ]; then
     echo "Not on main, aborting"
     exit 1
+else
+    echo "Updating main"
+    git pull origin main
 fi
 
-if [ -z "$AWS_ACCESS_KEY_ID" ]; then
-    echo 'AWS_ACCESS_KEY_ID not set. Are you using aws-vault?'
+if [ -n "$(git status --porcelain)" ]; then
+    echo "Detected uncommitted changes, aborting"
     exit 1
 fi
 
-if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-    echo 'AWS_SECRET_ACCESS_KEY not set. Are you using aws-vault?'
+if [ -z "$1" ]; then
+    echo "Must specify a desired version number"
     exit 1
+elif [[ ! $1 =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
+    echo "Must use a semantic version, e.g., 3.1.4"
+    exit 1
+else
+    NEW_VERSION=$1
 fi
 
-if [ -z "$AWS_SESSION_TOKEN" ]; then
-    echo 'AWS_SESSION_TOKEN not set. Are you using aws-vault?'
-    exit 1
-fi
-
-gem signin
-
+echo "Running tests"
 ./scripts/run_tests.sh
 
-echo 'Checking Regions'
-./scripts/list_layers.sh
+echo "Ensure you have access to gem account"
+gem signin
 
-PACKAGE_VERSION=$(gem build datadog-lambda | grep Version | sed -n -e 's/^.*Version: //p')
+echo "Ensure you have access to the AWS GovCloud account"
+saml2aws login -a govcloud-us1-fed-human-engineering
+AWS_PROFILE=govcloud-us1-fed-human-engineering aws sts get-caller-identity
 
-echo 'Publishing to RubyGems'
-gem push "datadog-lambda-${PACKAGE_VERSION}.gem"
+echo "Ensure you have access to the commercial AWS GovCloud account"
+aws-vault exec prod-engineering -- aws sts get-caller-identity
 
-echo 'Tagging Release'
-git tag "v$PACKAGE_VERSION"
-git push origin "refs/tags/v$PACKAGE_VERSION"
+CURRENT_VERSION=$(gem build datadog-lambda | grep Version | sed -n -e 's/^.*Version: //p')
+LAYER_VERSION=$(echo $NEW_VERSION | cut -d '.' -f 2)
 
+read -p "Ready to update the library version from $CURRENT_VERSION to $NEW_VERSION and publish layer version $LAYER_VERSION (y/n)?" CONT
+if [ "$CONT" != "y" ]; then
+    echo "Exiting"
+    exit 1
+fi
+
+echo
+echo "Updating version in ./lib/datadog/lambda/version.rb"
+echo
+sed -i "" -E "s/\'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\'/\'$NEW_VERSION\'/" ./lib/datadog/lambda/version.rb
+
+echo
 echo 'Building layers...'
 ./scripts/build_layers.sh
 
-echo 'Signing layers...'
-./scripts/sign_layers.sh prod
+echo
+echo "Signing layers for commercial AWS regions"
+aws-vault exec prod-engineering -- ./scripts/sign_layers.sh prod
 
-echo 'Publishing layers...'
-./scripts/publish_layers.sh
+echo
+echo "Publishing layers to commercial AWS regions"
+VERSION=$LAYER_VERSION aws-vault exec prod-engineering --no-session -- ./scripts/publish_layers.sh
+
+echo "Publishing layers to GovCloud AWS regions"
+saml2aws login -a govcloud-us1-fed-human-engineering
+VERSION=$LAYER_VERSION AWS_PROFILE=govcloud-us1-fed-human-engineering ./scripts/publish_layers.sh
+
+read -p "Ready to publish gem $NEW_VERSION (y/n)?" CONT
+if [ "$CONT" != "y" ]; then
+    echo "Exiting"
+    exit 1
+fi
+
+echo 'Publishing to RubyGems'
+gem push "datadog-lambda-${NEW_VERSION}.gem"
+
+echo
+echo 'Publishing updates to github'
+git commit lib/datadog/lambda/version.rb -m "Bump version to ${NEW_VERSION}"
+git push origin main
+git tag "v$NEW_VERSION"
+git push origin "refs/tags/v$NEW_VERSION"
+
+echo
+echo "Now create a new release with the tag v${NEW_VERSION} created"
+echo "https://github.com/DataDog/datadog-lambda-rb/releases/new?tag=v$NEW_VERSION&title=v$NEW_VERSION"
