@@ -9,7 +9,7 @@
 
 # 5 mb size limit
 MAX_LAYER_COMPRESSED_SIZE_KB=$(expr 8 \* 1024) 
-MAX_LAYER_UNCOMPRESSED_SIZE_KB=$(expr 14 \* 1024) 
+MAX_LAYER_UNCOMPRESSED_SIZE_KB=$(expr 20 \* 1024) 
 
 
 LAYER_FILES_PREFIX="datadog-lambda_ruby"
