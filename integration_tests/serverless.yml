@@ -1,13 +1,22 @@
-service: integration-tester
+# IAM permissions require service name to begin with 'integration-tests'
+service: integration-tests-rb
 
 provider:
   name: aws
+  region: sa-east-1
   tracing:
     lambda: true
     apiGateway: true
   environment:
     DD_INTEGRATION_TEST: true
     DD_API_KEY: ${env:DD_API_KEY}
+  lambdaHashingVersion: 20201221
+  timeout: 15
+  deploymentBucket:
+    name: integration-tests-deployment-bucket
+  iam:
+    # IAM permissions require that all functions are deployed with this role
+    role: "arn:aws:iam::601427279990:role/serverless-integration-test-lambda-role"
 
 layers:
   ruby25:

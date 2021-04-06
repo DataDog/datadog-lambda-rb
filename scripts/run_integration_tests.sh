@@ -20,9 +20,15 @@ scripts_dir=$(dirname $script_path)
 repo_dir=$(dirname $scripts_dir)
 integration_tests_dir="$repo_dir/integration_tests"
 
-script_start_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+script_utc_start_time=$(date -u +"%Y%m%dT%H%M%S")
 
 mismatch_found=false
+
+if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+    echo "No AWS credentials were found in the environment."
+    echo "Note that only Datadog employees can run these integration tests."
+    exit 1
+fi
 
 if [ -z "$DD_API_KEY" ]; then
     echo "No DD_API_KEY env var set, exiting"
@@ -45,8 +51,18 @@ input_event_files=$(ls ./input_events)
 # Sort event files by name so that snapshots stay consistent
 input_event_files=($(for file_name in ${input_event_files[@]}; do echo $file_name; done | sort))
 
+# Generate a random 8-character ID to avoid collisions with other runs
+run_id=$(xxd -l 4 -c 4 -p < /dev/random)
+
+# Always remove the stack before exiting, no matter what
+function remove_stack() {
+    echo "Removing functions"
+    serverless remove --stage $run_id
+}
+trap remove_stack EXIT
+
 echo "Deploying functions"
-serverless deploy
+serverless deploy --stage $run_id
 
 echo "Invoking functions"
 set +e # Don't exit this script if an invocation fails or there's a diff
@@ -59,7 +75,7 @@ for input_event_file in "${input_event_files[@]}"; do
             # Return value snapshot file format is snapshots/return_values/{handler}_{runtime}_{input-event}
             snapshot_path="./snapshots/return_values/${function_name}_${input_event_name}.json"
 
-            return_value=$(serverless invoke -f $function_name --path "./input_events/$input_event_file")
+            return_value=$(serverless invoke --stage $run_id -f $function_name --path "./input_events/$input_event_file")
 
             if [ ! -f $snapshot_path ]; then
                 # If the snapshot file doesn't exist yet, we create it
@@ -88,15 +104,34 @@ set -e
 echo "Sleeping $LOGS_WAIT_SECONDS seconds to wait for logs to appear in CloudWatch..."
 sleep $LOGS_WAIT_SECONDS
 
+set +e # Don't exit this script if there is a diff or the logs endpoint fails
 echo "Fetching logs for invocations and comparing to snapshots"
 for handler_name in "${LAMBDA_HANDLERS[@]}"; do
     for runtime in "${RUNTIMES[@]}"; do
         function_name="${handler_name}_${runtime}"
         function_snapshot_path="./snapshots/logs/$function_name.log"
 
-        echo $function_name
-        # Fetch logs with serverless cli
-        raw_logs=$(serverless logs -f $function_name --startTime $script_start_time)
+        # Fetch logs with serverless cli, retrying to avoid AWS account-wide rate limit error
+        retry_counter=0
+        while [ $retry_counter -lt 10 ]; do
+            raw_logs=$(serverless logs --stage $run_id -f $function_name --startTime $script_utc_start_time)
+            fetch_logs_exit_code=$?
+            if [ $fetch_logs_exit_code -eq 1 ]; then
+                echo "Retrying fetch logs for $function_name..."
+                retry_counter=$(($retry_counter + 1))
+                sleep 10
+                continue
+            fi
+            break
+        done
+
+        if [ $retry_counter -eq 9 ]; then
+            echo "FAILURE: Could not retrieve logs for $function_name"
+            echo "Error from final attempt to retrieve logs:"
+            echo $raw_logs
+
+            exit 1
+        fi
 
         # Replace invocation-specific data like timestamps and IDs with XXXX to normalize logs across executions
         logs=$(
@@ -104,21 +139,30 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Filter serverless cli errors
                 sed '/Serverless: Recoverable error occurred/d' |
                 # Normalize Lambda runtime report logs
-                sed -E 's/(RequestId|TraceId|SegmentId|Duration|Memory Used|"e"):( )?[a-z0-9\.\-]+/\1:\2XXXX/g' |
+                perl -p -e 's/(RequestId|TraceId|SegmentId|Duration|Memory Used|"e"):( )?[a-z0-9\.\-]+/\1:\2XXXX/g' |
                 # Normalize DD APM headers and AWS account ID
-                sed -E "s/(x-datadog-parent-id:|x-datadog-trace-id:|account_id:)[0-9]+/\1XXXX/g" |
+                perl -p -e "s/(x-datadog-parent-id:|x-datadog-trace-id:|account_id:)[0-9]+/\1XXXX/g" |
                 # Strip API key from logged requests
-                sed -E "s/(api_key=|'api_key': ')[a-z0-9\.\-]+/\1XXXX/g" |
+                perl -p -e "s/(api_key=|'api_key': ')[a-z0-9\.\-]+/\1XXXX/g" |
                 # Normalize log timestamps
-                sed -E "s/[0-9]{4}\-[0-9]{2}\-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+( \(\-?[0-9:]+\))?/XXXX-XX-XX XX:XX:XX.XXX/" |
+                perl -p -e "s/[0-9]{4}\-[0-9]{2}\-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+( \(\-?\+?[0-9:]+\))?/XXXX-XX-XX XX:XX:XX.XXX/" |
                 # Normalize DD trace ID injection
-                sed -E "s/(dd\.trace_id=)[0-9]+ (dd\.span_id=)[0-9]+/\1XXXX \2XXXX/" |
+                perl -p -e "s/(dd\.trace_id=)[0-9]+ (dd\.span_id=)[0-9]+/\1XXXX \2XXXX/" |
                 # Normalize execution ID in logs prefix
-                sed -E $'s/[0-9a-z]+\-[0-9a-z]+\-[0-9a-z]+\-[0-9a-z]+\-[0-9a-z]+\t/XXXX-XXXX-XXXX-XXXX-XXXX\t/' |
+                perl -p -e $'s/[0-9a-z]+\-[0-9a-z]+\-[0-9a-z]+\-[0-9a-z]+\-[0-9a-z]+\t/XXXX-XXXX-XXXX-XXXX-XXXX\t/' |
                 # Normalize minor package version tag so that these snapshots aren't broken on version bumps
-                # sed -E "s/(dd_lambda_layer:datadog-nodev[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
+                perl -p -e "s/(dd_lambda_layer:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
+                perl -p -e "s/(dd_trace:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
                 # Normalize data in logged traces
-                sed -E 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|allocations|system.pid)":("?)[a-zA-Z0-9\.:\-]+("?)/"\1":\2XXXX\3/g'
+                perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|allocations|system.pid)":("?)[a-zA-Z0-9\.:\-]+("?)/"\1":\2XXXX\3/g' |
+                # Strip out run ID (from function name, resource, etc.)
+                perl -p -e "s/$run_id/XXXX/g" |
+                # Normalize line numbers in stack traces
+                perl -p -e 's/(.js:)[0-9]*:[0-9]*/\1XXX:XXX/g' |
+                # Remove metrics and metas in logged traces (their order is inconsistent)
+                perl -p -e 's/"(meta|metrics)":{(.*?)}/"\1":{"XXXX": "XXXX"}/g' |
+                # Normalize enhanced metric datadog_lambda tag
+                perl -p -e "s/(datadog_lambda:v)[0-9\.]+/\1X.X.X/g"
         )
 
         if [ ! -f $function_snapshot_path ]; then
@@ -131,7 +175,6 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
             echo "$logs" >$function_snapshot_path
         else
             # Compare new logs to snapshots
-            set +e # Don't exit this script if there is a diff
             diff_output=$(echo "$logs" | diff - $function_snapshot_path)
             if [ $? -eq 1 ]; then
                 echo "Failed: Mismatch found between new $function_name logs (first) and snapshot (second):"
@@ -140,10 +183,10 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
             else
                 echo "Ok: New logs for $function_name match snapshot"
             fi
-            set -e
         fi
     done
 done
+set -e
 
 if [ "$mismatch_found" = true ]; then
     echo "FAILURE: A mismatch between new data and a snapshot was found and printed above."
