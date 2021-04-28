@@ -1,5 +1,5 @@
 START RequestId: XXXX Version: $LATEST
-{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-async-metrics_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:true","runtime:Ruby 2.5.8","resource:integration-tests-rb-XXXX-async-metrics_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
+{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-async-metrics_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:true","runtime:Ruby 2.5.X","resource:integration-tests-rb-XXXX-async-metrics_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby25","tagkey:tagvalue","eventsource:APIGateway"],"v":1}
 Processed APIGateway request
 {"traces":[[{"span_id":"XXXX","parent_id":"XXXX","trace_id":"XXXX","name":"aws.lambda","service":"aws.lambda","resource":"integration-tests-rb-XXXX-async-metrics_ruby25","type":"serverless","meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"allocations":XXXX,"error":0,"start":XXXX,"duration":XXXX}]]}
@@ -8,7 +8,7 @@ REPORT RequestId: XXXX	Duration: XXXX ms	Billed Duration: XXXX ms	Memory Size: 1
 XRAY TraceId: XXXX	SegmentId: XXXX	Sampled: true	
 
 START RequestId: XXXX Version: $LATEST
-{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-async-metrics_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.5.8","resource:integration-tests-rb-XXXX-async-metrics_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
+{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-async-metrics_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.5.X","resource:integration-tests-rb-XXXX-async-metrics_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.records_processed","t":["dd_lambda_layer:datadog-ruby25","tagkey:tagvalue","eventsource:SNS"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby25","tagkey:tagvalue","eventsource:SNS"],"v":1}
 Processed SNS request
@@ -18,7 +18,7 @@ REPORT RequestId: XXXX	Duration: XXXX ms	Billed Duration: XXXX ms	Memory Size: 1
 XRAY TraceId: XXXX	SegmentId: XXXX	Sampled: true	
 
 START RequestId: XXXX Version: $LATEST
-{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-async-metrics_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.5.8","resource:integration-tests-rb-XXXX-async-metrics_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
+{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-async-metrics_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.5.X","resource:integration-tests-rb-XXXX-async-metrics_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.records_processed","t":["dd_lambda_layer:datadog-ruby25","tagkey:tagvalue","eventsource:SQS"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.records_processed","t":["dd_lambda_layer:datadog-ruby25","tagkey:tagvalue","eventsource:SQS"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby25","tagkey:tagvalue","eventsource:SQS"],"v":1}
