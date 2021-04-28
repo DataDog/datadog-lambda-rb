@@ -19,87 +19,53 @@ provider:
     role: "arn:aws:iam::601427279990:role/serverless-integration-test-lambda-role"
 
 layers:
-  ruby25:
+  ruby:
     package:
-      artifact: ../.layers/datadog-lambda_ruby2.5.zip
-  ruby27:
-    package:
-      artifact: ../.layers/datadog-lambda_ruby2.7.zip
+      artifact: ../.layers/datadog-lambda_ruby${env:RUBY_VERSION}.zip
 
 functions:
   # async-metrics
-  async-metrics_ruby25:
+  async-metrics_ruby:
+    name: integration-tests-rb-${sls:stage}-async-metrics_${env:RUNTIME}
     handler: send_metrics.handle
-    runtime: ruby2.5
+    runtime: ${env:SERVERLESS_RUNTIME}
     layers:
-      - { Ref: Ruby25LambdaLayer }
-    environment:
-      DD_FLUSH_TO_LOG: true
-
-  async-metrics_ruby27:
-    handler: send_metrics.handle
-    runtime: ruby2.7
-    layers:
-      - { Ref: Ruby27LambdaLayer }
+      - { Ref: RubyLambdaLayer }
     environment:
       DD_FLUSH_TO_LOG: true
 
   # sync-metrics
-  sync-metrics_ruby25:
+  sync-metrics_ruby:
+    name: integration-tests-rb-${sls:stage}-sync-metrics_${env:RUNTIME}
     handler: send_metrics.handle
-    runtime: ruby2.5
+    runtime: ${env:SERVERLESS_RUNTIME}
     layers:
-      - { Ref: Ruby25LambdaLayer }
-
-  sync-metrics_ruby27:
-    handler: send_metrics.handle
-    runtime: ruby2.7
-    layers:
-      - { Ref: Ruby27LambdaLayer }
+      - { Ref: RubyLambdaLayer }
 
   # http-requests
-  http-requests_ruby25:
+  http-requests_ruby:
+    name: integration-tests-rb-${sls:stage}-http-requests_${env:RUNTIME}
     handler: http_requests.handle
-    runtime: ruby2.5
+    runtime: ${env:SERVERLESS_RUNTIME}
     layers:
-      - { Ref: Ruby25LambdaLayer }
-
-  http-requests_ruby27:
-    handler: http_requests.handle
-    runtime: ruby2.7
-    layers:
-      - { Ref: Ruby27LambdaLayer }
+      - { Ref: RubyLambdaLayer }
 
   # process-input-traced
-  process-input-traced_ruby25:
+  process-input-traced_ruby:
+    name: integration-tests-rb-${sls:stage}-process-input-traced_${env:RUNTIME}
     handler: process_input_traced.handle
-    runtime: ruby2.5
+    runtime: ${env:SERVERLESS_RUNTIME}
     layers:
-      - { Ref: Ruby25LambdaLayer }
-    environment:
-      DD_FLUSH_TO_LOG: true
-
-  process-input-traced_ruby27:
-    handler: process_input_traced.handle
-    runtime: ruby2.7
-    layers:
-      - { Ref: Ruby27LambdaLayer }
+      - { Ref: RubyLambdaLayer }
     environment:
       DD_FLUSH_TO_LOG: true
 
   # http-error
-  http-error_ruby25:
+  http-error_ruby:
+    name: integration-tests-rb-${sls:stage}-http-error_${env:RUNTIME}
     handler: http_error.handle
-    runtime: ruby2.5
+    runtime: ${env:SERVERLESS_RUNTIME}
     layers:
-      - { Ref: Ruby25LambdaLayer }
-    environment:
-      DD_FLUSH_TO_LOG: true
-
-  http-error_ruby27:
-    handler: http_error.handle
-    runtime: ruby2.7
-    layers:
-      - { Ref: Ruby27LambdaLayer }
+      - { Ref: RubyLambdaLayer }
     environment:
       DD_FLUSH_TO_LOG: true

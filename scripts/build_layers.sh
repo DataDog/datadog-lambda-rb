@@ -12,6 +12,18 @@ LAYER_DIR=".layers"
 LAYER_FILES_PREFIX="datadog-lambda_ruby"
 RUBY_VERSIONS=("2.5" "2.7")
 
+if [ -z "$RUBY_VERSION" ]; then
+    echo "Ruby version not specified, running for all ruby versions."
+else
+    echo "Ruby version is specified: $RUBY_VERSION"
+    if (printf '%s\n' "${RUBY_VERSIONS[@]}" | grep -xq $RUBY_VERSION); then
+        RUBY_VERSIONS=($RUBY_VERSION)
+    else
+        echo "Unsupported version found, valid options are : ${RUBY_VERSIONS[@]}" 
+        exit 1
+    fi
+fi
+
 function make_path_absolute {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
