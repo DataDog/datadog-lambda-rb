@@ -1,5 +1,5 @@
 START RequestId: XXXX Version: $LATEST
-{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-http-requests_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:true","runtime:Ruby 2.5.9","resource:integration-tests-rb-XXXX-http-requests_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
+{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-http-requests_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:true","runtime:2.5.X","resource:integration-tests-rb-XXXX-http-requests_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby25","function:http-request"],"v":1}
 Snapshot test http requests successfully made to URLs: ["ip-ranges.datadoghq.com", "ip-ranges.datadoghq.eu"]
 {"traces":[[{"span_id":"XXXX","parent_id":"XXXX","trace_id":"XXXX","name":"aws.lambda","service":"aws.lambda","resource":"integration-tests-rb-XXXX-http-requests_ruby25","type":"serverless","meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"allocations":XXXX,"error":0,"start":XXXX,"duration":XXXX}]]}
@@ -8,7 +8,7 @@ REPORT RequestId: XXXX	Duration: XXXX ms	Billed Duration: XXXX ms	Memory Size: 1
 XRAY TraceId: XXXX	SegmentId: XXXX	Sampled: true	
 
 START RequestId: XXXX Version: $LATEST
-{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-http-requests_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.5.9","resource:integration-tests-rb-XXXX-http-requests_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
+{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-http-requests_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:2.5.X","resource:integration-tests-rb-XXXX-http-requests_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby25","function:http-request"],"v":1}
 Snapshot test http requests successfully made to URLs: ["ip-ranges.datadoghq.com", "ip-ranges.datadoghq.eu"]
 {"traces":[[{"span_id":"XXXX","parent_id":"XXXX","trace_id":"XXXX","name":"aws.lambda","service":"aws.lambda","resource":"integration-tests-rb-XXXX-http-requests_ruby25","type":"serverless","meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"allocations":XXXX,"error":0,"start":XXXX,"duration":XXXX}]]}
@@ -17,7 +17,7 @@ REPORT RequestId: XXXX	Duration: XXXX ms	Billed Duration: XXXX ms	Memory Size: 1
 XRAY TraceId: XXXX	SegmentId: XXXX	Sampled: true	
 
 START RequestId: XXXX Version: $LATEST
-{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-http-requests_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.5.9","resource:integration-tests-rb-XXXX-http-requests_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
+{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby25","functionname:integration-tests-rb-XXXX-http-requests_ruby25","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:2.5.X","resource:integration-tests-rb-XXXX-http-requests_ruby25","datadog_lambda:1.12.0","dd_trace:0.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby25","function:http-request"],"v":1}
 Snapshot test http requests successfully made to URLs: ["ip-ranges.datadoghq.com", "ip-ranges.datadoghq.eu"]
 {"traces":[[{"span_id":"XXXX","parent_id":"XXXX","trace_id":"XXXX","name":"aws.lambda","service":"aws.lambda","resource":"integration-tests-rb-XXXX-http-requests_ruby25","type":"serverless","meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"allocations":XXXX,"error":0,"start":XXXX,"duration":XXXX}]]}
