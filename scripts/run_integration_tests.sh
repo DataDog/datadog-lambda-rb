@@ -192,13 +192,15 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Normalize data in logged traces
                 perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|allocations|system.pid)":("?)[a-zA-Z0-9\.:\-]+("?)/"\1":\2XXXX\3/g' |
                 # Strip out run ID (from function name, resource, etc.)
-                perl -p -e "s/$run_id/XXXX/g" |
+                perl -p -e "s/${!run_id}/XXXX/g" |
                 # Normalize line numbers in stack traces
                 perl -p -e 's/(.js:)[0-9]*:[0-9]*/\1XXX:XXX/g' |
                 # Remove metrics and metas in logged traces (their order is inconsistent)
-                perl -p -e 's/"(meta|metrics)":{(.*?)}/"\1":{"XXXX": "XXXX"}/g' |
+                perl -p -e 's/"(meta|metrics)":\{(.*?)\}/"\1":\{"XXXX": "XXXX"\}/g' |
                 # Normalize enhanced metric datadog_lambda tag
-                perl -p -e "s/(datadog_lambda:v)[0-9\.]+/\1X.X.X/g"
+                perl -p -e "s/(datadog_lambda:v)[0-9\.]+/\1X.X.X/g" |
+                # Normalize runtime bugfix version
+                perl -p -e "s/(runtime:Ruby [0-9]+\.[0-9]+)\.[0-9]+/\1\.X/g"
         )
 
         if [ ! -f $function_snapshot_path ]; then
