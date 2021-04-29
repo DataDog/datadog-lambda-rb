@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
           matrix:
-            runtime-param: [2.5]
+            runtime-param: [2.5, 2.7]
 
     steps:
       - name: Checkout
