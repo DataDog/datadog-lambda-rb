@@ -6,7 +6,8 @@ COPY . /var/task/datadog-lambda-ruby
 WORKDIR /var/task/datadog-lambda-ruby
 RUN gem build datadog-lambda
 RUN gem install datadog-lambda --install-dir "/opt/ruby/gems/${runtime}"
-RUN gem install ddtrace --install-dir "/opt/ruby/gems/${runtime}"
+# TODO remove specific version when 0.48 is fixed
+RUN gem install ddtrace -v 0.47 --install-dir "/opt/ruby/gems/${runtime}"
 # Cache files zipped gem files, that aren't used by during runtime, only during 
 # installation, so they are safe to delete
 RUN rm -rf "/opt/ruby/gems/${runtime}/cache"
