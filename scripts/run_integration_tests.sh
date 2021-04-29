@@ -189,8 +189,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Normalize minor package version tag so that these snapshots aren't broken on version bumps
                 perl -p -e "s/(dd_lambda_layer:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
                 perl -p -e "s/(dd_trace:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
-                # Normalize data in logged traces
-                perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|allocations|system.pid)":("?)[a-zA-Z0-9\.:\-]+("?)/"\1":\2XXXX\3/g' |
+                perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|x-datadog-trace-id|x-datadog-parent-id|datadog_lambda|dd_trace|allocations)":("?)[a-zA-Z0-9\.:\-]+("?)/"\1":\2XXXX\3/g' |
                 # Strip out run ID (from function name, resource, etc.)
                 perl -p -e "s/${!run_id}/XXXX/g" |
                 # Normalize line numbers in stack traces
@@ -213,7 +212,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
             echo "$logs" >$function_snapshot_path
         else
             # Compare new logs to snapshots
-            diff_output=$(echo "$logs" | sort | diff -w - <(sort $function_snapshot_path))
+            diff_output=$(echo "$logs" | diff - $function_snapshot_path)
             if [ $? -eq 1 ]; then
                 echo "Failed: Mismatch found between new $function_name logs (first) and snapshot (second):"
                 echo "$diff_output"
