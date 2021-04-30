@@ -24,6 +24,24 @@ script_utc_start_time=$(date -u +"%Y%m%dT%H%M%S")
 
 mismatch_found=false
 
+# Format :
+# [0]: serverless runtime name
+# [1]: ruby version
+# [2]: random 8-character ID to avoid collisions with other runs
+ruby25=("ruby2.5" "2.5" $(xxd -l 4 -c 4 -p < /dev/random))
+ruby27=("ruby2.7" "2.7" $(xxd -l 4 -c 4 -p < /dev/random))
+
+PARAMETERS_SETS=("ruby25" "ruby27")
+
+if [ -z "$RUNTIME_PARAM" ]; then
+    echo "Ruby version not specified, running for all ruby versions."
+else
+    RUNTIME_PARAM_NO_DOT=$(echo $RUNTIME_PARAM | sed 's/\.//')
+    echo "Ruby version is specified: $RUNTIME_PARAM"
+    PARAMETERS_SETS=(ruby${RUNTIME_PARAM_NO_DOT})
+    BUILD_LAYER_VERSION=ruby$RUNTIME_PARAM_NO_DOT[1]
+fi
+
 if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
     echo "No AWS credentials were found in the environment."
     echo "Note that only Datadog employees can run these integration tests."
@@ -41,7 +59,7 @@ fi
 
 if [ -n "$BUILD_LAYERS" ]; then
     echo "Building layers that will be deployed with our test functions"
-    source $scripts_dir/build_layers.sh
+    RUBY_VERSION=${!BUILD_LAYER_VERSION} source $scripts_dir/build_layers.sh
 else
     echo "Not building layers, ensure they've already been built or re-run with 'BUILD_LAYERS=true DD_API_KEY=XXXX ./scripts/run_integration_tests.sh'"
 fi
@@ -51,31 +69,46 @@ input_event_files=$(ls ./input_events)
 # Sort event files by name so that snapshots stay consistent
 input_event_files=($(for file_name in ${input_event_files[@]}; do echo $file_name; done | sort))
 
-# Generate a random 8-character ID to avoid collisions with other runs
-run_id=$(xxd -l 4 -c 4 -p < /dev/random)
-
-# Always remove the stack before exiting, no matter what
+# Always remove the stack(s) before exiting, no matter what
 function remove_stack() {
-    echo "Removing functions"
-    serverless remove --stage $run_id
+    for parameters_set in "${PARAMETERS_SETS[@]}"; do
+        serverless_runtime=$parameters_set[0]
+        ruby_version=$parameters_set[1]
+        run_id=$parameters_set[2]
+        echo "Removing stack for stage : ${!run_id}"
+        RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
+        serverless remove --stage ${!run_id}
+    done
 }
+
 trap remove_stack EXIT
 
-echo "Deploying functions"
-serverless deploy --stage $run_id
+for parameters_set in "${PARAMETERS_SETS[@]}"; do
+    
+    serverless_runtime=$parameters_set[0]
+    ruby_version=$parameters_set[1]
+    run_id=$parameters_set[2]
 
-echo "Invoking functions"
-set +e # Don't exit this script if an invocation fails or there's a diff
-for input_event_file in "${input_event_files[@]}"; do
+    echo "Deploying functions for runtime : $parameters_set, serverless runtime : ${!serverless_runtime}, \
+ruby version : ${!ruby_version} and run id : ${!run_id}"
+
+    RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
+    serverless deploy --stage ${!run_id}
+
+    echo "Invoking functions for runtime $parameters_set"
+    set +e # Don't exit this script if an invocation fails or there's a diff
     for handler_name in "${LAMBDA_HANDLERS[@]}"; do
-        for runtime in "${RUNTIMES[@]}"; do
-            function_name="${handler_name}_${runtime}"
+        
+        function_name="${handler_name}_ruby"
+        echo "$function_name"
+        # Invoke function once for each input event
+        for input_event_file in "${input_event_files[@]}"; do
             # Get event name without trailing ".json" so we can build the snapshot file name
             input_event_name=$(echo "$input_event_file" | sed "s/.json//")
-            # Return value snapshot file format is snapshots/return_values/{handler}_{runtime}_{input-event}
-            snapshot_path="./snapshots/return_values/${function_name}_${input_event_name}.json"
+            snapshot_path="./snapshots/return_values/${handler_name}_${parameters_set}_${input_event_name}.json"
 
-            return_value=$(serverless invoke --stage $run_id -f $function_name --path "./input_events/$input_event_file")
+            return_value=$(RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
+            serverless invoke --stage ${!run_id} -f "$function_name" --path "./input_events/$input_event_file")
 
             if [ ! -f $snapshot_path ]; then
                 # If the snapshot file doesn't exist yet, we create it
@@ -107,14 +140,17 @@ sleep $LOGS_WAIT_SECONDS
 set +e # Don't exit this script if there is a diff or the logs endpoint fails
 echo "Fetching logs for invocations and comparing to snapshots"
 for handler_name in "${LAMBDA_HANDLERS[@]}"; do
-    for runtime in "${RUNTIMES[@]}"; do
-        function_name="${handler_name}_${runtime}"
-        function_snapshot_path="./snapshots/logs/$function_name.log"
-
+    for parameters_set in "${PARAMETERS_SETS[@]}"; do
+        function_name="${handler_name}_ruby"
+        function_snapshot_path="./snapshots/logs/${handler_name}_${parameters_set}.log"
+        serverless_runtime=$parameters_set[0]
+        ruby_version=$parameters_set[1]
+        run_id=$parameters_set[2]
         # Fetch logs with serverless cli, retrying to avoid AWS account-wide rate limit error
         retry_counter=0
         while [ $retry_counter -lt 10 ]; do
-            raw_logs=$(serverless logs --stage $run_id -f $function_name --startTime $script_utc_start_time)
+            raw_logs=$(RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
+            serverless logs --stage ${!run_id} -f $function_name --startTime $script_utc_start_time)
             fetch_logs_exit_code=$?
             if [ $fetch_logs_exit_code -eq 1 ]; then
                 echo "Retrying fetch logs for $function_name..."
@@ -153,16 +189,17 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Normalize minor package version tag so that these snapshots aren't broken on version bumps
                 perl -p -e "s/(dd_lambda_layer:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
                 perl -p -e "s/(dd_trace:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
-                # Normalize data in logged traces
-                perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|allocations|system.pid)":("?)[a-zA-Z0-9\.:\-]+("?)/"\1":\2XXXX\3/g' |
+                perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|x-datadog-trace-id|x-datadog-parent-id|datadog_lambda|dd_trace|allocations)":("?)[a-zA-Z0-9\.:\-]+("?)/"\1":\2XXXX\3/g' |
                 # Strip out run ID (from function name, resource, etc.)
-                perl -p -e "s/$run_id/XXXX/g" |
+                perl -p -e "s/${!run_id}/XXXX/g" |
                 # Normalize line numbers in stack traces
                 perl -p -e 's/(.js:)[0-9]*:[0-9]*/\1XXX:XXX/g' |
                 # Remove metrics and metas in logged traces (their order is inconsistent)
-                perl -p -e 's/"(meta|metrics)":{(.*?)}/"\1":{"XXXX": "XXXX"}/g' |
+                perl -p -e 's/"(meta|metrics)":\{(.*?)\}/"\1":\{"XXXX": "XXXX"\}/g' |
                 # Normalize enhanced metric datadog_lambda tag
-                perl -p -e "s/(datadog_lambda:v)[0-9\.]+/\1X.X.X/g"
+                perl -p -e "s/(datadog_lambda:v)[0-9\.]+/\1X.X.X/g" |
+                # Normalize runtime bugfix version
+                perl -p -e "s/(runtime:Ruby [0-9]+\.[0-9]+)\.[0-9]+/\1\.X/g"
         )
 
         if [ ! -f $function_snapshot_path ]; then
@@ -191,7 +228,7 @@ set -e
 if [ "$mismatch_found" = true ]; then
     echo "FAILURE: A mismatch between new data and a snapshot was found and printed above."
     echo "If the change is expected, generate new snapshots by running 'UPDATE_SNAPSHOTS=true DD_API_KEY=XXXX ./scripts/run_integration_tests.sh'"
-    echo "Make sure https://httpstat.us/400/ is UP for the `http_error` test case"
+    echo "Make sure https://httpstat.us/400/ is UP for the >http_error< test case"
     exit 1
 fi
 
