@@ -5,7 +5,7 @@
 # Use dot-notation to access these properties
 class LambdaContextVersion
   def function_name
-    'ruby-test'
+    'Ruby-test'
   end
 
   def function_version
