@@ -208,6 +208,7 @@ describe Datadog::Trace do
           function_arn: 'arn:aws:lambda:us-east-1:172597598159:function:hello-dog-ruby-dev-hello',
           request_id: 'dcbfed85-c904-4367-bd54-984ca201ef47',
           resource_names: "hello-dog-ruby-dev-helloRuby#{RUBY_VERSION[0, 3].tr('.', '')}",
+          functionname: "hello-dog-ruby-dev-helloRuby#{RUBY_VERSION[0, 3].tr('.', '')}".downcase,
           function_version: '$LATEST'
         }
       )
@@ -229,7 +230,8 @@ describe Datadog::Trace do
           cold_start: false,
           function_arn: 'arn:aws:lambda:us-east-1:172597598159:function:ruby-test',
           request_id: 'dcbfed85-c904-4367-bd54-984ca201ef47',
-          resource_names: 'ruby-test',
+          resource_names: 'Ruby-test',
+          functionname: 'ruby-test',
           function_version: '1'
         }
       )
@@ -251,7 +253,8 @@ describe Datadog::Trace do
           cold_start: false,
           function_arn: 'arn:aws:lambda:us-east-1:172597598159:function:ruby-test',
           request_id: 'dcbfed85-c904-4367-bd54-984ca201ef47',
-          resource_names: 'ruby-test',
+          resource_names: 'Ruby-test',
+          functionname: 'ruby-test',
           function_version: 'my-alias'
         }
       )

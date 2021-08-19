@@ -78,10 +78,10 @@ describe Datadog::Lambda do
       expect(Datadog::Lambda.gen_enhanced_tags(ctxv)).to include(
         { account_id: '172597598159',
           cold_start: false,
-          functionname: 'ruby-test',
+          functionname: 'Ruby-test',
           memorysize: 128,
           region: 'us-east-1',
-          resource: 'ruby-test:1',
+          resource: 'Ruby-test:1',
           runtime: include('Ruby 2.') }
       )
     end
@@ -92,10 +92,10 @@ describe Datadog::Lambda do
       expect(Datadog::Lambda.gen_enhanced_tags(ctxa)).to include(
         { account_id: '172597598159',
           cold_start: false,
-          functionname: 'ruby-test',
+          functionname: 'Ruby-test',
           memorysize: 128,
           region: 'us-east-1',
-          resource: 'ruby-test:my-alias',
+          resource: 'Ruby-test:my-alias',
           executedversion: '1',
           runtime: include('Ruby 2.') }
       )

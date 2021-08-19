@@ -60,13 +60,15 @@ module Datadog
         tk = function_arn.split(':')
         function_arn = tk.length > 7 ? tk[0, 7].join(':') : function_arn
         function_version = tk.length > 7 ? tk[7] : '$LATEST'
+        function_name = request_context.function_name
         options = {
           tags: {
             cold_start: cold_start,
             function_arn: function_arn,
             function_version: function_version,
             request_id: request_context.aws_request_id,
-            resource_names: request_context.function_name
+            functionname: function_name.nil? || function_name.empty? ? nil : function_name.downcase,
+            resource_names: function_name
           }
         }
         options
