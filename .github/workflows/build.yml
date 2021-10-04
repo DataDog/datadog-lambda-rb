@@ -1,6 +1,6 @@
 name: build
 
-on: push
+on: [push, pull_request]
 
 jobs:
   lint:
@@ -50,8 +50,8 @@ jobs:
   integration-test:
     runs-on: ubuntu-latest
     strategy:
-          matrix:
-            runtime-param: [2.5, 2.7]
+      matrix:
+        runtime-param: [2.5, 2.7]
 
     steps:
       - name: Checkout
@@ -85,4 +85,3 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           RUNTIME_PARAM: ${{ matrix.runtime-param }}
         run: ./scripts/run_integration_tests.sh
-
