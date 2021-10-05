@@ -13,7 +13,7 @@ set -e
 LAMBDA_HANDLERS=("async-metrics" "sync-metrics" "http-requests" "http-error" "process-input-traced")
 RUNTIMES=("ruby25" "ruby27")
 
-LOGS_WAIT_SECONDS=20
+LOGS_WAIT_SECONDS=45
 
 script_path=${BASH_SOURCE[0]}
 scripts_dir=$(dirname $script_path)
@@ -28,8 +28,8 @@ mismatch_found=false
 # [0]: serverless runtime name
 # [1]: ruby version
 # [2]: random 8-character ID to avoid collisions with other runs
-ruby25=("ruby2.5" "2.5" $(xxd -l 4 -c 4 -p < /dev/random))
-ruby27=("ruby2.7" "2.7" $(xxd -l 4 -c 4 -p < /dev/random))
+ruby25=("ruby2.5" "2.5" $(xxd -l 4 -c 4 -p </dev/random))
+ruby27=("ruby2.7" "2.7" $(xxd -l 4 -c 4 -p </dev/random))
 
 PARAMETERS_SETS=("ruby25" "ruby27")
 
@@ -77,14 +77,14 @@ function remove_stack() {
         run_id=$parameters_set[2]
         echo "Removing stack for stage : ${!run_id}"
         RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
-        serverless remove --stage ${!run_id}
+            serverless remove --stage ${!run_id}
     done
 }
 
 trap remove_stack EXIT
 
 for parameters_set in "${PARAMETERS_SETS[@]}"; do
-    
+
     serverless_runtime=$parameters_set[0]
     ruby_version=$parameters_set[1]
     run_id=$parameters_set[2]
@@ -93,12 +93,12 @@ for parameters_set in "${PARAMETERS_SETS[@]}"; do
 ruby version : ${!ruby_version} and run id : ${!run_id}"
 
     RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
-    serverless deploy --stage ${!run_id}
+        serverless deploy --stage ${!run_id}
 
     echo "Invoking functions for runtime $parameters_set"
     set +e # Don't exit this script if an invocation fails or there's a diff
     for handler_name in "${LAMBDA_HANDLERS[@]}"; do
-        
+
         function_name="${handler_name}_ruby"
         echo "$function_name"
         # Invoke function once for each input event
@@ -108,7 +108,7 @@ ruby version : ${!ruby_version} and run id : ${!run_id}"
             snapshot_path="./snapshots/return_values/${handler_name}_${parameters_set}_${input_event_name}.json"
 
             return_value=$(RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
-            serverless invoke --stage ${!run_id} -f "$function_name" --path "./input_events/$input_event_file")
+                serverless invoke --stage ${!run_id} -f "$function_name" --path "./input_events/$input_event_file")
 
             if [ ! -f $snapshot_path ]; then
                 # If the snapshot file doesn't exist yet, we create it
@@ -150,7 +150,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
         retry_counter=0
         while [ $retry_counter -lt 10 ]; do
             raw_logs=$(RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
-            serverless logs --stage ${!run_id} -f $function_name --startTime $script_utc_start_time)
+                serverless logs --stage ${!run_id} -f $function_name --startTime $script_utc_start_time)
             fetch_logs_exit_code=$?
             if [ $fetch_logs_exit_code -eq 1 ]; then
                 echo "Retrying fetch logs for $function_name..."
