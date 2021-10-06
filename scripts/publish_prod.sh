@@ -95,3 +95,6 @@ git push origin "refs/tags/v$NEW_VERSION"
 echo
 echo "Now create a new release with the tag v${NEW_VERSION} created"
 echo "https://github.com/DataDog/datadog-lambda-rb/releases/new?tag=v$NEW_VERSION&title=v$NEW_VERSION"
+
+# Open a PR to the documentation repo to automatically bump layer version
+VERSION=$LAYER_VERSION LAYER=datadog-lambda-rb ./scripts/create_documentation_pr.sh
