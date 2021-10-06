@@ -5,7 +5,7 @@
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2019 Datadog, Inc
 
-# Usage: LAYER_VERSION=5 aws-vault exec sandbox-account-admin -- ./scripts/publish_sandbox.sh
+# Usage: LAYER_VERSION=5 ./scripts/publish_sandbox.sh
 
 set -e
 
