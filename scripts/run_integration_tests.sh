@@ -175,7 +175,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Filter serverless cli errors
                 sed '/Serverless: Recoverable error occurred/d' |
                 # Normalize Lambda runtime report logs
-                perl -p -e 's/(RequestId|TraceId|SegmentId|Duration|Memory Used|"e"):( )?[a-z0-9\.\-]+/\1:\2XXXX/g' |
+                perl -p -e 's/(RequestId|Duration|Memory Used|"e"):( )?[a-z0-9\.\-]+/\1:\2XXXX/g' |
                 # Normalize DD APM headers and AWS account ID
                 perl -p -e "s/(x-datadog-parent-id:|x-datadog-trace-id:|account_id:)[0-9]+/\1XXXX/g" |
                 # Strip API key from logged requests
@@ -199,7 +199,9 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Normalize enhanced metric datadog_lambda tag
                 perl -p -e "s/(datadog_lambda:v)[0-9\.]+/\1X.X.X/g" |
                 # Normalize runtime bugfix version
-                perl -p -e "s/(runtime:Ruby [0-9]+\.[0-9]+)\.[0-9]+/\1\.X/g"
+                perl -p -e "s/(runtime:Ruby [0-9]+\.[0-9]+)\.[0-9]+/\1\.X/g" |
+                # Filter XRAY line
+                sed '/XRAY TraceId:/d'
         )
 
         if [ ! -f $function_snapshot_path ]; then
