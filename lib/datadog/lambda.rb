@@ -102,7 +102,7 @@ module Datadog
     # @return [hash] a hash of the enhanced metrics tags
     # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     def self.gen_enhanced_tags(context)
-      arn_parts = context.invoked_function_arn.split(':')
+      arn_parts = context.invoked_function_arn.to_s.split(':')
       # Check if we have an alias or version
       function_alias = arn_parts[7].nil? ? nil : arn_parts[7]
 
