@@ -10,6 +10,10 @@ Datadog Lambda Library for Ruby (2.5 and 2.7) enables enhanced Lambda metrics, d
 
 Follow the [installation instructions](https://docs.datadoghq.com/serverless/installation/ruby/), and view your function's enhanced metrics, traces and logs in Datadog.
 
+## Configuration
+
+Follow the [configuration instructions][https://docs.datadoghq.com/serverless/configuration] to tag your telemetry, collect telemetry from non-Lambda resources, and more.
+
 For additional configuraton options for distributed tracing, see [the Datadog trace client readme](https://github.com/DataDog/dd-trace-rb)
 
 ## Opening Issues
