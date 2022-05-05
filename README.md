@@ -12,7 +12,7 @@ Follow the [installation instructions](https://docs.datadoghq.com/serverless/ins
 
 ## Configuration
 
-Follow the [configuration instructions][https://docs.datadoghq.com/serverless/configuration] to tag your telemetry, collect telemetry from non-Lambda resources, and more.
+Follow the [configuration instructions](https://docs.datadoghq.com/serverless/configuration) to tag your telemetry, collect telemetry from non-Lambda resources, and more.
 
 For additional configuraton options for distributed tracing, see [the Datadog trace client readme](https://github.com/DataDog/dd-trace-rb)
 
