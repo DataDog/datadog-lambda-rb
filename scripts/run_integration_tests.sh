@@ -11,7 +11,7 @@ set -e
 # These values need to be in sync with serverless.yml, where there needs to be a function
 # defined for every handler_runtime combination
 LAMBDA_HANDLERS=("async-metrics" "sync-metrics" "http-requests" "http-error" "process-input-traced")
-RUNTIMES=("ruby25" "ruby27")
+RUNTIMES=("ruby27")
 
 LOGS_WAIT_SECONDS=45
 
@@ -28,10 +28,9 @@ mismatch_found=false
 # [0]: serverless runtime name
 # [1]: ruby version
 # [2]: random 8-character ID to avoid collisions with other runs
-ruby25=("ruby2.5" "2.5" $(xxd -l 4 -c 4 -p </dev/random))
 ruby27=("ruby2.7" "2.7" $(xxd -l 4 -c 4 -p </dev/random))
 
-PARAMETERS_SETS=("ruby25" "ruby27")
+PARAMETERS_SETS=("ruby27")
 
 if [ -z "$RUNTIME_PARAM" ]; then
     echo "Ruby version not specified, running for all ruby versions."
