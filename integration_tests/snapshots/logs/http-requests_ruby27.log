@@ -1,18 +1,18 @@
 START
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby27","functionname:integration-tests-rb-XXXX-http-requests_ruby27","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:true","runtime:Ruby 2.7.X","resource:integration-tests-rb-XXXX-http-requests_ruby27","datadog_lambda:1.14.0","dd_trace:0.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby27","function:http-request"],"v":1}
-{"traces":[[{"span_id":"XXXX","parent_id":"XXXX","trace_id":"XXXX","name":"aws.lambda","service":"aws.lambda","resource":"integration-tests-rb-XXXX-http-requests_ruby27","type":"serverless","meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"allocations":XXXX,"error":0,"start":XXXX,"duration":XXXX}]]}
 Snapshot test http requests successfully made to URLs: ["ip-ranges.datadoghq.com", "ip-ranges.datadoghq.eu"]
-END Duration: XXXX ms (init: 555.59 ms) Memory Used: XXXX MB
+{"traces":[[{"span_id":"XXXX","parent_id":"XXXX","trace_id":"XXXX","name":"aws.lambda","service":"aws.lambda","resource":"integration-tests-rb-XXXX-http-requests_ruby27","type":"serverless","meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"allocations":XXXX,"error":0,"start":XXXX,"duration":XXXX}]]}
+END Duration: XXXX ms (init: 570.09 ms) Memory Used: XXXX MB
 START
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby27","functionname:integration-tests-rb-XXXX-http-requests_ruby27","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.7.X","resource:integration-tests-rb-XXXX-http-requests_ruby27","datadog_lambda:1.14.0","dd_trace:0.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby27","function:http-request"],"v":1}
 Snapshot test http requests successfully made to URLs: ["ip-ranges.datadoghq.com", "ip-ranges.datadoghq.eu"]
 {"traces":[[{"span_id":"XXXX","parent_id":"XXXX","trace_id":"XXXX","name":"aws.lambda","service":"aws.lambda","resource":"integration-tests-rb-XXXX-http-requests_ruby27","type":"serverless","meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"allocations":XXXX,"error":0,"start":XXXX,"duration":XXXX}]]}
-END Duration: XXXX ms (init: 1-63338813-3dfaf61c642550aa15933cc0) Memory Used: XXXX MB
+END Duration: XXXX ms (init: 1-63339810-74f2d662748627e47dcc8b66) Memory Used: XXXX MB
 START
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby27","functionname:integration-tests-rb-XXXX-http-requests_ruby27","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.7.X","resource:integration-tests-rb-XXXX-http-requests_ruby27","datadog_lambda:1.14.0","dd_trace:0.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby27","function:http-request"],"v":1}
 Snapshot test http requests successfully made to URLs: ["ip-ranges.datadoghq.com", "ip-ranges.datadoghq.eu"]
 {"traces":[[{"span_id":"XXXX","parent_id":"XXXX","trace_id":"XXXX","name":"aws.lambda","service":"aws.lambda","resource":"integration-tests-rb-XXXX-http-requests_ruby27","type":"serverless","meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"allocations":XXXX,"error":0,"start":XXXX,"duration":XXXX}]]}
-END Duration: XXXX ms (init: 1-63338816-4724ecc75219576d770dc4f3) Memory Used: XXXX MB
+END Duration: XXXX ms (init: 1-63339812-632337a21acb6ccc38589436) Memory Used: XXXX MB
