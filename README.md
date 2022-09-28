@@ -1,10 +1,11 @@
 # datadog-lambda-rb
+
 ![build](https://github.com/DataDog/datadog-lambda-rb/workflows/build/badge.svg)
 [![RubyGem](https://img.shields.io/gem/v/datadog-lambda)](https://rubygems.org/gems/datadog-lambda)
 [![Slack](https://chat.datadoghq.com/badge.svg?bg=632CA6)](https://chat.datadoghq.com/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/DataDog/datadog-lambda-rb/blob/main/LICENSE)
 
-Datadog Lambda Library for Ruby (2.5 and 2.7) enables enhanced Lambda metrics, distributed tracing, and custom metric submission from AWS Lambda functions.
+Datadog Lambda Library for Ruby (2.7) enables enhanced Lambda metrics, distributed tracing, and custom metric submission from AWS Lambda functions.
 
 ## Installation
 
@@ -37,4 +38,3 @@ For product feedback and questions, join the `#serverless` channel in the [Datad
 Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
 
 This product includes software developed at Datadog (https://www.datadoghq.com/). Copyright 2019 Datadog, Inc.
-

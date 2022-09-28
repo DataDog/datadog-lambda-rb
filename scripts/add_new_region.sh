@@ -12,8 +12,8 @@ set -e
 
 OLD_REGION='us-east-1'
 
-RUBY_VERSIONS_FOR_AWS_CLI=("ruby2.5" "ruby2.7")
-LAYER_NAMES=("Datadog-Ruby2-5" "Datadog-Ruby2-7")
+RUBY_VERSIONS_FOR_AWS_CLI=("ruby2.7")
+LAYER_NAMES=("Datadog-Ruby2-7")
 NEW_REGION=$1
 
 publish_layer() {

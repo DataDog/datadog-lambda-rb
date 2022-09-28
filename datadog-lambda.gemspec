@@ -7,13 +7,13 @@ require 'datadog/lambda/version'
 Gem::Specification.new do |spec|
   spec.name                  = 'datadog-lambda'
   spec.version               = Datadog::Lambda::VERSION::STRING
-  spec.required_ruby_version = '>= 2.5.0'
+  spec.required_ruby_version = '>= 2.7.0'
   spec.authors               = ['Datadog, Inc.']
   spec.email                 = ['dev@datadoghq.com']
 
   spec.summary     = 'Instruments your Ruby AWS Lambda functions with Datadog'
   spec.description = <<-MSG.gsub(/^[\s]+/, '')
-    datadog-lambda is Datadog’s AWS Lambda integration for ruby. It is used to perform
+    datadog-lambda is Datadog's AWS Lambda integration for ruby. It is used to perform
     distributed tracing between serverful and serverless environments, and send
     custom metrics to Datadog.
   MSG
