@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
 
   spec.summary     = 'Instruments your Ruby AWS Lambda functions with Datadog'
   spec.description = <<-MSG.gsub(/^[\s]+/, '')
-    datadog-lambda is Datadog’s AWS Lambda integration for ruby. It is used to perform
+    datadog-lambda is Datadog's AWS Lambda integration for ruby. It is used to perform
     distributed tracing between serverful and serverless environments, and send
     custom metrics to Datadog.
   MSG

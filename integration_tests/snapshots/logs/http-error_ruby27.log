@@ -3,16 +3,16 @@ START
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby27","function:http-request"],"v":1}
 Snapshot test http requests successfully made to URLs: https://httpstat.us/400
 {"traces":[[{"span_id":"XXXX","parent_id":"XXXX","trace_id":"XXXX","name":"aws.lambda","service":"aws.lambda","resource":"integration-tests-rb-XXXX-http-error_ruby27","type":"serverless","meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"allocations":XXXX,"error":0,"start":XXXX,"duration":XXXX}]]}
-END Duration: XXXX ms (init: 522.47 ms) Memory Used: XXXX MB
+END Duration: XXXX ms (init: 538.51 ms) Memory Used: XXXX MB
 START
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby27","functionname:integration-tests-rb-XXXX-http-error_ruby27","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.7.X","resource:integration-tests-rb-XXXX-http-error_ruby27","datadog_lambda:1.14.0","dd_trace:0.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby27","function:http-request"],"v":1}
 Snapshot test http requests successfully made to URLs: https://httpstat.us/400
 {"traces":[[{"span_id":"XXXX","parent_id":"XXXX","trace_id":"XXXX","name":"aws.lambda","service":"aws.lambda","resource":"integration-tests-rb-XXXX-http-error_ruby27","type":"serverless","meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"allocations":XXXX,"error":0,"start":XXXX,"duration":XXXX}]]}
-END Duration: XXXX ms (init: 1-63339818-67ae6547179df8115781ad20) Memory Used: XXXX MB
+END Duration: XXXX ms (init: 1-63346772-6a0033841dba1e9d50261ab2) Memory Used: XXXX MB
 START
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby27","functionname:integration-tests-rb-XXXX-http-error_ruby27","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.7.X","resource:integration-tests-rb-XXXX-http-error_ruby27","datadog_lambda:1.14.0","dd_trace:0.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby27","function:http-request"],"v":1}
 Snapshot test http requests successfully made to URLs: https://httpstat.us/400
 {"traces":[[{"span_id":"XXXX","parent_id":"XXXX","trace_id":"XXXX","name":"aws.lambda","service":"aws.lambda","resource":"integration-tests-rb-XXXX-http-error_ruby27","type":"serverless","meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"allocations":XXXX,"error":0,"start":XXXX,"duration":XXXX}]]}
-END Duration: XXXX ms (init: 1-6333981a-5a7cc5a20cbd9a767bb85189) Memory Used: XXXX MB
+END Duration: XXXX ms (init: 1-63346773-510de26965c7be285c19c748) Memory Used: XXXX MB
