@@ -27,15 +27,15 @@ module Datadog
     # Same options can be given as Datadog.configure in tracer
     # See https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md#quickstart-for-ruby-applications
     def self.configure_apm
-      require 'ddtrace'
-      require 'ddtrace/sync_writer'
+      require 'datadog/tracing'
+      require 'ddtrace/transport/io'
 
       @patch_http = false
       # Needed to keep trace flushes on a single line
       $stdout.sync = true
 
       Datadog.configure do |c|
-        c.tracer writer: Datadog::SyncWriter.new(
+        c.tracing.writer = Datadog::Tracing::SyncWriter.new(
           transport: Datadog::Transport::IO.default
         )
         c.tags = { "_dd.origin": 'lambda' }
@@ -160,7 +160,7 @@ module Datadog
     end
 
     # Check the DD_ENHANCED_METRICS environment variable
-    # @reurn [boolean] true if this lambda should have
+    # @return [boolean] true if this lambda should have
     # enhanced metrics
     def self.do_enhanced_metrics?
       dd_enhanced_metrics = ENV['DD_ENHANCED_METRICS']
