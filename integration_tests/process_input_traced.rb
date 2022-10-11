@@ -10,7 +10,7 @@ def handle(event:, context:)
     response_payload = {
       'message' => 'hello, dog!'
     }
-    span = Datadog.tracer.active_span
+    span = Datadog::Tracing.active_span
     Datadog::Lambda.metric('serverless.integration_test.execution', 1, function: 'http-request')
     record_ids, event_type = process_event(event: event)
     response_payload['recordIds'] = record_ids if record_ids
@@ -29,10 +29,10 @@ def handle(event:, context:)
 end
 
 def process_event(event:)
-  Datadog.tracer.trace('get_record_ids') do |_span|
+  Datadog::Tracing.trace('get_record_ids') do |_span|
     record_ids, event_type = get_record_ids(event)
     if event_type
-      span = Datadog.tracer.active_span
+      span = Datadog::Tracing.active_span
       span.set_tag('record_event_type', event_type)
       span.set_tag('record_ids', record_ids.join)
     end
@@ -60,11 +60,11 @@ def get_record_ids(event)
 end
 
 def get_api_gateway_request_id(event:)
-  Datadog.tracer.trace('get_api_gateway_request_id') do |span|
+  Datadog::Tracing.trace('get_api_gateway_request_id') do |span|
     request_id = nil
     if event['requestContext']
       request_id = event['requestContext']['requestId']
-      span = Datadog.tracer.active_span
+      span = Datadog::Tracing.active_span
       span.set_tag('api_gateway_request_id', request_id)
       span.set_tag('event_type', 'APIGateway')
     end
