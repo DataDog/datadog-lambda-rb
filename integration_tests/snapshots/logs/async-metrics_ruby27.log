@@ -3,7 +3,7 @@ START
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby27","tagkey:tagvalue","eventsource:APIGateway"],"v":1}
 Processed APIGateway request
 {"traces":[[{"error":0,"meta":{"XXXX": "XXXX"},"metrics":{"XXXX": "XXXX"},"name":"aws.lambda","parent_id":"XXXX","resource":"integration-tests-rb-XXXX-async-metrics_ruby27","service":"aws.lambda","span_id":"XXXX","trace_id":"XXXX","type":"serverless","start":XXXX,"duration":XXXX}]]}
-W, [2022-10-11T18:17:05.197338 #9]  WARN 2632b284-18cb-4a82-b504-631834c4cdd2 -- ddtrace: [ddtrace] Failed to collect environment information: undefined method `client' for #<Datadog::Transport::IO::Client:0x0000000002e742d8> Location: /opt/ruby/gems/2.7.0/gems/ddtrace-1.5.0/lib/datadog/core/diagnostics/environment_logger.rb:113:in `agent_url'
+W, [XXXX]  WARN XXXX[ddtrace] Failed to collect environment information: undefined method `client' for #<Datadog::Transport::IO::Client:XXXX> Location: /opt/ruby/gems/2.7.0/gems/ddtrace-1.5.0/lib/datadog/core/diagnostics/environment_logger.rb:113:in `agent_url'
 END Duration: XXXX ms (init: XXXX ms) Memory Used: XXXX MB
 START
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby27","functionname:integration-tests-rb-XXXX-async-metrics_ruby27","region:sa-east-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.7.X","resource:integration-tests-rb-XXXX-async-metrics_ruby27","datadog_lambda:1.14.0","dd_trace:1.XX.X"],"v":1}
