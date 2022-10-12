@@ -28,15 +28,10 @@ module Datadog
       end
 
       def wrap_datadog(options, &block)
-        tracer_available = false
-        begin
-          raise StandardError unless Datadog::Tracing.enabled?
-
-          tracer_available = true
-        rescue StandardError
+        unless Datadog::Tracing.enabled?
           Datadog::Utils.logger.debug 'dd-trace unavailable'
+          return block.call
         end
-        return block.call unless tracer_available
 
         Datadog::Tracing.trace('aws.lambda', options) do |_span|
           block.call
