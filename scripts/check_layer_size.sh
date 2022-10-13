@@ -7,9 +7,11 @@
 
 # Compares layer size to threshold, and fails if below that threshold
 
-# 5 mb size limit
-MAX_LAYER_COMPRESSED_SIZE_KB=$(expr 8 \* 1024) 
-MAX_LAYER_UNCOMPRESSED_SIZE_KB=$(expr 21 \* 1024) 
+# Previous: 5 mb size limit
+# Current state: limits are way too high, a change to
+# reduce this is needed in the future.
+MAX_LAYER_COMPRESSED_SIZE_KB=$(expr 28 \* 1024) 
+MAX_LAYER_UNCOMPRESSED_SIZE_KB=$(expr 100 \* 1024) 
 
 
 LAYER_FILES_PREFIX="datadog-lambda_ruby"

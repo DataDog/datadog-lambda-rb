@@ -200,7 +200,9 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Normalize runtime bugfix version
                 perl -p -e "s/(runtime:Ruby [0-9]+\.[0-9]+)\.[0-9]+/\1\.X/g" |
                 # Filter XRAY line
-                sed '/XRAY TraceId:/d'
+                sed '/XRAY TraceId:/d' |
+                # Warning Log for unresolved bug in dd-trace 
+                perl -p -e 's/(WARN |W, \[|Client:)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' 
         )
 
         if [ ! -f $function_snapshot_path ]; then
