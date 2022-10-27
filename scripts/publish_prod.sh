@@ -47,7 +47,9 @@ echo "Ensure you have access to the commercial AWS GovCloud account"
 aws-vault exec prod-engineering -- aws sts get-caller-identity
 
 CURRENT_VERSION=$(gem build datadog-lambda | grep Version | sed -n -e 's/^.*Version: //p')
-LAYER_VERSION=$(echo $NEW_VERSION | cut -d '.' -f 2)
+MAJOR_VERSION=$(echo $NEW_VERSION | cut -d '.' -f 1)
+LAYER_VERSION=$(echo $NEW_VERSION | cut -d '.' -f 2)  # MINOR_VERSION === LAYER_VERSION
+PATCH_VERSION=$(echo $NEW_VERSION | cut -d '.' -f 3)
 
 read -p "Ready to update the library version from $CURRENT_VERSION to $NEW_VERSION and publish layer version $LAYER_VERSION (y/n)?" CONT
 if [ "$CONT" != "y" ]; then
@@ -58,7 +60,9 @@ fi
 echo
 echo "Updating version in ./lib/datadog/lambda/version.rb"
 echo
-sed -i "" -E "s/\'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\'/\'$NEW_VERSION\'/" ./lib/datadog/lambda/version.rb
+sed -i "" -E "s/(MAJOR = )(0|[1-9][0-9]*)/\1$MAJOR_VERSION/" ./lib/datadog/lambda/version.rb
+sed -i "" -E "s/(MINOR = )(0|[1-9][0-9]*)/\1$LAYER_VERSION/" ./lib/datadog/lambda/version.rb
+sed -i "" -E "s/(PATCH = )(0|[1-9][0-9]*)/\1$PATCH_VERSION/" ./lib/datadog/lambda/version.rb
 
 echo
 echo 'Building layers...'
