@@ -11,7 +11,7 @@ set -e
 # These values need to be in sync with serverless.yml, where there needs to be a function
 # defined for every handler_runtime combination
 LAMBDA_HANDLERS=("async-metrics" "sync-metrics" "http-requests" "http-error" "process-input-traced")
-RUNTIMES=("ruby25" "ruby27")
+RUNTIMES=("ruby27")
 
 LOGS_WAIT_SECONDS=45
 
@@ -28,10 +28,9 @@ mismatch_found=false
 # [0]: serverless runtime name
 # [1]: ruby version
 # [2]: random 8-character ID to avoid collisions with other runs
-ruby25=("ruby2.5" "2.5" $(xxd -l 4 -c 4 -p </dev/random))
 ruby27=("ruby2.7" "2.7" $(xxd -l 4 -c 4 -p </dev/random))
 
-PARAMETERS_SETS=("ruby25" "ruby27")
+PARAMETERS_SETS=("ruby27")
 
 if [ -z "$RUNTIME_PARAM" ]; then
     echo "Ruby version not specified, running for all ruby versions."
@@ -175,7 +174,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Filter serverless cli errors
                 sed '/Serverless: Recoverable error occurred/d' |
                 # Normalize Lambda runtime report logs
-                perl -p -e 's/(RequestId|Duration|Memory Used|"e"):( )?[a-z0-9\.\-]+/\1:\2XXXX/g' |
+                perl -p -e 's/(RequestId|Duration|Memory Used|"e"|init):( )?[a-z0-9\.\-]+/\1:\2XXXX/g' |
                 # Normalize DD APM headers and AWS account ID
                 perl -p -e "s/(x-datadog-parent-id:|x-datadog-trace-id:|account_id:)[0-9]+/\1XXXX/g" |
                 # Strip API key from logged requests
@@ -201,7 +200,9 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Normalize runtime bugfix version
                 perl -p -e "s/(runtime:Ruby [0-9]+\.[0-9]+)\.[0-9]+/\1\.X/g" |
                 # Filter XRAY line
-                sed '/XRAY TraceId:/d'
+                sed '/XRAY TraceId:/d' |
+                # Warning Log for unresolved bug in dd-trace 
+                perl -p -e 's/(WARN |W, \[|Client:)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' 
         )
 
         if [ ! -f $function_snapshot_path ]; then

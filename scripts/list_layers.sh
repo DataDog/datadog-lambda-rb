@@ -10,7 +10,7 @@
 
 set -e
 
-LAYER_NAMES=("Datadog-Ruby2-5" "Datadog-Ruby2-7")
+LAYER_NAMES=("Datadog-Ruby2-7")
 AVAILABLE_REGIONS=$(aws ec2 describe-regions | jq -r '.[] | .[] | .RegionName')
 LAYERS_MISSING_REGIONS=()
 
