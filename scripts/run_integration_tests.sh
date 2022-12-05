@@ -2,9 +2,9 @@
 
 # Usage - run commands from repo root:
 # To check if new changes to the layer cause changes to any snapshots:
-#   BUILD_LAYERS=true DD_API_KEY=XXXX aws-vault exec serverless-sandbox-account-admin -- ./scripts/run_integration_tests
+#   BUILD_LAYERS=true DD_API_KEY=XXXX aws-vault exec serverless-sandbox-account-admin -- ./scripts/run_integration_tests.sh
 # To regenerate snapshots:
-#   UPDATE_SNAPSHOTS=true DD_API_KEY=XXXX aws-vault exec serverless-sandbox-account-admin -- ./scripts/run_integration_tests
+#   UPDATE_SNAPSHOTS=true DD_API_KEY=XXXX aws-vault exec serverless-sandbox-account-admin -- ./scripts/run_integration_tests.sh
 
 set -e
 
@@ -202,7 +202,8 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Filter XRAY line
                 sed '/XRAY TraceId:/d' |
                 # Warning Log for unresolved bug in dd-trace 
-                perl -p -e 's/(WARN |W, \[|Client:)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' 
+                perl -p -e 's/(WARN |W, \[|Client:)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
+                sort
         )
 
         if [ ! -f $function_snapshot_path ]; then
