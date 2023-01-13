@@ -7,7 +7,7 @@
 #
 # Use with `./publish_prod.sh <DESIRED_NEW_VERSION>
 
-set -e
+set -eo pipefail
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [ $BRANCH != "main" ]; then
@@ -37,6 +37,7 @@ echo "Running tests"
 ./scripts/run_tests.sh
 
 echo "Ensure you have access to gem account"
+ruby scripts/check_credentials.rb
 gem signin
 
 echo "Ensure you have access to the AWS GovCloud account"
