@@ -203,6 +203,8 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 sed '/XRAY TraceId:/d' |
                 # Warning Log for unresolved bug in dd-trace 
                 perl -p -e 's/(WARN |W, \[|Client:)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
+                # Filter out INIT runtime logs
+                perl -p -e "s/INIT_START.*//g" |
                 sort
         )
 
