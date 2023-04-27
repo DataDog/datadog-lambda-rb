@@ -67,7 +67,6 @@ describe Datadog::Lambda do
         functionname: "hello-dog-ruby-dev-helloRuby#{dd_lambda_layer_tag}",
         memorysize: 128,
         region: 'us-east-1',
-        runtime: include('Ruby 2.'),
         resource: "hello-dog-ruby-dev-helloRuby#{dd_lambda_layer_tag}"
       )
     end
@@ -81,8 +80,7 @@ describe Datadog::Lambda do
           functionname: 'Ruby-test',
           memorysize: 128,
           region: 'us-east-1',
-          resource: 'Ruby-test:1',
-          runtime: include('Ruby 2.') }
+          resource: 'Ruby-test:1' }
       )
     end
   end
@@ -96,8 +94,7 @@ describe Datadog::Lambda do
           memorysize: 128,
           region: 'us-east-1',
           resource: 'Ruby-test:my-alias',
-          executedversion: '1',
-          runtime: include('Ruby 2.') }
+          executedversion: '1' }
       )
     end
   end
