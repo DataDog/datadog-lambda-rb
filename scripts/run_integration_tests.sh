@@ -175,7 +175,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Filter serverless cli errors
                 sed '/Serverless: Recoverable error occurred/d' |
                 # Normalize Lambda runtime report logs
-                perl -p -e 's/(RequestId|Duration|Memory Used|"e"|init|"date"):( )?[a-z0-9\.\-]+/\1:\2XXXX/g' |
+                perl -p -e 's/(RequestId|Duration|Memory Used|"e"|init):( )?[a-z0-9\.\-]+/\1:\2XXXX/g' |
                 # Normalize DD APM headers and AWS account ID
                 perl -p -e "s/(x-datadog-parent-id:|x-datadog-trace-id:|account_id:)[0-9]+/\1XXXX/g" |
                 # Strip API key from logged requests
@@ -189,7 +189,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Normalize minor package version tag so that these snapshots aren't broken on version bumps
                 perl -p -e "s/(dd_lambda_layer:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
                 perl -p -e "s/(dd_trace:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
-                perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|x-datadog-trace-id|x-datadog-parent-id|datadog_lambda|dd_trace|allocations)":("?)[a-zA-Z0-9\.:\-]+("?)/"\1":\2XXXX\3/g' |
+                perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|x-datadog-trace-id|x-datadog-parent-id|datadog_lambda|dd_trace|allocations|date)":("?)[a-zA-Z0-9\.:\-\+]+("?)/"\1":\2XXXX\3/g' |
                 # Strip out run ID (from function name, resource, etc.)
                 perl -p -e "s/${!run_id}/XXXX/g" |
                 # Normalize line numbers in stack traces
