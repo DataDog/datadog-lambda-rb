@@ -28,7 +28,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        ruby-version: [2.7]
+        ruby-version: [2.7, 3.2]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        runtime-param: [2.7]
+        runtime-param: [2.7, 3.2]
 
     steps:
       - name: Checkout
