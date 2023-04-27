@@ -10,9 +10,9 @@
 # VERSION is required.
 set -e
 
-RUBY_VERSIONS_FOR_AWS_CLI=("ruby2.7")
-LAYER_PATHS=(".layers/datadog-lambda_ruby2.7.zip")
-AVAILABLE_LAYERS=("Datadog-Ruby2-7")
+RUBY_VERSIONS_FOR_AWS_CLI=("ruby2.7" "ruby3.2")
+LAYER_PATHS=(".layers/datadog-lambda_ruby-amd64-2.7.zip" ".layers/datadog-lambda_ruby-arm64-2.7.zip" ".layers/datadog-lambda_ruby-amd64-3.2.zip" ".layers/datadog-lambda_ruby-arm64-3.2.zip")
+AVAILABLE_LAYERS=("Datadog-Ruby2-7" "Datadog-Ruby2-7-ARM" "Datadog-Ruby3-2" "Datadog-Ruby3-2-ARM")
 AVAILABLE_REGIONS=$(aws ec2 describe-regions | jq -r '.[] | .[] | .RegionName')
 
 
