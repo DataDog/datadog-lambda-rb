@@ -175,7 +175,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Filter serverless cli errors
                 sed '/Serverless: Recoverable error occurred/d' |
                 # Normalize Lambda runtime report logs
-                perl -p -e 's/(RequestId|Duration|Memory Used|"e"|init):( )?[a-z0-9\.\-]+/\1:\2XXXX/g' |
+                perl -p -e 's/(RequestId|Duration|Memory Used|"e"|init|"date"):( )?[a-z0-9\.\-]+/\1:\2XXXX/g' |
                 # Normalize DD APM headers and AWS account ID
                 perl -p -e "s/(x-datadog-parent-id:|x-datadog-trace-id:|account_id:)[0-9]+/\1XXXX/g" |
                 # Strip API key from logged requests
@@ -204,6 +204,8 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 sed '/XRAY TraceId:/d' |
                 # Warning Log for unresolved bug in dd-trace 
                 perl -p -e 's/(WARN |W, \[|Client:)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
+                # Information Log for Datadog Configuration
+                perl -p -e 's/(INFO |I, \[)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
                 # Filter out INIT runtime logs
                 perl -p -e "s/INIT_START.*//g" |
                 sort
