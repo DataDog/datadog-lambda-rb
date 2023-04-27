@@ -20,7 +20,7 @@ provider:
 layers:
   ruby:
     package:
-      artifact: ../.layers/datadog-lambda_ruby${env:RUBY_VERSION}.zip
+      artifact: ../.layers/datadog-lambda_ruby-amd64-${env:RUBY_VERSION}.zip
 
 functions:
   # async-metrics
