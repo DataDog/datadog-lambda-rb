@@ -4,8 +4,7 @@ ARG runtime
 # Install dev dependencies
 COPY . /var/task/datadog-lambda-ruby
 WORKDIR /var/task/datadog-lambda-ruby
-RUN apt-get update
-RUN apt-get install -y gcc zip binutils
+RUN yum install -y gcc zip binutils
 RUN gem build datadog-lambda
 RUN gem install datadog-lambda --install-dir "/opt/ruby/gems/${runtime}"
 # v0.48 has a bug : https://github.com/DataDog/dd-trace-rb/issues/1475
