@@ -38,7 +38,7 @@ function docker_build_zip {
     # between different ruby runtimes.
     temp_dir=$(mktemp -d)
     docker buildx build -t datadog-lambda-ruby-${arch}:$1 . --no-cache \
-        --build-arg "image=ruby:${1}" \
+        --build-arg "image=public.ecr.aws/lambda/ruby:${1}" \
         --build-arg "runtime=${1}.0" \
         --platform linux/${arch} \
         --load
