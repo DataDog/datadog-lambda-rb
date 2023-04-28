@@ -105,7 +105,7 @@ ruby version : ${!ruby_version} and run id : ${!run_id}"
         for input_event_file in "${input_event_files[@]}"; do
             # Get event name without trailing ".json" so we can build the snapshot file name
             input_event_name=$(echo "$input_event_file" | sed "s/.json//")
-            snapshot_path="./snapshots/return_values/${handler_name}_${parameters_set}_${input_event_name}.json"
+            snapshot_path="./snapshots/return_values/${handler_name}_${input_event_name}.json"
 
             return_value=$(RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
                 serverless invoke --stage ${!run_id} -f "$function_name" --path "./input_events/$input_event_file")
