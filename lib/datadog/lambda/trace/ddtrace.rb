@@ -33,7 +33,7 @@ module Datadog
           return block.call
         end
 
-        Datadog::Tracing.trace('aws.lambda', options) do |_span|
+        Datadog::Tracing.trace('aws.lambda', **options) do |_span|
           block.call
         end
       end
