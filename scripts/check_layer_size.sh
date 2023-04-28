@@ -20,7 +20,7 @@ VERSIONS=("2.7" "3.2")
 
 for version in "${VERSIONS[@]}"
 do
-    FILE=$LAYER_DIR/${LAYER_FILES_PREFIX}${version}.zip
+    FILE=$LAYER_DIR/${LAYER_FILES_PREFIX}-amd64-${version}.zip
     FILE_SIZE=$(stat --printf="%s" $FILE)
     FILE_SIZE_KB="$(( ${FILE_SIZE%% *} / 1024))"
     echo "Layer file ${FILE} has zipped size ${FILE_SIZE_KB} kb"
