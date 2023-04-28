@@ -77,6 +77,10 @@ jobs:
         working-directory: integration_tests
         run: yarn install
 
+      - name: Install Crossbuild dependencies
+        run: |
+          sudo apt install -y qemu-user-static binfmt-support
+
       - name: Run tests
         env:
           BUILD_LAYERS: true
