@@ -11,6 +11,7 @@
 
 require 'datadog/lambda/trace/listener'
 require 'datadog/lambda/utils/logger'
+require 'datadog/lambda/utils/extension'
 require 'datadog/lambda/trace/patch_http'
 require 'json'
 require 'time'
@@ -35,9 +36,11 @@ module Datadog
       $stdout.sync = true
 
       Datadog.configure do |c|
-        c.tracing.writer = Datadog::Tracing::SyncWriter.new(
-          transport: Datadog::Transport::IO.default
-        )
+        unless Datadog::Utils.extension_running
+          c.tracing.writer = Datadog::Tracing::SyncWriter.new(
+            transport: Datadog::Transport::IO.default
+          )
+        end
         c.tags = { "_dd.origin": 'lambda' }
         yield(c) if block_given?
       end

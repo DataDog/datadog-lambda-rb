@@ -12,7 +12,7 @@ module Datadog
   module Lambda
     module VERSION
       MAJOR = 2
-      MINOR = 16
+      MINOR = 17
       PATCH = 0
       PRE = nil
 
