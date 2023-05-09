@@ -14,13 +14,14 @@ module Datadog
   module Utils
     AGENT_URL = 'http://127.0.0.1:8124'
     HELLO_PATH = '/lambda/hello'
+    EXTENSION_CHECK_URI = URI(AGENT_URL + HELLO_PATH).freeze
     EXTENSION_PATH = '/opt/extensions/datadog-agent'
 
     def self.extension_running
       return false unless File.exist?(EXTENSION_PATH)
 
       begin
-        Net::HTTP.get(URI(AGENT_URL + HELLO_PATH))
+        Net::HTTP.get(EXTENSION_CHECK_URI)
       rescue StandardError => e
         Datadog::Utils.logger.debug "extension is not running, returned with error #{e}"
         return false
