@@ -10,7 +10,7 @@ set -e
 
 LAYER_DIR=".layers"
 LAYER_FILES_PREFIX="datadog-lambda_ruby"
-RUBY_VERSIONS=("2.7")
+RUBY_VERSIONS=("2.7" "3.2")
 
 if [ -z "$RUBY_VERSION" ]; then
     echo "Ruby version not specified, running for all ruby versions."
@@ -29,19 +29,23 @@ function make_path_absolute {
 }
 
 function docker_build_zip {
-    # Args: [ruby version] [zip destination]
+    # Args: [ruby version] [zip destination] [architecture]
 
     destination=$(make_path_absolute $2)
+    arch=$3
 
     # Install datadog ruby in a docker container to avoid the mess from switching
     # between different ruby runtimes.
     temp_dir=$(mktemp -d)
-    docker build -t datadog-lambda-layer-ruby:$1 . --no-cache \
-        --build-arg "image=lambci/lambda:build-ruby${1}" --build-arg "runtime=${1}.0"
+    docker buildx build -t datadog-lambda-ruby-${arch}:$1 . --no-cache \
+        --build-arg "image=ruby:${1}" \
+        --build-arg "runtime=${1}.0" \
+        --platform linux/${arch} \
+        --load
 
     # Run the image by runtime tag, tar its generatd `ruby` directory to sdout,
     # then extract it to a temp directory.
-    docker run --rm datadog-lambda-layer-ruby:$1 tar cf - /opt/ruby | tar -xf - -C $temp_dir
+    docker run --rm datadog-lambda-ruby-${arch}:$1 tar cf - /opt/ruby | tar -xf - -C $temp_dir
 
     # Zip to destination, and keep directory structure as based in $temp_dir
     (cd $temp_dir/opt/ && zip -q -r $destination ./)
@@ -55,8 +59,11 @@ mkdir $LAYER_DIR
 
 for ruby_version in "${RUBY_VERSIONS[@]}"
 do
-    echo "Building layer for ruby${ruby_version}"
-    docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}${ruby_version}.zip
+    echo "Building layer for Ruby ${ruby_version} arch=arm64"
+    docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}-arm64-${ruby_version}.zip arm64
+
+    echo "Building layer for Ruby ${ruby_version} arch=amd64"
+    docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}-amd64-${ruby_version}.zip amd64
 done
 
 

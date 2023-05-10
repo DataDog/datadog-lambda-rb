@@ -25,6 +25,11 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: yarn install
 
+      - name: Install Crossbuild dependencies
+        run: |
+          sudo apt-get update --allow-releaseinfo-change --fix-missing
+          sudo apt install -y qemu-user-static binfmt-support
+
       - name: Build Layers
         run: ./scripts/build_layers.sh
 

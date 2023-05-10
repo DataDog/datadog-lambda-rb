@@ -11,7 +11,7 @@ set -e
 # These values need to be in sync with serverless.yml, where there needs to be a function
 # defined for every handler_runtime combination
 LAMBDA_HANDLERS=("async-metrics" "sync-metrics" "http-requests" "http-error" "process-input-traced")
-RUNTIMES=("ruby27")
+RUNTIMES=("ruby27" "ruby32")
 
 LOGS_WAIT_SECONDS=45
 
@@ -29,8 +29,9 @@ mismatch_found=false
 # [1]: ruby version
 # [2]: random 8-character ID to avoid collisions with other runs
 ruby27=("ruby2.7" "2.7" $(xxd -l 4 -c 4 -p </dev/random))
+ruby32=("ruby3.2" "3.2" $(xxd -l 4 -c 4 -p </dev/random))
 
-PARAMETERS_SETS=("ruby27")
+PARAMETERS_SETS=("ruby27" "ruby32")
 
 if [ -z "$RUNTIME_PARAM" ]; then
     echo "Ruby version not specified, running for all ruby versions."
@@ -104,7 +105,7 @@ ruby version : ${!ruby_version} and run id : ${!run_id}"
         for input_event_file in "${input_event_files[@]}"; do
             # Get event name without trailing ".json" so we can build the snapshot file name
             input_event_name=$(echo "$input_event_file" | sed "s/.json//")
-            snapshot_path="./snapshots/return_values/${handler_name}_${parameters_set}_${input_event_name}.json"
+            snapshot_path="./snapshots/return_values/${handler_name}_${input_event_name}.json"
 
             return_value=$(RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
                 serverless invoke --stage ${!run_id} -f "$function_name" --path "./input_events/$input_event_file")
@@ -188,7 +189,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Normalize minor package version tag so that these snapshots aren't broken on version bumps
                 perl -p -e "s/(dd_lambda_layer:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
                 perl -p -e "s/(dd_trace:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
-                perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|x-datadog-trace-id|x-datadog-parent-id|datadog_lambda|dd_trace|allocations)":("?)[a-zA-Z0-9\.:\-]+("?)/"\1":\2XXXX\3/g' |
+                perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|x-datadog-trace-id|x-datadog-parent-id|datadog_lambda|dd_trace|allocations|date)":("?)[a-zA-Z0-9\.:\-\+]+("?)/"\1":\2XXXX\3/g' |
                 # Strip out run ID (from function name, resource, etc.)
                 perl -p -e "s/${!run_id}/XXXX/g" |
                 # Normalize line numbers in stack traces
@@ -203,6 +204,8 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 sed '/XRAY TraceId:/d' |
                 # Warning Log for unresolved bug in dd-trace 
                 perl -p -e 's/(WARN |W, \[|Client:)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
+                # Information Log for Datadog Configuration
+                perl -p -e 's/(INFO |I, \[)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
                 # Filter out INIT runtime logs
                 perl -p -e "s/INIT_START.*//g" |
                 sort
