@@ -64,6 +64,7 @@ echo
 sed -i "" -E "s/(MAJOR = )(0|[1-9][0-9]*)/\1$MAJOR_VERSION/" ./lib/datadog/lambda/version.rb
 sed -i "" -E "s/(MINOR = )(0|[1-9][0-9]*)/\1$LAYER_VERSION/" ./lib/datadog/lambda/version.rb
 sed -i "" -E "s/(PATCH = )(0|[1-9][0-9]*)/\1$PATCH_VERSION/" ./lib/datadog/lambda/version.rb
+gem build datadog-lambda
 
 echo
 echo 'Building layers...'
