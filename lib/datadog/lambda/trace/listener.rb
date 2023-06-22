@@ -16,6 +16,7 @@ module Datadog
   module Trace
     # TraceListener tracks tracing context information
     class Listener
+      @trace = nil
       def initialize(handler_name:, function_name:, patch_http:,
                      merge_xray_traces:)
         @handler_name = handler_name
@@ -25,16 +26,24 @@ module Datadog
         Datadog::Trace.patch_http if patch_http
       end
 
-      def on_start(event:)
-        trace_context = Datadog::Trace.extract_trace_context(event,
-                                                             @merge_xray_traces)
-        Datadog::Trace.trace_context = trace_context
-        Datadog::Utils.logger.debug "extracted trace context #{trace_context}"
-      rescue StandardError => e
-        Datadog::Utils.logger.error "couldn't read tracing context #{e}"
+      def on_start(request_context:, cold_start:)
+        options = get_option_tags(
+          request_context: request_context,
+          cold_start: cold_start
+        )
+        context = Datadog::Trace.trace_context
+        source = context[:source] if context
+        options[:tags]['_dd.parent_source'] = source if source && source != 'ddtrace'
+        options[:resource] = @function_name
+        options[:service] = 'aws.lambda'
+        options[:span_type] = 'serverless'
+        Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
+        @trace = Datadog::Tracing.trace('aws.lambda', **options)
       end
 
-      def on_end; end
+      def on_end
+        @trace.finish
+      end
 
       def on_wrap(request_context:, cold_start:, &block)
         options = get_option_tags(
