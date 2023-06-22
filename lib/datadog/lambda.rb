@@ -53,13 +53,11 @@ module Datadog
     def self.wrap(event, context, &block)
       Datadog::Utils.update_log_level
       @listener ||= initialize_listener
-      @listener.on_start(event: event)
       record_enhanced('invocations', context)
       begin
         cold = @is_cold_start
-        res = @listener.on_wrap(request_context: context, cold_start: cold) do
-          block.call
-        end
+        @listener.on_start(event: event, request_context: context, cold_start: cold)
+        block.call
       rescue StandardError => e
         record_enhanced('errors', context)
         raise e
