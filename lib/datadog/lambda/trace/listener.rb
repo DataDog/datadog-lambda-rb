@@ -26,7 +26,11 @@ module Datadog
         Datadog::Trace.patch_http if patch_http
       end
 
-      def on_start(request_context:, cold_start:)
+      # rubocop:disable Metrics/AbcSize
+      def on_start(event:, request_context:, cold_start:)
+        trace_context = Datadog::Trace.extract_trace_context(event, @merge_xray_traces)
+        Datadog::Trace.trace_context = trace_context
+        Datadog::Utils.logger.debug "extracted trace context #{trace_context}"
         options = get_option_tags(
           request_context: request_context,
           cold_start: cold_start
@@ -40,6 +44,7 @@ module Datadog
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
         @trace = Datadog::Tracing.trace('aws.lambda', **options)
       end
+      # rubocop:enable Metrics/AbcSize
 
       def on_end
         @trace.finish
