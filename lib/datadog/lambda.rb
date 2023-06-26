@@ -37,13 +37,11 @@ module Datadog
       $stdout.sync = true
 
       Datadog.configure do |c|
-        # TODO: change implementation to not use the hello route
-        #
-        # unless Datadog::Utils.extension_running
-        #   c.tracing.writer = Datadog::Tracing::SyncWriter.new(
-        #     transport: Datadog::Transport::IO.default
-        #   )
-        # end
+        unless Datadog::Utils.extension_running
+          c.tracing.writer = Datadog::Tracing::SyncWriter.new(
+            transport: Datadog::Transport::IO.default
+          )
+        end
         c.tags = { "_dd.origin": 'lambda' }
         yield(c) if block_given?
       end
