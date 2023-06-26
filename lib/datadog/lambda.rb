@@ -21,6 +21,7 @@ module Datadog
   # Instruments AWS Lambda functions with Datadog distributed tracing and
   # custom metrics
   module Lambda
+    @response = nil
     @is_cold_start = true
     @patch_http = true
 
@@ -36,11 +37,13 @@ module Datadog
       $stdout.sync = true
 
       Datadog.configure do |c|
-        unless Datadog::Utils.extension_running
-          c.tracing.writer = Datadog::Tracing::SyncWriter.new(
-            transport: Datadog::Transport::IO.default
-          )
-        end
+        # TODO: change implementation to not use the hello route
+        #
+        # unless Datadog::Utils.extension_running
+        #   c.tracing.writer = Datadog::Tracing::SyncWriter.new(
+        #     transport: Datadog::Transport::IO.default
+        #   )
+        # end
         c.tags = { "_dd.origin": 'lambda' }
         yield(c) if block_given?
       end
@@ -57,12 +60,13 @@ module Datadog
       begin
         cold = @is_cold_start
         @listener.on_start(event: event, request_context: context, cold_start: cold)
-        block.call
+        @response = block.call
       rescue StandardError => e
         record_enhanced('errors', context)
         raise e
       ensure
-        @listener.on_end
+        res = @response
+        @listener.on_end(response: res)
         @is_cold_start = false
       end
       res

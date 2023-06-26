@@ -43,10 +43,12 @@ module Datadog
         options[:span_type] = 'serverless'
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
         @trace = Datadog::Tracing.trace('aws.lambda', **options)
+        Datadog::Utils.send_start_invocation_request(event: event)
       end
       # rubocop:enable Metrics/AbcSize
 
-      def on_end
+      def on_end(response:)
+        Datadog::Utils.send_end_invocation_request(response: response)
         @trace.finish
       end
 
