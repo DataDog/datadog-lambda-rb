@@ -12,26 +12,17 @@ require 'net/http'
 module Datadog
   # Utils contains utility functions shared between modules
   module Utils
-    AGENT_URL = 'http://127.0.0.1:8124'
-    HELLO_PATH = '/lambda/hello'
+    EXTENSION_PATH = '/opt/extensions/datadog-agent'
+    EXTENSION_BASE_URL = 'http://127.0.0.1:8124'
+
     START_INVOCATION_PATH = '/lambda/start-invocation'
     END_INVOCATION_PATH = '/lambda/end-invocation'
+
     START_INVOCATION_URI = URI(AGENT_URL + START_INVOCATION_PATH).freeze
     END_INVOCATION_URI = URI(AGENT_URL + END_INVOCATION_PATH).freeze
-    EXTENSION_CHECK_URI = URI(AGENT_URL + HELLO_PATH).freeze
-    EXTENSION_PATH = '/opt/extensions/datadog-agent'
 
     def self.extension_running
-      return false unless File.exist?(EXTENSION_PATH)
-
-      begin
-        Net::HTTP.get(EXTENSION_CHECK_URI)
-      rescue StandardError => e
-        Datadog::Utils.logger.debug "extension is not running, returned with error #{e}"
-        return false
-      end
-
-      true
+      File.exist?(EXTENSION_PATH)
     end
 
     def self.send_start_invocation_request(event:)
