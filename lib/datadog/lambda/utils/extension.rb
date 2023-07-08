@@ -18,8 +18,8 @@ module Datadog
     START_INVOCATION_PATH = '/lambda/start-invocation'
     END_INVOCATION_PATH = '/lambda/end-invocation'
 
-    START_INVOCATION_URI = URI(AGENT_URL + START_INVOCATION_PATH).freeze
-    END_INVOCATION_URI = URI(AGENT_URL + END_INVOCATION_PATH).freeze
+    START_INVOCATION_URI = URI(EXTENSION_BASE_URL + START_INVOCATION_PATH).freeze
+    END_INVOCATION_URI = URI(EXTENSION_BASE_URL + END_INVOCATION_PATH).freeze
 
     def self.extension_running
       File.exist?(EXTENSION_PATH)
