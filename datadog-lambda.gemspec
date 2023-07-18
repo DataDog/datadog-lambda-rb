@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.email                 = ['dev@datadoghq.com']
 
   spec.summary     = 'Instruments your Ruby AWS Lambda functions with Datadog'
-  spec.description = <<-MSG.gsub(/^[\s]+/, '')
+  spec.description = <<-MSG.gsub(/^\s+/, '')
     datadog-lambda is Datadog's AWS Lambda integration for ruby. It is used to perform
     distributed tracing between serverful and serverless environments, and send
     custom metrics to Datadog.
@@ -33,7 +33,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'aws-xray-sdk', '~> 0.11.3'
   # We don't add this as a direct dependency, because it has
   # native modules that are difficult to package for lambda
-  spec.add_development_dependency 'ddtrace', '~>1.12.0'
+  spec.add_development_dependency 'ddtrace', '~>1.12.1'
 
   # Development dependencies
   spec.add_development_dependency 'rake', '~> 12.3'
