@@ -2,7 +2,7 @@
 END Duration: XXXX ms (init: XXXX ms) Memory Used: XXXX MB
 END Duration: XXXX ms (init: XXXX) Memory Used: XXXX MB
 END Duration: XXXX ms (init: XXXX) Memory Used: XXXX MB
-I, [XXXX]  INFO XXXX[ddtrace] DATADOG CONFIGURATION - {"date":"XXXX","os_name":"x86_64-pc-linux-gnu","version":"1.11.0","lang":"ruby","lang_version":"2.7.7","enabled":true,"service":"runtime","debug":false,"analytics_enabled":false,"tags":"_dd.origin:lambda","runtime_metrics_enabled":false,"vm":"ruby-2.7.7","partial_flushing_enabled":false,"priority_sampling_enabled":false,"health_metrics_enabled":false,"profiling_enabled":false}
+I, [XXXX]  INFO XXXX[ddtrace] DATADOG CONFIGURATION - {"date":"XXXX","os_name":"x86_64-pc-linux-gnu","version":"1.12.0","lang":"ruby","lang_version":"2.7.8","enabled":true,"service":"runtime","debug":false,"analytics_enabled":false,"tags":"_dd.origin:lambda","runtime_metrics_enabled":false,"vm":"ruby-2.7.8","partial_flushing_enabled":false,"priority_sampling_enabled":false,"health_metrics_enabled":false,"profiling_enabled":false}
 Processed APIGateway request
 Processed SNS request
 Processed SQS request
