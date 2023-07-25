@@ -66,6 +66,7 @@ module Datadog
       ensure
         @listener.on_end
         @is_cold_start = false
+        Datadog::Metrics.end
       end
       res
     end
@@ -85,15 +86,7 @@ module Datadog
       raise 'name must be a string' unless name.is_a?(String)
       raise 'value must be a number' unless value.is_a?(Numeric)
 
-      time ||= Time.now
-      time_ms = time.to_f.to_i
-
-      tag_list = ["dd_lambda_layer:datadog-ruby#{dd_lambda_layer_tag}"]
-      tags.each do |tag|
-        tag_list.push("#{tag[0]}:#{tag[1]}")
-      end
-      metric = { e: time_ms, m: name, t: tag_list, v: value }
-      puts metric.to_json
+      Datadog::Metrics.distribution(name, value, time: time, **tags)
     end
 
     def self.dd_lambda_layer_tag
