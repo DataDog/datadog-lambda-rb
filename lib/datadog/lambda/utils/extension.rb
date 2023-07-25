@@ -17,7 +17,17 @@ module Datadog
     EXTENSION_CHECK_URI = URI(AGENT_URL + HELLO_PATH).freeze
     EXTENSION_PATH = '/opt/extensions/datadog-agent'
 
+    @is_extension_running = nil
+
     def self.extension_running
+      return @is_extension_running unless @is_extension_running.nil?
+
+      @is_extension_running = ping_extension
+
+      @is_extension_running
+    end
+
+    def ping_extension
       return false unless File.exist?(EXTENSION_PATH)
 
       begin
