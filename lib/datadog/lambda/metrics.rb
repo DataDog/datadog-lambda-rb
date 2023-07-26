@@ -29,8 +29,10 @@ module Datadog
         tag_list = get_tags(**tags)
 
         if Datadog::Utils.extension_running?
+          Datadog::Utils.logger.debug 'sending metrics through extension'
           @statsd.distribution(name, value, tags: tag_list)
         else
+          Datadog::Utils.logger.debug 'metrics are going to be handled by the forwarder'
           time ||= Time.now
           time_ms = time.to_f.to_i
 
@@ -52,7 +54,7 @@ module Datadog
         tag_list
       end
 
-      def initialize
+      private_class_method def initialize
         @statsd = Datadog::Statsd.new(URL, PORT, single_thread: true) if Datadog::Utils.extension_running?
       end
     end
