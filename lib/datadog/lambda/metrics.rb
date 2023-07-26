@@ -16,16 +16,20 @@ module Datadog
   module Metrics
     URL = 'localhost'
     PORT = '8125'
-    class << self
-      @instance = new
-
+    # Client is a singleton class that instantiates a Datadog::Statsd
+    # client to send metrics to the Datadog Extension if present.
+    class Client
       private_class_method :new
 
-      def self.distribution(name, value, time: nil, **tags)
+      def self.instance
+        @instance ||= new
+      end
+
+      def distribution(name, value, time: nil, **tags)
         tag_list = get_tags(**tags)
 
         if Datadog::Utils.extension_running?
-          @instance.distribution(name, value, tags: tag_list)
+          @statsd.distribution(name, value, tags: tag_list)
         else
           time ||= Time.now
           time_ms = time.to_f.to_i
@@ -35,12 +39,12 @@ module Datadog
         end
       end
 
-      def self.end
-        @instance&.close
+      def end
+        @statsd&.close
       end
 
       def get_tags(**tags)
-        tag_list = ["dd_lambda_layer:datadog-ruby#{dd_lambda_layer_tag}"]
+        tag_list = ["dd_lambda_layer:datadog-ruby#{Datadog::Lambda.dd_lambda_layer_tag}"]
         tags.each do |tag|
           tag_list.push("#{tag[0]}:#{tag[1]}")
         end
@@ -49,7 +53,7 @@ module Datadog
       end
 
       def initialize
-        @instance = Datadog::Statsd.new(URL, PORT, single_thread: true) if Datadog::Utils.extension_running?
+        @statsd = Datadog::Statsd.new(URL, PORT, single_thread: true) if Datadog::Utils.extension_running?
       end
     end
   end
