@@ -25,6 +25,7 @@ describe Datadog::Metrics::Client do
 
       # Mock Datadog::Statsd client
       statsd = instance_double(Datadog::Statsd)
+      previous_statsd = client.instance_variable_get(:@statsd)
       client.instance_variable_set(:@statsd, statsd)
 
       expected_tags = default_tags.concat(['env:dev', 'region:nyc'])
@@ -33,6 +34,9 @@ describe Datadog::Metrics::Client do
 
       # Call the distribution method
       client.distribution('metric_name', 42, env: 'dev', region: 'nyc')
+
+      # Reset Datadog::Statsd mock
+      client.instance_variable_set(:@statsd, previous_statsd)
     end
 
     it 'prints metrics when extension is not running' do
@@ -63,3 +67,5 @@ describe Datadog::Metrics::Client do
     end
   end
 end
+
+# rubocop:enable Metrics/BlockLength
