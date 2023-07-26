@@ -19,15 +19,15 @@ module Datadog
 
     @is_extension_running = nil
 
-    def self.extension_running
+    def self.extension_running?
       return @is_extension_running unless @is_extension_running.nil?
 
-      @is_extension_running = ping_extension
+      @is_extension_running = check_extension_running
 
       @is_extension_running
     end
 
-    def ping_extension
+    def self.check_extension_running
       return false unless File.exist?(EXTENSION_PATH)
 
       begin
