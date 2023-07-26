@@ -9,6 +9,7 @@
 #
 # rubocop:disable Metrics/ModuleLength
 
+require 'datadog/lambda/metrics'
 require 'datadog/lambda/trace/listener'
 require 'datadog/lambda/utils/logger'
 require 'datadog/lambda/utils/extension'
@@ -23,6 +24,7 @@ module Datadog
   module Lambda
     @is_cold_start = true
     @patch_http = true
+    @metrics_client = Metrics::Client.instance
 
     # Configures Datadog's APM tracer with lambda specific defaults.
     # Same options can be given as Datadog.configure in tracer
@@ -36,7 +38,7 @@ module Datadog
       $stdout.sync = true
 
       Datadog.configure do |c|
-        unless Datadog::Utils.extension_running
+        unless Datadog::Utils.extension_running?
           c.tracing.writer = Datadog::Tracing::SyncWriter.new(
             transport: Datadog::Transport::IO.default
           )
@@ -52,7 +54,7 @@ module Datadog
     # @param block [Proc] implementation of the handler function.
     def self.wrap(event, context, &block)
       Datadog::Utils.update_log_level
-      @listener ||= initialize_listener
+      @trace_listener ||= initialize_listener
       @listener.on_start(event: event)
       record_enhanced('invocations', context)
       begin
@@ -66,7 +68,7 @@ module Datadog
       ensure
         @listener.on_end
         @is_cold_start = false
-        Datadog::Metrics.end
+        @metrics_client.end
       end
       res
     end
@@ -86,7 +88,7 @@ module Datadog
       raise 'name must be a string' unless name.is_a?(String)
       raise 'value must be a number' unless value.is_a?(Numeric)
 
-      Datadog::Metrics.distribution(name, value, time: time, **tags)
+      @metrics_client.distribution(name, value, time: time, **tags)
     end
 
     def self.dd_lambda_layer_tag
