@@ -30,7 +30,11 @@ module Datadog
 
         if Datadog::Utils.extension_running?
           Datadog::Utils.logger.debug 'sending metrics through extension'
-          @statsd.distribution(name, value, tags: tag_list)
+          begin
+            @statsd.distribution(name, value, tags: tag_list)
+          rescue StandardError => e
+            Datadog::Utils.logger.warning "error sending metric to the extension: #{e}"
+          end
         else
           Datadog::Utils.logger.debug 'metrics are going to be handled by the forwarder'
           time ||= Time.now
