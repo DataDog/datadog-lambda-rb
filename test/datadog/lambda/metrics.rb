@@ -4,9 +4,10 @@
 require 'datadog/lambda'
 require 'datadog/statsd'
 require 'datadog/lambda/metrics'
+require 'datadog/lambda/utils/logger'
 
 describe Datadog::Metrics::Client do
-  let(:client) { Datadog::Metrics::Client.instance }
+  subject(:client) { Datadog::Metrics::Client.instance }
   let(:layer_tag) { Datadog::Lambda.dd_lambda_layer_tag }
   let(:default_tags) { ["dd_lambda_layer:datadog-ruby#{layer_tag}"] }
 
@@ -19,11 +20,47 @@ describe Datadog::Metrics::Client do
   end
 
   describe '#distribution' do
-    it 'sends metrics through extension when extension is running' do
-      # Mock the extension_running? method to return true
+    context 'when extension is running' do
+      let(:statsd) { instance_double(Datadog::Statsd) }
+
+      before(:each) do
+        # Mock the extension_running? method to return true
+        allow(Datadog::Utils).to receive(:extension_running?).and_return(true)
+
+        # Mock Datadog::Statsd client
+        @previous_statsd = client.instance_variable_get(:@statsd)
+        client.instance_variable_set(:@statsd, statsd)
+      end
+
+      after(:each) do
+        # Reset Datadog::Statsd mock
+        client.instance_variable_set(:@statsd, @previous_statsd)
+      end
+
+      it 'sends metrics properly' do
+        expected_tags = default_tags.concat(['env:dev', 'region:nyc'])
+        # Expect the distribution method to be called with the correct arguments
+        expect(statsd).to receive(:distribution).with('metric_name', 42, tags: expected_tags)
+
+        # Call the distribution method
+        client.distribution('metric_name', 42, env: 'dev', region: 'nyc')
+      end
+
+      it 'doesnt send metric when statsd fails' do
+        expect(statsd).to receive(:distribution).and_raise 'not sending metric!'
+
+        expected = 'error sending metric to the extension: not sending metric!'
+        expect(Datadog::Utils.logger).to receive(:warning).with(expected)
+
+        # Call the distribution method, which should raise the specified error
+        # and the logger should print it as debug
+        client.distribution('metric_name', 42, env: 'dev', region: 'nyc')
+      end
+    end
+
+    it 'doesnt send metric when statsd fails' do
       allow(Datadog::Utils).to receive(:extension_running?).and_return(true)
 
-      # Mock Datadog::Statsd client
       statsd = instance_double(Datadog::Statsd)
       previous_statsd = client.instance_variable_get(:@statsd)
       client.instance_variable_set(:@statsd, statsd)
