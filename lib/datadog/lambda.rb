@@ -68,7 +68,7 @@ module Datadog
       ensure
         @listener.on_end
         @is_cold_start = false
-        @metrics_client.end
+        @metrics_client.close
       end
       res
     end

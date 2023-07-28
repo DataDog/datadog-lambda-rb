@@ -23,8 +23,6 @@ module Datadog
       return @is_extension_running unless @is_extension_running.nil?
 
       @is_extension_running = check_extension_running
-
-      @is_extension_running
     end
 
     def self.check_extension_running

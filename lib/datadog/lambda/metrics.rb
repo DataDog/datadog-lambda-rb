@@ -38,14 +38,14 @@ module Datadog
         else
           Datadog::Utils.logger.debug 'metrics are going to be handled by the forwarder'
           time ||= Time.now
-          time_ms = time.to_f.to_i
+          time_ms = time.to_i
 
           metric = { e: time_ms, m: name, t: tag_list, v: value }
           puts metric.to_json
         end
       end
 
-      def end
+      def close
         @statsd&.close
       end
 
