@@ -24,7 +24,7 @@ describe Datadog::Metrics::Client do
       let(:statsd) { instance_double(Datadog::Statsd) }
 
       before(:each) do
-        # Mock the extension_running? method to return true
+        # Stub the extension_running? method to return true
         allow(Datadog::Utils).to receive(:extension_running?).and_return(true)
 
         # Mock Datadog::Statsd client
@@ -59,7 +59,7 @@ describe Datadog::Metrics::Client do
     end
 
     it 'prints metrics when extension is not running' do
-      # Mock the extension_running? method to return false
+      # Stub the extension_running? method to return false
       allow(Datadog::Utils).to receive(:extension_running?).and_return(false)
 
       now = Time.utc(2023, 1, 7, 12, 30)
