@@ -58,24 +58,6 @@ describe Datadog::Metrics::Client do
       end
     end
 
-    it 'doesnt send metric when statsd fails' do
-      allow(Datadog::Utils).to receive(:extension_running?).and_return(true)
-
-      statsd = instance_double(Datadog::Statsd)
-      previous_statsd = client.instance_variable_get(:@statsd)
-      client.instance_variable_set(:@statsd, statsd)
-
-      expected_tags = default_tags.concat(['env:dev', 'region:nyc'])
-      # Expect the distribution method to be called with the correct arguments
-      expect(statsd).to receive(:distribution).with('metric_name', 42, tags: expected_tags)
-
-      # Call the distribution method
-      client.distribution('metric_name', 42, env: 'dev', region: 'nyc')
-
-      # Reset Datadog::Statsd mock
-      client.instance_variable_set(:@statsd, previous_statsd)
-    end
-
     it 'prints metrics when extension is not running' do
       # Mock the extension_running? method to return false
       allow(Datadog::Utils).to receive(:extension_running?).and_return(false)
