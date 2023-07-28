@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'aws-xray-sdk', '~> 0.11.3'
-  spec.add_dependency 'dogstatsd-ruby', '~> 5.6'
+  spec.add_dependency 'dogstatsd-ruby', '~> 5.0'
   # We don't add this as a direct dependency, because it has
   # native modules that are difficult to package for lambda
   spec.add_development_dependency 'ddtrace', '~>1.12.0'
