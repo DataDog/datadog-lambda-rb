@@ -1,4 +1,5 @@
 
+D, [2023-07-29T20:43:24.777192 #8] DEBUG  -- : metrics are going to be handled by the forwarder
 END Duration: XXXX ms (init: XXXX ms) Memory Used: XXXX MB
 END Duration: XXXX ms (init: XXXX) Memory Used: XXXX MB
 END Duration: XXXX ms (init: XXXX) Memory Used: XXXX MB

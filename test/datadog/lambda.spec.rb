@@ -162,18 +162,18 @@ describe Datadog::Lambda do
         now = Time.utc(2008, 7, 8, 9, 10)
         expect(Time).to receive(:now).and_return(now)
 
-        output = %({"e":1215508200,"m":"m1","t":["dd_lambda_layer:datadog-ruby#{layer_tag}","t.a:val","t.b:v2"],"v":100})
+        output = %({"e":1215508200,"m":"m1","t":["dd_lambda_layer:datadog-ruby#{layer_tag}","t.b:v2"],"v":100})
         expect do
-          Datadog::Lambda.metric('m1', 100, "t.a": 'val', "t.b": 'v2')
+          Datadog::Lambda.metric('m1', 100, "t.b": 'v2')
         end.to output("#{output}\n").to_stdout
       end
 
       it 'prints a custom metric with a custom timestamp' do
         custom_time = Time.utc(2008, 7, 8, 9, 11)
 
-        output = %({"e":1215508260,"m":"m1","t":["dd_lambda_layer:datadog-ruby#{layer_tag}","t.a:val","t.b:v2"],"v":100})
+        output = %({"e":1215508260,"m":"m1","t":["dd_lambda_layer:datadog-ruby#{layer_tag}","t.b:v2"],"v":100})
         expect do
-          Datadog::Lambda.metric('m1', 100, time: custom_time, "t.a": 'val', "t.b": 'v2')
+          Datadog::Lambda.metric('m1', 100, time: custom_time, "t.b": 'v2')
         end.to output("#{output}\n").to_stdout
       end
     end
