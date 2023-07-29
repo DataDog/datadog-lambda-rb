@@ -5,6 +5,7 @@ require 'datadog/lambda'
 require 'datadog/statsd'
 require 'datadog/lambda/metrics'
 require 'datadog/lambda/utils/logger'
+require 'time'
 
 describe Datadog::Metrics::Client do
   subject(:client) { Datadog::Metrics::Client.instance }
@@ -16,6 +17,14 @@ describe Datadog::Metrics::Client do
       instance1 = Datadog::Metrics::Client.instance
       instance2 = Datadog::Metrics::Client.instance
       expect(instance1).to be(instance2)
+    end
+
+    it 'initialiazes Datadog::Statsd with the right parameters' do
+      # Stub the extension_running? method to return true
+      allow(Datadog::Utils).to receive(:extension_running?).and_return(true)
+
+      expect(Datadog::Statsd).to receive(:new).with(Datadog::Metrics::URL, Datadog::Metrics::PORT, single_thread: true)
+      Datadog::Metrics::Client.send(:new)
     end
   end
 
