@@ -51,7 +51,7 @@ module Datadog
       def get_tags(**tags)
         tag_list = ["dd_lambda_layer:datadog-ruby#{Datadog::Lambda.dd_lambda_layer_tag}"]
         tags.each do |tag|
-          tag_list.push("#{tag[0]}:#{tag[1]}")
+          tag_list << "#{tag[0]}:#{tag[1]}"
         end
 
         tag_list
