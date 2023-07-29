@@ -9,6 +9,7 @@
 #
 
 require 'datadog/statsd'
+require 'time'
 
 module Datadog
   # Metrics module contains the singleton class Client to send custom
@@ -29,14 +30,12 @@ module Datadog
         tag_list = get_tags(**tags)
 
         if Datadog::Utils.extension_running?
-          Datadog::Utils.logger.debug 'sending metrics through extension'
           begin
             @statsd.distribution(name, value, tags: tag_list)
           rescue StandardError => e
             Datadog::Utils.logger.warning "error sending metric to the extension: #{e}"
           end
         else
-          Datadog::Utils.logger.debug 'metrics are going to be handled by the forwarder'
           time ||= Time.now
           time_ms = time.to_i
 
@@ -59,7 +58,12 @@ module Datadog
       end
 
       private_class_method def initialize
-        @statsd = Datadog::Statsd.new(URL, PORT, single_thread: true) if Datadog::Utils.extension_running?
+        if Datadog::Utils.extension_running?
+          Datadog::Utils.logger.debug 'sending metrics through extension'
+          @statsd = Datadog::Statsd.new(URL, PORT, single_thread: true)
+        else
+          Datadog::Utils.logger.debug 'metrics are going to be handled by the forwarder'
+        end
       end
     end
   end
