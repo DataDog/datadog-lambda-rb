@@ -15,7 +15,6 @@ require 'datadog/lambda/utils/logger'
 require 'datadog/lambda/utils/extension'
 require 'datadog/lambda/trace/patch_http'
 require 'json'
-require 'time'
 require 'datadog/lambda/version'
 
 module Datadog
