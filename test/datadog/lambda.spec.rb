@@ -9,35 +9,64 @@ require_relative './lambdacontextalias'
 
 describe Datadog::Lambda do
   ctx = LambdaContext.new
-  dd_lambda_layer_tag = RUBY_VERSION[0, 3].tr('.', '')
+  let(:layer_tag) { RUBY_VERSION[0, 3].tr('.', '') }
+  let(:default_tags) { ["dd_lambda_layer:datadog-ruby#{layer_tag}"] }
+
   context 'enhanced tags' do
     it 'recognizes a cold start' do
       expect(Datadog::Lambda.gen_enhanced_tags(ctx)[:cold_start]).to eq(true)
     end
   end
-  context 'with a handler that raises an error' do
-    subject { Datadog::Lambda.wrap(event, context) { raise 'Error' } }
-    let(:event) { '1' }
-    let(:context) { ctx }
 
-    it 'should raise an error if the block raises an error' do
-      expect { subject }.to raise_error 'Error'
+  describe '#wrap' do
+    context 'with a handler that raises an error' do
+      subject { Datadog::Lambda.wrap(event, context) { raise 'Error' } }
+      let(:event) { '1' }
+      let(:context) { ctx }
+
+      it 'should raise an error if the block raises an error' do
+        expect { subject }.to raise_error 'Error'
+      end
+    end
+
+    context 'with a succesful handler' do
+      subject { Datadog::Lambda.wrap(event, context) { { result: 100 } } }
+      let(:event) { '1' }
+      let(:context) { ctx }
+
+      it 'should return the same value as returned by the block' do
+        expect(subject[:result]).to be 100
+      end
+    end
+
+    context 'with a handler that sends a custom metric' do
+      subject(:handler) do
+        Datadog::Lambda.wrap(event, context) do
+          Datadog::Lambda.metric('m1', 100, env: 'dev', region: 'nyc')
+          { result: 100 }
+        end
+      end
+      let(:event) { '1' }
+      let(:context) { ctx }
+      let(:metrics_client) { Datadog::Lambda.instance_variable_get(:@metrics_client) }
+
+      it 'should print metric and close the client' do
+        # Mock first distribution call which is for enhanced metrics
+        expect(metrics_client).to receive(:distribution)
+        # Mock second call which is our custom metric
+        expect(metrics_client).to receive(:distribution).with('m1', 100, time: nil, env: 'dev', region: 'nyc')
+        expect(metrics_client).to receive(:close)
+        expect(handler[:result]).to be 100
+      end
     end
   end
+
   context 'enhanced tags' do
     it 'recognizes an error as having warmed the environment' do
       expect(Datadog::Lambda.gen_enhanced_tags(ctx)[:cold_start]).to eq(false)
     end
   end
-  context 'with a succesful handler' do
-    subject { Datadog::Lambda.wrap(event, context) { { result: 100 } } }
-    let(:event) { '1' }
-    let(:context) { ctx }
 
-    it 'should return the same value as returned by the block' do
-      expect(subject[:result]).to be 100
-    end
-  end
   context 'trace_context' do
     it 'should return the last trace context' do
       event = {
@@ -64,10 +93,10 @@ describe Datadog::Lambda do
       expect(Datadog::Lambda.gen_enhanced_tags(ctx)).to include(
         account_id: '172597598159',
         cold_start: false,
-        functionname: "hello-dog-ruby-dev-helloRuby#{dd_lambda_layer_tag}",
+        functionname: "hello-dog-ruby-dev-helloRuby#{layer_tag}",
         memorysize: 128,
         region: 'us-east-1',
-        resource: "hello-dog-ruby-dev-helloRuby#{dd_lambda_layer_tag}"
+        resource: "hello-dog-ruby-dev-helloRuby#{layer_tag}"
       )
     end
   end
@@ -98,24 +127,55 @@ describe Datadog::Lambda do
       )
     end
   end
-  context 'metric' do
-    it 'prints a custom metric' do
-      now = Time.utc(2008, 7, 8, 9, 10)
 
-      output = '{"e":1215508200,"m":"m1","t":["dd_lambda_layer:datadog-ruby' + \
-               dd_lambda_layer_tag + '","t.a:val","t.b:v2"],"v":100}'
-      expect(Time).to receive(:now).and_return(now)
-      expect do
-        Datadog::Lambda.metric('m1', 100, "t.a": 'val', "t.b": 'v2')
-      end.to output("#{output}\n").to_stdout
+  describe '#metric' do
+    context 'when extension is running' do
+      subject(:lambdaModule) { Datadog::Lambda }
+      subject(:metrics_client) { lambdaModule.instance_variable_get(:@metrics_client) }
+      let(:statsd) { instance_double(Datadog::Statsd) }
+
+      before(:each) do
+        # Stub the extension_running? method to return true
+        allow(Datadog::Utils).to receive(:extension_running?).and_return(true)
+
+        # Mock Datadog::Statsd client
+        @previous_statsd = metrics_client.instance_variable_get(:@statsd)
+        metrics_client.instance_variable_set(:@statsd, statsd)
+      end
+
+      after(:each) do
+        # Reset Datadog::Statsd mock
+        metrics_client.instance_variable_set(:@statsd, @previous_statsd)
+      end
+
+      it 'sends metrics properly' do
+        # Expect the metric method to be called with the correct arguments
+        expect(lambdaModule).to receive(:metric).with('metric_name', 42, env: 'dev', region: 'nyc')
+
+        # Call the distribution method
+        lambdaModule.metric('metric_name', 42, env: 'dev', region: 'nyc')
+      end
     end
-    it 'prints a custom metric with a custom timestamp' do
-      custom_time = Time.utc(2008, 7, 8, 9, 11)
-      output = '{"e":1215508260,"m":"m1","t":["dd_lambda_layer:datadog-ruby' + \
-               dd_lambda_layer_tag + '","t.a:val","t.b:v2"],"v":100}'
-      expect do
-        Datadog::Lambda.metric('m1', 100, time: custom_time, "t.a": 'val', "t.b": 'v2')
-      end.to output("#{output}\n").to_stdout
+
+    context 'when extension is not running' do
+      it 'prints a custom metric' do
+        now = Time.utc(2008, 7, 8, 9, 10)
+        expect(Time).to receive(:now).and_return(now)
+
+        output = %({"e":1215508200,"m":"m1","t":["dd_lambda_layer:datadog-ruby#{layer_tag}","t.b:v2"],"v":100})
+        expect do
+          Datadog::Lambda.metric('m1', 100, "t.b": 'v2')
+        end.to output("#{output}\n").to_stdout
+      end
+
+      it 'prints a custom metric with a custom timestamp' do
+        custom_time = Time.utc(2008, 7, 8, 9, 11)
+
+        output = %({"e":1215508260,"m":"m1","t":["dd_lambda_layer:datadog-ruby#{layer_tag}","t.b:v2"],"v":100})
+        expect do
+          Datadog::Lambda.metric('m1', 100, time: custom_time, "t.b": 'v2')
+        end.to output("#{output}\n").to_stdout
+      end
     end
   end
 
@@ -153,7 +213,7 @@ describe Datadog::Lambda do
       # rubocop:disable Metrics/LineLength
       expect do
         Datadog::Lambda.record_enhanced('invocations', ctx)
-      end.to output(/"dd_lambda_layer:datadog-ruby#{dd_lambda_layer_tag}","functionname:hello-dog-ruby-dev-helloRuby#{dd_lambda_layer_tag}","region:us-east-1","account_id:172597598159","memorysize:128",/).to_stdout
+      end.to output(/"dd_lambda_layer:datadog-ruby#{layer_tag}","functionname:hello-dog-ruby-dev-helloRuby#{layer_tag}","region:us-east-1","account_id:172597598159","memorysize:128",/).to_stdout
       # rubocop:enable Metrics/LineLength
     end
   end
