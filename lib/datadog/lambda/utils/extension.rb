@@ -21,8 +21,14 @@ module Datadog
     START_INVOCATION_URI = URI(EXTENSION_BASE_URL + START_INVOCATION_PATH).freeze
     END_INVOCATION_URI = URI(EXTENSION_BASE_URL + END_INVOCATION_PATH).freeze
 
-    def self.extension_running
-      File.exist?(EXTENSION_PATH)
+    def self.extension_running?
+      return @is_extension_running unless @is_extension_running.nil?
+
+      @is_extension_running = check_extension_running
+    end
+
+    def self.check_extension_running
+      return false unless File.exist?(EXTENSION_PATH)
     end
 
     def self.send_start_invocation_request(event:)

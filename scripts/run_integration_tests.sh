@@ -206,6 +206,8 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 perl -p -e 's/(WARN |W, \[|Client:)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
                 # Information Log for Datadog Configuration
                 perl -p -e 's/(INFO |I, \[)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
+                # Debug Log for Datadog Configuration
+                perl -p -e 's/(D, \[)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
                 # Filter out INIT runtime logs
                 perl -p -e "s/INIT_START.*//g" |
                 sort

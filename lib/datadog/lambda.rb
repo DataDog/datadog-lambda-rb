@@ -9,12 +9,12 @@
 #
 # rubocop:disable Metrics/ModuleLength
 
+require 'datadog/lambda/metrics'
 require 'datadog/lambda/trace/listener'
 require 'datadog/lambda/utils/logger'
 require 'datadog/lambda/utils/extension'
 require 'datadog/lambda/trace/patch_http'
 require 'json'
-require 'time'
 require 'datadog/lambda/version'
 
 module Datadog
@@ -24,6 +24,7 @@ module Datadog
     @response = nil
     @is_cold_start = true
     @patch_http = true
+    @metrics_client = Metrics::Client.instance
 
     # Configures Datadog's APM tracer with lambda specific defaults.
     # Same options can be given as Datadog.configure in tracer
@@ -37,7 +38,7 @@ module Datadog
       $stdout.sync = true
 
       Datadog.configure do |c|
-        unless Datadog::Utils.extension_running
+        unless Datadog::Utils.extension_running?
           c.tracing.writer = Datadog::Tracing::SyncWriter.new(
             transport: Datadog::Transport::IO.default
           )
@@ -66,6 +67,7 @@ module Datadog
         res = @response
         @listener.on_end(response: res)
         @is_cold_start = false
+        @metrics_client.close
       end
       res
     end
@@ -85,15 +87,7 @@ module Datadog
       raise 'name must be a string' unless name.is_a?(String)
       raise 'value must be a number' unless value.is_a?(Numeric)
 
-      time ||= Time.now
-      time_ms = time.to_f.to_i
-
-      tag_list = ["dd_lambda_layer:datadog-ruby#{dd_lambda_layer_tag}"]
-      tags.each do |tag|
-        tag_list.push("#{tag[0]}:#{tag[1]}")
-      end
-      metric = { e: time_ms, m: name, t: tag_list, v: value }
-      puts metric.to_json
+      @metrics_client.distribution(name, value, time: time, **tags)
     end
 
     def self.dd_lambda_layer_tag
