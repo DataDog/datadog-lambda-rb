@@ -13,7 +13,7 @@ module Datadog
   # Utils contains utility functions shared between modules
   module Utils
     EXTENSION_PATH = '/opt/extensions/datadog-agent'
-    EXTENSION_BASE_URL = 'http://127.0.0.1:8124'
+    EXTENSION_BASE_URL = 'localhost:8124'
 
     START_INVOCATION_PATH = '/lambda/start-invocation'
     END_INVOCATION_PATH = '/lambda/end-invocation'
@@ -28,29 +28,25 @@ module Datadog
     end
 
     def self.check_extension_running
-      return false unless File.exist?(EXTENSION_PATH)
+      File.exist?(EXTENSION_PATH)
     end
 
     def self.send_start_invocation_request(event:)
-      begin
-        response = Net::HTTP.post(START_INVOCATION_URI, event.to_json)
-        puts "response: #{response.body}"
-        puts "headers: #{response} #{response.inspect}"
-        _update_trace_context_on_response_headers(response: response)
-      rescue StandardError => e
-        puts "[error][start] #{e}"
-      end
+      response = Net::HTTP.post(START_INVOCATION_URI, event.to_json)
+      puts "response: #{response.body}"
+      puts "headers: #{response} #{response.inspect}"
+      _update_trace_context_on_response_headers(response: response)
+    rescue StandardError => e
+      puts "[error][start] #{e}"
     end
 
     def self.send_end_invocation_request(response:)
-      begin
-        headers = _end_invocation_request_headers
-        result = Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
-        puts "response: #{result.body}"
-        puts "headers: #{headers} #{headers.inspect}"
-      rescue StandardError => e
-        puts "[error][end] #{e}"
-      end
+      headers = _end_invocation_request_headers
+      result = Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
+      puts "response: #{result.body}"
+      puts "headers: #{headers} #{headers.inspect}"
+    rescue StandardError => e
+      puts "[error][end] #{e}"
     end
 
     # rubocop:disable Metrics/AbcSize
