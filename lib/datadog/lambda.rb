@@ -44,6 +44,9 @@ module Datadog
           )
         end
         c.tags = { "_dd.origin": 'lambda' }
+        # Enable AWS SDK instrumentation
+        c.tracing.instrument :aws
+
         yield(c) if block_given?
       end
     end
@@ -74,8 +77,7 @@ module Datadog
 
     # Gets the current tracing context
     def self.trace_context
-      context = Hash[Datadog::Trace.trace_context]
-      context
+      Hash[Datadog::Trace.trace_context]
     end
 
     # Send a custom distribution metric
