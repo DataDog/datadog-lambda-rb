@@ -61,18 +61,17 @@ module Datadog
       record_enhanced('invocations', context)
       begin
         cold = @is_cold_start
-        @listener.on_start(event: event, request_context: context, cold_start: cold)
+        @listener&.on_start(event: event, request_context: context, cold_start: cold)
         @response = block.call
       rescue StandardError => e
         record_enhanced('errors', context)
         raise e
       ensure
-        res = @response
-        @listener.on_end(response: res)
+        @listener&.on_end(response: @response)
         @is_cold_start = false
         @metrics_client.close
       end
-      res
+      @response
     end
 
     # Gets the current tracing context
@@ -178,10 +177,18 @@ module Datadog
         Datadog::Utils.logger.debug("Setting merge traces #{merge_xray_traces}")
       end
 
-      Trace::Listener.new(handler_name: handler,
-                          function_name: function,
-                          patch_http: @patch_http,
-                          merge_xray_traces: merge_xray_traces)
+      # Only initialize listener if Tracing enabled.
+      unless Datadog::Tracing.enabled?
+        Datadog::Utils.logger.debug 'dd-trace unavailable'
+        return nil
+      end
+
+      Trace::Listener.new(
+        handler_name: handler,
+        function_name: function,
+        patch_http: @patch_http,
+        merge_xray_traces: merge_xray_traces
+      )
     end
   end
 end
