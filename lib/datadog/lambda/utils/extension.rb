@@ -13,7 +13,7 @@ module Datadog
   # Utils contains utility functions shared between modules
   module Utils
     EXTENSION_PATH = '/opt/extensions/datadog-agent'
-    EXTENSION_BASE_URL = 'localhost:8124'
+    EXTENSION_BASE_URL = 'http://127.0.0.1:8124'
 
     START_INVOCATION_PATH = '/lambda/start-invocation'
     END_INVOCATION_PATH = '/lambda/end-invocation'
@@ -49,7 +49,6 @@ module Datadog
       puts "[error][end] #{e}"
     end
 
-    # rubocop:disable Metrics/AbcSize
     def self._end_invocation_request_headers
       headers = {}
       headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = Datadog::Tracing.active_span.trace_id.to_s
