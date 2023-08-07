@@ -33,41 +33,32 @@ module Datadog
 
     def self.send_start_invocation_request(event:)
       response = Net::HTTP.post(START_INVOCATION_URI, event.to_json)
-      puts "response: #{response.body}"
-      puts "headers: #{response} #{response.inspect}"
       _update_trace_context_on_response_headers(response: response)
     rescue StandardError => e
-      puts "[error][start] #{e}"
-    end
-
-    def self.send_end_invocation_request(response:)
-      headers = _end_invocation_request_headers
-      result = Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
-      puts "response: #{result.body}"
-      puts "headers: #{headers} #{headers.inspect}"
-    rescue StandardError => e
-      puts "[error][end] #{e}"
-    end
-
-    def self._end_invocation_request_headers
-      headers = {}
-      headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = Datadog::Tracing.active_span.trace_id.to_s
-      headers[Datadog::Trace::DD_SPAN_ID_HEADER.to_sym] = Datadog::Tracing.active_span.id.to_s
-      headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] = '1'
-
-      headers
+      Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
     end
 
     def self._update_trace_context_on_response_headers(response:)
       trace_context = {}
-
       trace_context[:trace_id] &&= response[DD_TRACE_ID_HEADER]
       trace_context[:parent_id] &&= response[DD_PARENT_ID_HEADER]
       trace_context[:sample_mode] &&= response[DD_SAMPLING_PRIORITY_HEADER]
-      puts "modifying context: #{trace_context} whereas context from module is: #{Datadog::Trace.trace_context}"
-      Datadog::Trace.trace_context = trace_context unless trace_context.empty?
+
+      return if trace_context.empty?
+
+      Datadog::Utils.logger.debug "trace context will be updated to #{trace_context.to_json}"
+      Datadog::Trace.apply_datadog_trace_context(trace_context)
+    end
+
+    def self.send_end_invocation_request(response:)
+      Datadog::Utils.logger.debug "current trace context is #{Datadog::Trace.trace_context} #{Datadog::Trace.trace_context.inspect}"
+      headers = Datadog::Trace.trace_context_to_headers(Datadog::Trace.trace_context)
+
+      result = Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
+      puts "response: #{result.body}"
+      puts "headers: #{headers} #{headers.inspect}"
+    rescue StandardError => e
+      Datadog::Utils.logger.debug "failed on end invocation request to extension: #{e}"
     end
   end
 end
-
-# rubocop:enable Metrics/AbcSize
