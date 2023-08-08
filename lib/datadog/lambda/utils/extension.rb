@@ -32,6 +32,8 @@ module Datadog
     end
 
     def self.send_start_invocation_request(event:)
+      return unless extension_running?
+
       response = Net::HTTP.post(START_INVOCATION_URI, event.to_json)
       _update_trace_context_on_response_headers(response: response)
     rescue StandardError => e
@@ -51,6 +53,8 @@ module Datadog
     end
 
     def self.send_end_invocation_request(response:)
+      return unless extension_running?
+
       trace_context = Datadog::Trace.trace_context
       Datadog::Utils.logger.debug "current trace context is #{trace_context} #{trace_context.to_json}"
       headers = trace_context_to_headers(trace_context)
