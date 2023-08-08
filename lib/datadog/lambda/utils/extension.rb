@@ -40,9 +40,9 @@ module Datadog
 
     def self._update_trace_context_on_response_headers(response:)
       trace_context = {}
-      trace_context[:trace_id] &&= response[DD_TRACE_ID_HEADER]
-      trace_context[:parent_id] &&= response[DD_PARENT_ID_HEADER]
-      trace_context[:sample_mode] &&= response[DD_SAMPLING_PRIORITY_HEADER]
+      trace_context[:trace_id] &&= response[Datadog::Trace::DD_TRACE_ID_HEADER]
+      trace_context[:parent_id] &&= response[Datadog::Trace::DD_PARENT_ID_HEADER]
+      trace_context[:sample_mode] &&= response[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER]
 
       return if trace_context.empty?
 
@@ -51,14 +51,34 @@ module Datadog
     end
 
     def self.send_end_invocation_request(response:)
-      Datadog::Utils.logger.debug "current trace context is #{Datadog::Trace.trace_context} #{Datadog::Trace.trace_context.inspect}"
-      headers = Datadog::Trace.trace_context_to_headers(Datadog::Trace.trace_context)
+      trace_context = Datadog::Trace.trace_context
+      Datadog::Utils.logger.debug "current trace context is #{trace_context} #{trace_context.to_json}"
+      headers = trace_context_to_headers(trace_context)
+      Datadog::Utils.logger.debug "headers are #{headers} #{headers.to_json}"
 
       result = Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
       puts "response: #{result.body}"
       puts "headers: #{headers} #{headers.inspect}"
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on end invocation request to extension: #{e}"
+    end
+
+    def trace_context_to_headers(trace_context)
+      headers = {}
+      if trace_context.nil?
+        active_span_trace_context_to_headers(headers)
+      else
+        headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_context[:trace_id]
+        headers[Datadog::Trace::DD_SPAN_ID_HEADER.to_sym] = trace_context[:span_id]
+        headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] = trace_context[:sample_mode]
+      end
+
+      headers
+    end
+
+    def active_span_trace_context_to_headers(headers)
+      headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = Datadog::Tracing.active_span.trace_id.to_s
+      headers[Datadog::Trace::DD_SPAN_ID_HEADER.to_sym] = Datadog::Tracing.active_span.id.to_s
     end
   end
 end

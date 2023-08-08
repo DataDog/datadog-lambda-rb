@@ -17,16 +17,6 @@ module Datadog
   # lambda events/X-Ray
   module Trace
     class << self
-      def trace_context_to_headers(trace_context)
-        headers = {}
-
-        headers[DD_TRACE_ID_HEADER.to_sym] = trace_context[:trace_id]
-        headers[DD_SPAN_ID_HEADER.to_sym] = trace_context[:span_id]
-        headers[DD_SAMPLING_PRIORITY_HEADER.to_sym] = trace_context[:sample_mode]
-
-        headers
-      end
-
       def extract_trace_context(event, merge_xray_traces)
         context = read_trace_context_from_event(event)
         unless context.nil?
