@@ -57,8 +57,6 @@ module Datadog
       Datadog::Utils.logger.debug "headers are #{headers} #{headers.to_json}"
 
       result = Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
-      puts "response: #{result.body}"
-      puts "headers: #{headers} #{headers.inspect}"
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on end invocation request to extension: #{e}"
     end
@@ -66,10 +64,8 @@ module Datadog
     def self.trace_context_to_headers(trace_context)
       headers = {}
       if trace_context.nil?
-        p 'trace context is nil'
         return active_span_trace_context_to_headers(headers)
       else
-        p "trace context is not nil #{trace_context}"
         headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_context[:trace_id]
         headers[Datadog::Trace::DD_SPAN_ID_HEADER.to_sym] = trace_context[:span_id]
         headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] = trace_context[:sample_mode]
