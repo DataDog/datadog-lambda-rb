@@ -66,8 +66,10 @@ module Datadog
     def self.trace_context_to_headers(trace_context)
       headers = {}
       if trace_context.nil?
-        active_span_trace_context_to_headers(headers)
+        p 'trace context is nil'
+        return active_span_trace_context_to_headers(headers)
       else
+        p "trace context is not nil #{trace_context}"
         headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_context[:trace_id]
         headers[Datadog::Trace::DD_SPAN_ID_HEADER.to_sym] = trace_context[:span_id]
         headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] = trace_context[:sample_mode]
@@ -79,6 +81,7 @@ module Datadog
     def self.active_span_trace_context_to_headers(headers)
       headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = Datadog::Tracing.active_span.trace_id.to_s
       headers[Datadog::Trace::DD_SPAN_ID_HEADER.to_sym] = Datadog::Tracing.active_span.id.to_s
+      headers
     end
   end
 end
