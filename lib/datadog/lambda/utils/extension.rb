@@ -56,7 +56,7 @@ module Datadog
       headers = trace_context_to_headers(trace_context)
       Datadog::Utils.logger.debug "headers are #{headers} #{headers.to_json}"
 
-      result = Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
+      Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on end invocation request to extension: #{e}"
     end
