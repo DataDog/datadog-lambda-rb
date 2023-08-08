@@ -63,7 +63,7 @@ module Datadog
       Datadog::Utils.logger.debug "failed on end invocation request to extension: #{e}"
     end
 
-    def trace_context_to_headers(trace_context)
+    def self.trace_context_to_headers(trace_context)
       headers = {}
       if trace_context.nil?
         active_span_trace_context_to_headers(headers)
@@ -76,7 +76,7 @@ module Datadog
       headers
     end
 
-    def active_span_trace_context_to_headers(headers)
+    def self.active_span_trace_context_to_headers(headers)
       headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = Datadog::Tracing.active_span.trace_id.to_s
       headers[Datadog::Trace::DD_SPAN_ID_HEADER.to_sym] = Datadog::Tracing.active_span.id.to_s
     end
