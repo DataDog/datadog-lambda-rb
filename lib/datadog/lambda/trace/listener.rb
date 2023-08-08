@@ -49,24 +49,7 @@ module Datadog
 
       def on_end(response:)
         Datadog::Utils.send_end_invocation_request(response: response)
-        @trace.finish
-      end
-
-      def on_wrap(request_context:, cold_start:, &block)
-        options = get_option_tags(
-          request_context: request_context,
-          cold_start: cold_start
-        )
-        context = Datadog::Trace.trace_context
-        source = context[:source] if context
-        options[:tags]['_dd.parent_source'] = source if source && source != 'ddtrace'
-        options[:resource] = @function_name
-        options[:service] = 'aws.lambda'
-        options[:span_type] = 'serverless'
-        Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
-        Datadog::Trace.wrap_datadog(options) do
-          block.call
-        end
+        @trace&.finish
       end
 
       private
