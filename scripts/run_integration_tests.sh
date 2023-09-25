@@ -2,9 +2,9 @@
 
 # Usage - run commands from repo root:
 # To check if new changes to the layer cause changes to any snapshots:
-#   BUILD_LAYERS=true DD_API_KEY=XXXX aws-vault exec serverless-sandbox-account-admin -- ./scripts/run_integration_tests.sh
+#   BUILD_LAYERS=true DD_API_KEY=XXXX aws-vault exec sso-serverless-sandbox-account-admin -- ./scripts/run_integration_tests.sh
 # To regenerate snapshots:
-#   UPDATE_SNAPSHOTS=true DD_API_KEY=XXXX aws-vault exec serverless-sandbox-account-admin -- ./scripts/run_integration_tests.sh
+#   UPDATE_SNAPSHOTS=true DD_API_KEY=XXXX aws-vault exec sso-serverless-sandbox-account-admin -- ./scripts/run_integration_tests.sh
 
 set -e
 
@@ -202,7 +202,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 perl -p -e "s/(runtime:Ruby [0-9]+\.[0-9]+)\.[0-9]+/\1\.X/g" |
                 # Filter XRAY line
                 sed '/XRAY TraceId:/d' |
-                # Warning Log for unresolved bug in dd-trace 
+                # Warning Log for unresolved bug in dd-trace
                 perl -p -e 's/(WARN |W, \[|Client:)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
                 # Information Log for Datadog Configuration
                 perl -p -e 's/(INFO |I, \[)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
