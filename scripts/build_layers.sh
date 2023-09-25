@@ -19,7 +19,7 @@ else
     if (printf '%s\n' "${RUBY_VERSIONS[@]}" | grep -xq $RUBY_VERSION); then
         RUBY_VERSIONS=($RUBY_VERSION)
     else
-        echo "Unsupported version found, valid options are : ${RUBY_VERSIONS[@]}" 
+        echo "Unsupported version found, valid options are : ${RUBY_VERSIONS[@]}"
         exit 1
     fi
 fi
@@ -43,9 +43,10 @@ function docker_build_zip {
         --platform linux/${arch} \
         --load
 
-    # Run the image by runtime tag, tar its generatd `ruby` directory to sdout,
-    # then extract it to a temp directory.
-    docker run --rm datadog-lambda-ruby-${arch}:$1 tar cf - /opt/ruby | tar -xf - -C $temp_dir
+    # Run the image by runtime tag and copy the output /opt/ruby to the temp dir/opt/ruby
+    dockerId=$(docker create datadog-lambda-ruby-${arch}:$1)
+    mkdir $temp_dir/opt/
+    docker cp $dockerId:/opt/ruby $temp_dir/opt/ruby
 
     # Zip to destination, and keep directory structure as based in $temp_dir
     (cd $temp_dir/opt/ && zip -q -r $destination ./)
