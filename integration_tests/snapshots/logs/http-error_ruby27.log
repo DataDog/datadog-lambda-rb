@@ -10,6 +10,7 @@ START
 Snapshot test http requests successfully made to URLs: https://httpstat.us/400
 Snapshot test http requests successfully made to URLs: https://httpstat.us/400
 Snapshot test http requests successfully made to URLs: https://httpstat.us/400
+W, [XXXX]  WARN XXXX[ddtrace] Unable to patch Datadog::Tracing::Contrib::Aws::Integration (Available?: false, Loaded? false, Compatible? false, Patchable? false)
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby27","functionname:integration-tests-rb-XXXX-http-error_ruby27","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.7.X","resource:integration-tests-rb-XXXX-http-error_ruby27","datadog_lambda:2.20.0","dd_trace:1.XX.X"],"v":1}
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby27","functionname:integration-tests-rb-XXXX-http-error_ruby27","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 2.7.X","resource:integration-tests-rb-XXXX-http-error_ruby27","datadog_lambda:2.20.0","dd_trace:1.XX.X"],"v":1}
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby27","functionname:integration-tests-rb-XXXX-http-error_ruby27","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:true","runtime:Ruby 2.7.X","resource:integration-tests-rb-XXXX-http-error_ruby27","datadog_lambda:2.20.0","dd_trace:1.XX.X"],"v":1}
