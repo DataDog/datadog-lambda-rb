@@ -45,7 +45,7 @@ module Datadog
         end
         c.tags = { "_dd.origin": 'lambda' }
         # Enable AWS SDK instrumentation
-        c.tracing.instrument :aws
+        c.tracing.instrument :aws if trace_managed_services?
 
         yield(c) if block_given?
       end
@@ -165,6 +165,15 @@ module Datadog
       return true if dd_enhanced_metrics.nil?
 
       dd_enhanced_metrics.downcase == 'true'
+    end
+
+    # Read DD_TRACE_MANAGED_SERVICES environment variable
+    # @return [boolean] true if we should trace AWS services
+    def self.trace_managed_services?
+      dd_trace_managed_services = ENV[Trace::DD_TRACE_MANAGED_SERVICES]
+      return true if dd_trace_managed_services.nil?
+
+      dd_trace_managed_services.downcase == 'true'
     end
 
     def self.initialize_listener
