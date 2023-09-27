@@ -35,12 +35,12 @@ module Datadog
       return unless extension_running?
 
       response = Net::HTTP.post(START_INVOCATION_URI, event.to_json)
-      _update_trace_context_on_response_headers(response: response)
+      _update_trace_context_on_response(response: response)
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
     end
 
-    def self._update_trace_context_on_response_headers(response:)
+    def self._update_trace_context_on_response(response:)
       trace_context = {}
       trace_context[:trace_id] &&= response[Datadog::Trace::DD_TRACE_ID_HEADER]
       trace_context[:parent_id] &&= response[Datadog::Trace::DD_PARENT_ID_HEADER]
@@ -71,15 +71,18 @@ module Datadog
       return active_span_trace_context_to_headers(headers) if trace_context.nil?
 
       headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_context[:trace_id]
-      headers[Datadog::Trace::DD_SPAN_ID_HEADER.to_sym] = trace_context[:span_id]
+      headers[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = trace_context[:parent_id]
       headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] = trace_context[:sample_mode]
 
       headers
     end
 
-    def self.active_span_trace_context_to_headers(headers)
-      headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = Datadog::Tracing.active_span.trace_id.to_s
-      headers[Datadog::Trace::DD_SPAN_ID_HEADER.to_sym] = Datadog::Tracing.active_span.id.to_s
+    def self.active_trace_context_to_headers(headers)
+      trace_digest = Datadog::Tracing.active_trace.to_digest
+      headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_digest.trace_id
+      headers[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = trace_digest.span_id
+      headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] = trace_digest.trace_sampling_priority
+
       headers
     end
   end
