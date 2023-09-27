@@ -41,10 +41,7 @@ module Datadog
     end
 
     def self.update_trace_context_on_response(response:)
-      trace_context = {}
-      trace_context[:trace_id] &&= response[Datadog::Trace::DD_TRACE_ID_HEADER]
-      trace_context[:parent_id] &&= response[Datadog::Trace::DD_PARENT_ID_HEADER]
-      trace_context[:sample_mode] &&= response[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER]
+      trace_context = headers_to_trace_context(response)
 
       return if trace_context.empty?
 
@@ -52,12 +49,26 @@ module Datadog
       Datadog::Trace.apply_datadog_trace_context(trace_context)
     end
 
+    def self.headers_to_trace_context(headers)
+      trace_context = {}
+
+      trace_id = headers[Datadog::Trace::DD_TRACE_ID_HEADER]
+      parent_id = headers[Datadog::Trace::DD_PARENT_ID_HEADER]
+      sample_mode = headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER]
+
+      trace_context[:trace_id] = trace_id unless trace_id.nil?
+      trace_context[:parent_id] = parent_id unless parent_id.nil?
+      trace_context[:sample_mode] = sample_mode unless sample_mode.nil?
+
+      trace_context
+    end
+
     def self.send_end_invocation_request(response:)
       return unless extension_running?
 
       trace_context = Datadog::Trace.trace_context
       Datadog::Utils.logger.debug "current trace context is #{trace_context} #{trace_context.to_json}"
-      headers = trace_context_to_headers(trace_context)
+      headers = trace_context.nil? ? active_trace_context_to_headers : trace_context_to_headers(trace_context)
       Datadog::Utils.logger.debug "headers are #{headers} #{headers.to_json}"
 
       Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
@@ -68,7 +79,7 @@ module Datadog
     def self.trace_context_to_headers(trace_context)
       headers = {}
 
-      return active_span_trace_context_to_headers(headers) if trace_context.nil?
+      return if trace_context.nil?
 
       headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_context[:trace_id]
       headers[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = trace_context[:parent_id]
@@ -77,7 +88,9 @@ module Datadog
       headers
     end
 
-    def self.active_trace_context_to_headers(headers)
+    def self.active_trace_context_to_headers
+      headers = {}
+
       trace_digest = Datadog::Tracing.active_trace.to_digest
       headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_digest.trace_id
       headers[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = trace_digest.span_id
