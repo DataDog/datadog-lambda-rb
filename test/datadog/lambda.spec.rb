@@ -86,6 +86,23 @@ describe Datadog::Lambda do
         source: Datadog::Trace::SOURCE_EVENT
       )
     end
+
+    it 'correctly reads the DD_TRACE_MANAGED_SERVICES env var' do
+      allow(ENV).to receive(:[]).with('DD_TRACE_MANAGED_SERVICES').and_return('true')
+      expect(Datadog::Lambda.trace_managed_services?).to eq(true)
+    end
+    it 'correctly reads the DD_TRACE_MANAGED_SERVICES env var regardless of case' do
+      allow(ENV).to receive(:[]).with('DD_TRACE_MANAGED_SERVICES').and_return('True')
+      expect(Datadog::Lambda.trace_managed_services?).to eq(true)
+    end
+    it 'correctly reads false DD_TRACE_MANAGED_SERVICES as false' do
+      allow(ENV).to receive(:[]).with('DD_TRACE_MANAGED_SERVICES').and_return('false')
+      expect(Datadog::Lambda.trace_managed_services?).to eq(false)
+    end
+    it 'correctly reads lack of DD_TRACE_MANAGED_SERVICES as false' do
+      allow(ENV).to receive(:[]).with('DD_TRACE_MANAGED_SERVICES').and_return(nil)
+      expect(Datadog::Lambda.trace_managed_services?).to eq(true)
+    end
   end
   context 'enhanced tags' do
     it 'makes tags from a Lambda context' do
@@ -130,8 +147,8 @@ describe Datadog::Lambda do
 
   describe '#metric' do
     context 'when extension is running' do
-      subject(:lambdaModule) { Datadog::Lambda }
-      subject(:metrics_client) { lambdaModule.instance_variable_get(:@metrics_client) }
+      subject(:lambda_module) { Datadog::Lambda }
+      subject(:metrics_client) { lambda_module.instance_variable_get(:@metrics_client) }
       let(:statsd) { instance_double(Datadog::Statsd) }
 
       before(:each) do
@@ -150,10 +167,10 @@ describe Datadog::Lambda do
 
       it 'sends metrics properly' do
         # Expect the metric method to be called with the correct arguments
-        expect(lambdaModule).to receive(:metric).with('metric_name', 42, env: 'dev', region: 'nyc')
+        expect(lambda_module).to receive(:metric).with('metric_name', 42, env: 'dev', region: 'nyc')
 
         # Call the distribution method
-        lambdaModule.metric('metric_name', 42, env: 'dev', region: 'nyc')
+        lambda_module.metric('metric_name', 42, env: 'dev', region: 'nyc')
       end
     end
 
