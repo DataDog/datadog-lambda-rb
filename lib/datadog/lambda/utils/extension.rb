@@ -35,12 +35,12 @@ module Datadog
       return unless extension_running?
 
       response = Net::HTTP.post(START_INVOCATION_URI, event.to_json)
-      _update_trace_context_on_response(response: response)
+      update_trace_context_on_response(response: response)
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
     end
 
-    def self._update_trace_context_on_response(response:)
+    def self.update_trace_context_on_response(response:)
       trace_context = {}
       trace_context[:trace_id] &&= response[Datadog::Trace::DD_TRACE_ID_HEADER]
       trace_context[:parent_id] &&= response[Datadog::Trace::DD_PARENT_ID_HEADER]
