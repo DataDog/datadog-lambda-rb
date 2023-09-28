@@ -34,7 +34,7 @@ module Datadog
     def self.send_start_invocation_request(event:)
       return unless extension_running?
 
-      response = Net::HTTP.post(START_INVOCATION_URI, event.to_json)
+      response = Net::HTTP.post(START_INVOCATION_URI, event.to_json, request_headers)
       update_trace_context_on_response(response: response)
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
@@ -77,19 +77,19 @@ module Datadog
     end
 
     def self.trace_context_to_headers(trace_context)
-      headers = {}
+      headers = request_headers
 
       return if trace_context.nil?
 
-      headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_context[:trace_id]
-      headers[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = trace_context[:parent_id]
-      headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] = trace_context[:sample_mode]
+      headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_context[:trace_id].to_s
+      headers[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = trace_context[:parent_id].to_s
+      headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] = trace_context[:sample_mode].to_s
 
       headers
     end
 
     def self.active_trace_context_to_headers
-      headers = {}
+      headers = request_headers
 
       trace_digest = Datadog::Tracing.active_trace.to_digest
       headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_digest.trace_id.to_s
@@ -97,6 +97,12 @@ module Datadog
       headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] = trace_digest.trace_sampling_priority.to_s
 
       headers
+    end
+
+    def self.request_headers
+      {
+        Datadog::Trace::HEADER_DD_INTERNAL_UNTRACED_REQUEST.to_sym => 'true'
+      }
     end
   end
 end

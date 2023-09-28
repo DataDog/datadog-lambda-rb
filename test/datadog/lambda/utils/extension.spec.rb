@@ -38,7 +38,7 @@ describe Datadog::Utils do
 
       it 'applies trace context from extension' do
         # Stub POST request to return a trace context
-        expect(Net::HTTP).to receive(:post).with(Datadog::Utils::START_INVOCATION_URI, 'null') { headers }
+        expect(Net::HTTP).to receive(:post).with(Datadog::Utils::START_INVOCATION_URI, 'null', Datadog::Utils.request_headers) { headers }
 
         # Call the start request with an empty event
         Datadog::Utils.send_start_invocation_request(event: nil)
@@ -52,7 +52,7 @@ describe Datadog::Utils do
 
       it 'skips applying trace context when headers are not present' do
         # Stub POST request to return a trace context
-        expect(Net::HTTP).to receive(:post).with(Datadog::Utils::START_INVOCATION_URI, 'null') { {} }
+        expect(Net::HTTP).to receive(:post).with(Datadog::Utils::START_INVOCATION_URI, 'null', Datadog::Utils.request_headers) { {} }
 
         # Call the start request with an empty event
         Datadog::Utils.send_start_invocation_request(event: nil)
