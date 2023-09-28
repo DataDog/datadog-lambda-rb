@@ -92,9 +92,9 @@ module Datadog
       headers = {}
 
       trace_digest = Datadog::Tracing.active_trace.to_digest
-      headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_digest.trace_id
-      headers[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = trace_digest.span_id
-      headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] = trace_digest.trace_sampling_priority
+      headers[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym] = trace_digest.trace_id.to_s
+      headers[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym] = trace_digest.span_id.to_s
+      headers[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym] = trace_digest.trace_sampling_priority.to_s
 
       headers
     end
