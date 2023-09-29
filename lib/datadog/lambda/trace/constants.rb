@@ -28,7 +28,7 @@ module Datadog
     LOCAL_HOST = '127.0.0.1'
     AWS_XRAY_DAEMON_ADDRESS_ENV_VAR = 'AWS_XRAY_DAEMON_ADDRESS'
 
-    # Header that prevents dd-trace-rb Net::HTTP integration from tracing 
+    # Header that prevents dd-trace-rb Net::HTTP integration from tracing
     # internal trace requests. Set it to any value to skip tracing.
     HEADER_DD_INTERNAL_UNTRACED_REQUEST = 'DD-Internal-Untraced-Request'
   end
