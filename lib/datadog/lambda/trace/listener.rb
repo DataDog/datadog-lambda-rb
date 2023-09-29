@@ -39,10 +39,10 @@ module Datadog
         source = context[:source] if context
         options[:tags]['_dd.parent_source'] = source if source && source != 'ddtrace'
         options[:resource] = @function_name
-        options[:service] = 'aws.lambda'
+        options[:service] = 'dd-tracer-serverless-span'
         options[:span_type] = 'serverless'
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
-        @trace = Datadog::Tracing.trace('aws.lambda', **options)
+        @trace = Datadog::Tracing.trace('dd-tracer-serverless-span', **options)
         Datadog::Utils.send_start_invocation_request(event: event)
       end
       # rubocop:enable Metrics/AbcSize
