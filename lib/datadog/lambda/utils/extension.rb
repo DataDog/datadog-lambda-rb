@@ -75,7 +75,9 @@ module Datadog
 
       # Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
 
-      request = Net::HTTP::Post.new(END_INVOCATION_URI, initheader: request_headers)
+      request = Net::HTTP::Post.new(END_INVOCATION_URI, initheader: {
+                                      'DD-Internal-Untraced-Request' => 'true'
+                                    })
       hostname = END_INVOCATION_URI.hostname
       request.body = response.to_json
       trace = Datadog::Tracing.active_trace
