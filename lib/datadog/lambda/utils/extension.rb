@@ -76,13 +76,12 @@ module Datadog
       # Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
 
       request = Net::HTTP::Post.new(END_INVOCATION_URI)
-      hostname = END_INVOCATION_URI.hostname
       request.body = response.to_json
       request['DD-Internal-Untraced-Request'] = 'true'
       trace = Datadog::Tracing.active_trace
       Tracing::Propagation::HTTP.inject!(trace, request)
 
-      Net::HTTP.start(hostname) do |http|
+      Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|
         http.request(request)
       end
     rescue StandardError => e
