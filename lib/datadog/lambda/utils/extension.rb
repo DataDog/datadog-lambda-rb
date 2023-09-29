@@ -35,9 +35,15 @@ module Datadog
       return unless extension_running?
 
       response = Net::HTTP.post(START_INVOCATION_URI, event.to_json, request_headers)
-      update_trace_context_on_response(response: response)
-      # trace_digest = Tracing::Propagation::HTTP.extract(response)
-      # Tracing.continue_trace!(trace_digest)
+      # update_trace_context_on_response(response: response)
+
+      p ' --- [layer][start] response is'
+      p response.each_header.to_h
+
+      trace_digest = Tracing::Propagation::HTTP.extract(response)
+      p ' --- [layer][start] trace digest is'
+      p trace_digest.inspect
+      Tracing.continue_trace!(trace_digest)
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
     end
@@ -68,22 +74,29 @@ module Datadog
     def self.send_end_invocation_request(response:)
       return unless extension_running?
 
-      trace_context = Datadog::Trace.trace_context
-      Datadog::Utils.logger.debug "current trace context is #{trace_context} #{trace_context.to_json}"
-      headers = trace_context.nil? ? active_trace_context_to_headers : trace_context_to_headers(trace_context)
-      Datadog::Utils.logger.debug "headers are #{headers} #{headers.to_json}"
+      # trace_context = Datadog::Trace.trace_context
+      # Datadog::Utils.logger.debug "current trace context is #{trace_context} #{trace_context.to_json}"
+      # headers = trace_context.nil? ? active_trace_context_to_headers : trace_context_to_headers(trace_context)
+      # Datadog::Utils.logger.debug "headers are #{headers} #{headers.to_json}"
 
-      Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
+      # Net::HTTP.post(END_INVOCATION_URI, response.to_json, headers)
 
-      # request = Net::HTTP::Post.new(END_INVOCATION_URI)
-      # request.body = response.to_json
-      # request['DD-Internal-Untraced-Request'] = 'true'
-      # trace = Datadog::Tracing.active_trace
-      # Tracing::Propagation::HTTP.inject!(trace, request)
+      request = Net::HTTP::Post.new(END_INVOCATION_URI)
+      request.body = response.to_json
+      request['DD-Internal-Untraced-Request'] = 'true'
 
-      # Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|
-      #   http.request(request)
-      # end
+      trace = Datadog::Tracing.active_trace
+      p ' --- [layer][end] BEFORE INJECTION trace digest is'
+      p trace&.to_digest.inspect
+      Tracing::Propagation::HTTP.inject!(trace, request)
+      p ' --- [layer][end] AFTER INJECTION trace digest is'
+      p trace&.to_digest.inspect
+      Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|
+        p ' --- [layer][end] request is'
+        p request.each_header.to_h
+
+        http.request(request)
+      end
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on end invocation request to extension: #{e}"
     end
