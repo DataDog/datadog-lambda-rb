@@ -43,7 +43,7 @@ module Datadog
       trace_digest = Tracing::Propagation::HTTP.extract(response)
       p ' --- [layer][start] trace digest is'
       p trace_digest.inspect
-      Tracing.continue_trace!(trace_digest)
+      Tracing.continue_trace!(trace_digest) if trace_digest
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
     end
