@@ -49,7 +49,7 @@ module Datadog
 
       request = Net::HTTP::Post.new(END_INVOCATION_URI)
       request.body = response.to_json
-      request[Datadog::Tracing::HEADER_DD_INTERNAL_UNTRACED_REQUEST] = 1
+      request[Datadog::Trace::HEADER_DD_INTERNAL_UNTRACED_REQUEST] = 1
 
       trace = Datadog::Tracing.active_trace
       Tracing::Propagation::HTTP.inject!(trace, request)
