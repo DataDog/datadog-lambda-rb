@@ -72,52 +72,6 @@ describe Datadog::Utils do
     end
   end
 
-  describe '#update_trace_context_on_response' do
-    before(:each) do
-      # Start tracing for active span
-      @trace = Datadog::Tracing.trace('aws.lambda')
-    end
-
-    after(:each) do
-      @trace.finish
-    end
-
-    it 'applies trace context from response' do
-      Datadog::Utils.update_trace_context_on_response(response: headers)
-
-      digest = Datadog::Tracing.active_trace.to_digest
-
-      expect(digest.trace_id.to_s).to eq('4110911582297405557')
-      expect(digest.span_id.to_s).to eq('797643193680388254')
-      expect(digest.trace_sampling_priority.to_s).to eq('1')
-    end
-
-    it 'skips applying trace context when headers are not present' do
-      Datadog::Utils.update_trace_context_on_response(response: {})
-
-      digest = Datadog::Tracing.active_trace.to_digest
-
-      expect(digest.trace_id.to_s).not_to eq('4110911582297405557')
-      expect(digest.span_id.to_s).not_to eq('797643193680388254')
-    end
-  end
-
-  describe '#headers_to_trace_context' do
-    it 'returns a hash with trace context keys when headers are present' do
-      result = Datadog::Utils.headers_to_trace_context(headers)
-
-      expect(result[:trace_id]).to eq('4110911582297405557')
-      expect(result[:parent_id]).to eq('797643193680388254')
-      expect(result[:sample_mode]).to eq('1')
-    end
-
-    it 'returns an empty hash when headers are not present' do
-      result = Datadog::Utils.headers_to_trace_context({})
-
-      expect(result).to eq({})
-    end
-  end
-
   describe '#send_end_invocation_request' do
     context 'when extension is running' do
       before(:each) do
@@ -146,33 +100,6 @@ describe Datadog::Utils do
         result = Datadog::Utils.send_end_invocation_request(response: nil)
         expect(result).to eq(nil)
       end
-    end
-  end
-
-  describe '#trace_context_to_headers' do
-    it 'converts to datadog headers when trace context has values' do
-      result = Datadog::Utils.trace_context_to_headers(trace_context)
-
-      expect(result[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym]).to eq('4110911582297405557')
-      expect(result[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym]).to eq('797643193680388254')
-      expect(result[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym]).to eq('1')
-    end
-
-    it 'returns nil if trace context is not present' do
-      expect(Datadog::Utils.trace_context_to_headers(nil)).to eq(nil)
-    end
-  end
-
-  describe '#active_trace_context_to_headers' do
-    it 'returns active trace context as headers' do
-      trace = Datadog::Tracing.trace('aws.lambda')
-
-      result = Datadog::Utils.active_trace_context_to_headers
-      expect(result[Datadog::Trace::DD_TRACE_ID_HEADER.to_sym]).not_to eq(nil)
-      expect(result[Datadog::Trace::DD_PARENT_ID_HEADER.to_sym]).not_to eq(nil)
-      expect(result[Datadog::Trace::DD_SAMPLING_PRIORITY_HEADER.to_sym]).not_to eq(nil)
-
-      trace.finish
     end
   end
 end
