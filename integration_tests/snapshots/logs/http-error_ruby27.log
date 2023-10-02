@@ -3,7 +3,7 @@ D, [XXXX] DEBUG  -- : metrics are going to be handled by the forwarder
 END Duration: XXXX ms (init: XXXX ms) Memory Used: XXXX MB
 END Duration: XXXX ms (init: XXXX) Memory Used: XXXX MB
 END Duration: XXXX ms (init: XXXX) Memory Used: XXXX MB
-I, [XXXX]  INFO XXXX[ddtrace] DATADOG CONFIGURATION - {"date":"XXXX","os_name":"x86_64-pc-linux-gnu","version":"1.12.0","lang":"ruby","lang_version":"2.7.8","enabled":true,"service":"runtime","debug":false,"analytics_enabled":false,"tags":"_dd.origin:lambda","runtime_metrics_enabled":false,"integrations_loaded":"aws@","vm":"ruby-2.7.8","partial_flushing_enabled":false,"priority_sampling_enabled":false,"health_metrics_enabled":false,"profiling_enabled":false,"integration_aws_analytics_enabled":"false","integration_aws_analytics_sample_rate":"1.0","integration_aws_enabled":"true","integration_aws_service_name":"aws"}
+I, [XXXX]  INFO XXXX[ddtrace] DATADOG CONFIGURATION - {"date":"XXXX","os_name":"x86_64-pc-linux-gnu","version":"1.14.0","lang":"ruby","lang_version":"2.7.8","enabled":true,"service":"runtime","debug":false,"analytics_enabled":false,"tags":"_dd.origin:lambda","runtime_metrics_enabled":false,"integrations_loaded":"aws@","vm":"ruby-2.7.8","partial_flushing_enabled":false,"priority_sampling_enabled":false,"health_metrics_enabled":false,"profiling_enabled":false,"integration_aws_analytics_enabled":"false","integration_aws_analytics_sample_rate":"1.0","integration_aws_enabled":"true","integration_aws_service_name":"aws"}
 START
 START
 START
