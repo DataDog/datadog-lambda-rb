@@ -16,6 +16,7 @@ module Datadog
   module Trace
     # TraceListener tracks tracing context information
     class Listener
+      @trace = nil
       def initialize(handler_name:, function_name:, patch_http:,
                      merge_xray_traces:)
         @handler_name = handler_name
@@ -25,18 +26,11 @@ module Datadog
         Datadog::Trace.patch_http if patch_http
       end
 
-      def on_start(event:)
-        trace_context = Datadog::Trace.extract_trace_context(event,
-                                                             @merge_xray_traces)
+      # rubocop:disable Metrics/AbcSize
+      def on_start(event:, request_context:, cold_start:)
+        trace_context = Datadog::Trace.extract_trace_context(event, @merge_xray_traces)
         Datadog::Trace.trace_context = trace_context
         Datadog::Utils.logger.debug "extracted trace context #{trace_context}"
-      rescue StandardError => e
-        Datadog::Utils.logger.error "couldn't read tracing context #{e}"
-      end
-
-      def on_end; end
-
-      def on_wrap(request_context:, cold_start:, &block)
         options = get_option_tags(
           request_context: request_context,
           cold_start: cold_start
@@ -48,9 +42,14 @@ module Datadog
         options[:service] = 'aws.lambda'
         options[:span_type] = 'serverless'
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
-        Datadog::Trace.wrap_datadog(options) do
-          block.call
-        end
+        @trace = Datadog::Tracing.trace('aws.lambda', **options)
+        Datadog::Utils.send_start_invocation_request(event: event)
+      end
+      # rubocop:enable Metrics/AbcSize
+
+      def on_end(response:)
+        Datadog::Utils.send_end_invocation_request(response: response)
+        @trace&.finish
       end
 
       private

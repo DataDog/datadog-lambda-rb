@@ -21,6 +21,7 @@ module Datadog
   # Instruments AWS Lambda functions with Datadog distributed tracing and
   # custom metrics
   module Lambda
+    @response = nil
     @is_cold_start = true
     @patch_http = true
     @metrics_client = Metrics::Client.instance
@@ -43,6 +44,9 @@ module Datadog
           )
         end
         c.tags = { "_dd.origin": 'lambda' }
+        # Enable AWS SDK instrumentation
+        c.tracing.instrument :aws if trace_managed_services?
+
         yield(c) if block_given?
       end
     end
@@ -54,28 +58,25 @@ module Datadog
     def self.wrap(event, context, &block)
       Datadog::Utils.update_log_level
       @listener ||= initialize_listener
-      @listener.on_start(event: event)
       record_enhanced('invocations', context)
       begin
         cold = @is_cold_start
-        res = @listener.on_wrap(request_context: context, cold_start: cold) do
-          block.call
-        end
+        @listener&.on_start(event: event, request_context: context, cold_start: cold)
+        @response = block.call
       rescue StandardError => e
         record_enhanced('errors', context)
         raise e
       ensure
-        @listener.on_end
+        @listener&.on_end(response: @response)
         @is_cold_start = false
         @metrics_client.close
       end
-      res
+      @response
     end
 
     # Gets the current tracing context
     def self.trace_context
-      context = Hash[Datadog::Trace.trace_context]
-      context
+      Hash[Datadog::Trace.trace_context]
     end
 
     # Send a custom distribution metric
@@ -166,6 +167,15 @@ module Datadog
       dd_enhanced_metrics.downcase == 'true'
     end
 
+    # Read DD_TRACE_MANAGED_SERVICES environment variable
+    # @return [boolean] true if we should trace AWS services
+    def self.trace_managed_services?
+      dd_trace_managed_services = ENV[Trace::DD_TRACE_MANAGED_SERVICES]
+      return true if dd_trace_managed_services.nil?
+
+      dd_trace_managed_services.downcase == 'true'
+    end
+
     def self.initialize_listener
       handler = ENV['_HANDLER'].nil? ? 'handler' : ENV['_HANDLER']
       function = ENV['AWS_LAMBDA_FUNCTION_NAME']
@@ -176,10 +186,18 @@ module Datadog
         Datadog::Utils.logger.debug("Setting merge traces #{merge_xray_traces}")
       end
 
-      Trace::Listener.new(handler_name: handler,
-                          function_name: function,
-                          patch_http: @patch_http,
-                          merge_xray_traces: merge_xray_traces)
+      # Only initialize listener if Tracing enabled.
+      unless Datadog::Tracing.enabled?
+        Datadog::Utils.logger.debug 'dd-trace unavailable'
+        return nil
+      end
+
+      Trace::Listener.new(
+        handler_name: handler,
+        function_name: function,
+        patch_http: @patch_http,
+        merge_xray_traces: merge_xray_traces
+      )
     end
   end
 end
