@@ -62,6 +62,8 @@ module Datadog
 
     def self.request_headers
       {
+        # Header used to avoid tracing requests that are internal to
+        # Datadog products.
         Datadog::Transport::Ext::HTTP::HEADER_DD_INTERNAL_UNTRACED_REQUEST.to_sym => 'true'
       }
     end
