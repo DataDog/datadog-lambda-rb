@@ -34,7 +34,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'dogstatsd-ruby', '~> 5.0'
   # We don't add this as a direct dependency, because it has
   # native modules that are difficult to package for lambda
-  spec.add_development_dependency 'ddtrace', '~>1.14.0'
+  spec.add_development_dependency 'ddtrace', '~>1.15.0'
 
   # Development dependencies
   spec.add_development_dependency 'rake', '~> 12.3'
