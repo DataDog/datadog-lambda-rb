@@ -31,7 +31,7 @@ module Datadog
     # See https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md#quickstart-for-ruby-applications
     def self.configure_apm
       require 'datadog/tracing'
-      require 'ddtrace/transport/io'
+      require 'datadog/tracing/transport/io'
 
       @patch_http = false
       # Needed to keep trace flushes on a single line
@@ -40,7 +40,7 @@ module Datadog
       Datadog.configure do |c|
         unless Datadog::Utils.extension_running?
           c.tracing.writer = Datadog::Tracing::SyncWriter.new(
-            transport: Datadog::Transport::IO.default
+            transport: Datadog::Tracing::Transport::IO.default
           )
         end
         c.tags = { "_dd.origin": 'lambda' }

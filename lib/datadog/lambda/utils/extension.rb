@@ -49,7 +49,7 @@ module Datadog
 
       request = Net::HTTP::Post.new(END_INVOCATION_URI)
       request.body = response.to_json
-      request[Datadog::Transport::Ext::HTTP::HEADER_DD_INTERNAL_UNTRACED_REQUEST] = 1
+      request[Datadog::Core::Transport::Ext::HTTP::HEADER_DD_INTERNAL_UNTRACED_REQUEST] = 1
 
       trace = Datadog::Tracing.active_trace
       Tracing::Propagation::HTTP.inject!(trace, request)
@@ -64,7 +64,7 @@ module Datadog
       {
         # Header used to avoid tracing requests that are internal to
         # Datadog products.
-        Datadog::Transport::Ext::HTTP::HEADER_DD_INTERNAL_UNTRACED_REQUEST.to_sym => 'true'
+        Datadog::Core::Transport::Ext::HTTP::HEADER_DD_INTERNAL_UNTRACED_REQUEST.to_sym => 'true'
       }
     end
   end
