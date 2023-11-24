@@ -3,7 +3,7 @@ D, [XXXX] DEBUG  -- : metrics are going to be handled by the forwarder
 END Duration: XXXX ms (init: XXXX ms) Memory Used: XXXX MB
 END Duration: XXXX ms (init: XXXX) Memory Used: XXXX MB
 END Duration: XXXX ms (init: XXXX) Memory Used: XXXX MB
-I, [XXXX]  INFO XXXX[ddtrace] DATADOG CONFIGURATION - CORE - {"date":"XXXX","os_name":"x86_64-pc-linux-gnu","version":"1.15.0","lang":"ruby","lang_version":"2.7.8","env":null,"service":"runtime","dd_version":null,"debug":false,"tags":"_dd.origin:lambda","runtime_metrics_enabled":false,"vm":"ruby-2.7.8","health_metrics_enabled":false}
+I, [XXXX]  INFO XXXX[ddtrace] DATADOG CONFIGURATION - CORE - {"date":"XXXX","os_name":"x86_64-pc-linux-gnu","version":"1.17.0","lang":"ruby","lang_version":"2.7.8","env":null,"service":"runtime","dd_version":null,"debug":false,"tags":"_dd.origin:lambda","runtime_metrics_enabled":false,"vm":"ruby-2.7.8","health_metrics_enabled":false}
 I, [XXXX]  INFO XXXX[ddtrace] DATADOG CONFIGURATION - PROFILING - {"profiling_enabled":false}
 I, [XXXX]  INFO XXXX[ddtrace] DATADOG CONFIGURATION - TRACING - {"enabled":true,"agent_url":null,"analytics_enabled":false,"sample_rate":null,"sampling_rules":null,"integrations_loaded":"aws@","partial_flushing_enabled":false,"priority_sampling_enabled":false,"integration_aws_analytics_enabled":"false","integration_aws_analytics_sample_rate":"1.0","integration_aws_enabled":"true","integration_aws_service_name":"aws","integration_aws_peer_service":""}
 Processed APIGateway request
