@@ -8,6 +8,7 @@
 # Copyright 2023 Datadog, Inc.
 #
 require 'net/http'
+require 'datadog/tracing/contrib/http/distributed/fetcher'
 
 module Datadog
   # Utils contains utility functions shared between modules
@@ -20,6 +21,9 @@ module Datadog
 
     START_INVOCATION_URI = URI(EXTENSION_BASE_URL + START_INVOCATION_PATH).freeze
     END_INVOCATION_URI = URI(EXTENSION_BASE_URL + END_INVOCATION_PATH).freeze
+
+    # Internal communications use Datadog tracing headers
+    PROPAGATOR = Tracing::Distributed::Datadog.new(fetcher: Fetcher)
 
     def self.extension_running?
       return @is_extension_running unless @is_extension_running.nil?
@@ -36,12 +40,13 @@ module Datadog
 
       response = Net::HTTP.post(START_INVOCATION_URI, event.to_json, request_headers)
 
-      trace_digest = Tracing::Propagation::HTTP.extract(response)
+      trace_digest = PROPAGATOR.extract(response)
       # Only continue trace from a new one if it exist, or else,
       # it will create a new trace, which is not ideal here.
       Tracing.continue_trace!(trace_digest) if trace_digest
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
+      Datadog::Utils.logger.debug "{e.backtrace}"
     end
 
     def self.send_end_invocation_request(response:)
@@ -52,7 +57,7 @@ module Datadog
       request[Datadog::Core::Transport::Ext::HTTP::HEADER_DD_INTERNAL_UNTRACED_REQUEST] = 1
 
       trace = Datadog::Tracing.active_trace
-      Tracing::Propagation::HTTP.inject!(trace, request)
+      PROPAGATOR.inject!(trace, request)
       Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|
         http.request(request)
       end
