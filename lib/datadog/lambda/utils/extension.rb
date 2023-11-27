@@ -41,6 +41,7 @@ module Datadog
       response = Net::HTTP.post(START_INVOCATION_URI, event.to_json, request_headers)
 
       trace_digest = PROPAGATOR.extract(response)
+
       # Only continue trace from a new one if it exist, or else,
       # it will create a new trace, which is not ideal here.
       Tracing.continue_trace!(trace_digest) if trace_digest
@@ -56,7 +57,7 @@ module Datadog
       request.body = response.to_json
       request[Datadog::Core::Transport::Ext::HTTP::HEADER_DD_INTERNAL_UNTRACED_REQUEST] = 1
 
-      trace = Datadog::Tracing.active_trace
+      trace = Datadog::Tracing.active_trace&.to_digest
       PROPAGATOR.inject!(trace, request)
       Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|
         http.request(request)
