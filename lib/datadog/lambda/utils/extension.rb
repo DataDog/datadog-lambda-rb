@@ -43,10 +43,13 @@ module Datadog
 
       # Only continue trace from a new one if it exist, or else,
       # it will create a new trace, which is not ideal here.
-      current_trace = Datadog::Tracing.active_trace&.to_digest
-      Datadog::Utils.logger.debug "current trace context #{current_trace}"
+      current_trace = Datadog::Tracing.active_trace
+      Datadog::Utils.logger.debug "[start] current active trace #{current_trace}"
+      _trace_digest = current_trace&.to_digest
+      Datadog::Utils.logger.debug "[start] current trace digest #{_trace_digest&.trace_id} #{_trace_digest&.span_id} #{_trace_digest&.span_name}"
       if trace_digest
-        Datadog::Utils.logger.debug "found a trace context #{trace_digest} continuing trace with it"
+        Datadog::Utils.logger.debug "[start] found a trace context #{trace_digest} continuing trace with it"
+        Datadog::Utils.logger.debug "[start] new trace digest #{_trace_digest&.trace_id} #{_trace_digest&.span_id} #{_trace_digest&.span_name}"
         Tracing.continue_trace!(trace_digest)
       end
     rescue StandardError => e
@@ -61,7 +64,7 @@ module Datadog
       request[Datadog::Core::Transport::Ext::HTTP::HEADER_DD_INTERNAL_UNTRACED_REQUEST] = 1
 
       trace_digest = Datadog::Tracing.active_trace&.to_digest
-      Datadog::Utils.logger.debug "current trace context #{trace_digest}" if trace_digest
+      Datadog::Utils.logger.debug "[end] current trace digest #{trace_digest&.trace_id} #{trace_digest&.span_id} #{trace_digest&.span_name}" if trace_digest
       PROPAGATOR.inject!(trace_digest, request)
       Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|
         http.request(request)
