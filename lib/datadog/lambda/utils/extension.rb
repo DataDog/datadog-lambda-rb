@@ -46,7 +46,7 @@ module Datadog
       Tracing.continue_trace!(trace_digest) if trace_digest
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
-      Datadog::Utils.logger.debug "{e.backtrace}"
+      Datadog::Utils.logger.debug e.backtrace
     end
 
     def self.send_end_invocation_request(response:)
