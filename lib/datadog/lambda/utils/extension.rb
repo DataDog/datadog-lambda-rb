@@ -52,7 +52,7 @@ module Datadog
       headers = response.each_header.to_h
       Datadog::Utils.logger.debug "[start] headers from response are #{headers}"
       Datadog::Utils.logger.debug "[start] response body is #{response.body}"
-
+      response["x-datadog-origin"] = "lambda"
       trace_digest = PROPAGATOR.extract(response)
       Datadog::Utils.logger.debug "[start] extracted trace digest #{trace_digest.inspect}"
 
