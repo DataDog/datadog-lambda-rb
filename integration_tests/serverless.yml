@@ -58,13 +58,3 @@ functions:
       - { Ref: RubyLambdaLayer }
     environment:
       DD_FLUSH_TO_LOG: true
-
-  # http-error
-  http-error_ruby:
-    name: integration-tests-rb-${sls:stage}-http-error_${env:RUNTIME}
-    handler: http_error.handle
-    runtime: ${env:SERVERLESS_RUNTIME}
-    layers:
-      - { Ref: RubyLambdaLayer }
-    environment:
-      DD_FLUSH_TO_LOG: true
