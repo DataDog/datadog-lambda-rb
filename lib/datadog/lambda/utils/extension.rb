@@ -46,17 +46,10 @@ module Datadog
       return unless extension_running?
 
       response = Net::HTTP.post(START_INVOCATION_URI, event.to_json, request_headers)
-      Datadog::Utils.logger.debug "[start] received event is #{event.to_json}"
-      Datadog::Utils.logger.debug "[start] response returned #{response.inspect}"
+      # Add origin, since tracer expects it for extraction
+      response[Datadog::Trace::DD_ORIGIN] = 'lambda'
 
-      headers = response.each_header.to_h
-      Datadog::Utils.logger.debug "[start] headers from response are #{headers}"
-      Datadog::Utils.logger.debug "[start] response body is #{response.body}"
-      response["x-datadog-origin"] = "lambda"
-      trace_digest = PROPAGATOR.extract(response)
-      Datadog::Utils.logger.debug "[start] extracted trace digest #{trace_digest.inspect}"
-
-      trace_digest
+      PROPAGATOR.extract(response)
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e} #{e.backtrace}"
     end
@@ -69,7 +62,6 @@ module Datadog
       request[Datadog::Core::Transport::Ext::HTTP::HEADER_DD_INTERNAL_UNTRACED_REQUEST] = 1
 
       trace_digest = Datadog::Tracing.active_trace&.to_digest
-      Datadog::Utils.logger.debug "[end] current trace_digest #{trace_digest.inspect} to inject"
 
       PROPAGATOR.inject!(trace_digest, request)
       Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|

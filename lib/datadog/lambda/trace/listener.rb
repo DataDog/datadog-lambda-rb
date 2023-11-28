@@ -47,7 +47,6 @@ module Datadog
         # Only continue trace from a new one if it exist, or else,
         # it will create a new trace, which is not ideal here.
         options[:continue_from] = trace_digest if trace_digest
-        Datadog::Utils.logger.debug "[listener][on_start] starting with trace_digest #{trace_digest.inspect}" if trace_digest
 
         @trace = Datadog::Tracing.trace('aws.lambda', **options)
       end
