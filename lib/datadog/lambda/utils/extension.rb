@@ -50,8 +50,9 @@ module Datadog
       if trace_digest
         Datadog::Utils.logger.debug "[start] found a trace context #{trace_digest} continuing trace with it"
         Datadog::Utils.logger.debug "[start] new trace digest #{_trace_digest&.trace_id} #{_trace_digest&.span_id} #{_trace_digest&.span_name}"
-        Tracing.continue_trace!(trace_digest)
       end
+
+      trace_digest
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
     end
