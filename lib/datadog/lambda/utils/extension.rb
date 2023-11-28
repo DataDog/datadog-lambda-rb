@@ -23,10 +23,14 @@ module Datadog
     END_INVOCATION_URI = URI(EXTENSION_BASE_URL + END_INVOCATION_PATH).freeze
 
     # Internal communications use Datadog tracing headers
-    PROPAGATOR = Tracing::Distributed::Propagation.new(propagation_styles: {
-      Tracing::Configuration::Ext::Distributed::PROPAGATION_STYLE_DATADOG =>
-        Tracing::Distributed::Datadog.new(fetcher: Tracing::Contrib::HTTP::Distributed::Fetcher)
-    })
+    # PROPAGATOR = Tracing::Distributed::Propagation.new(propagation_styles: {
+    #   Tracing::Configuration::Ext::Distributed::PROPAGATION_STYLE_DATADOG =>
+    #     Tracing::Distributed::Datadog.new(fetcher: Tracing::Contrib::HTTP::Distributed::Fetcher)
+    # })
+
+    PROPAGATOR = Tracing::Distributed::Datadog.new(
+      fetcher: Tracing::Contrib::HTTP::Distributed::Fetcher
+    )
 
     def self.extension_running?
       return @is_extension_running unless @is_extension_running.nil?
