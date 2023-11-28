@@ -49,11 +49,9 @@ module Datadog
       Datadog::Utils.logger.debug "[start] received event is #{event.to_json}"
       Datadog::Utils.logger.debug "[start] response returned #{response.inspect}"
 
-      headers = response.each_header
-      Datadog::Utils.logger.debug "[start] headers from response are #{headers.to_json}"
+      headers = response.each_header.to_h
+      Datadog::Utils.logger.debug "[start] headers from response are #{headers}"
       Datadog::Utils.logger.debug "[start] response body is #{response.body}"
-
-      end
 
       trace_digest = PROPAGATOR.extract(response)
       Datadog::Utils.logger.debug "[start] extracted trace digest #{trace_digest.inspect}"
