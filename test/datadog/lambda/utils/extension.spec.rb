@@ -10,7 +10,8 @@ describe Datadog::Utils do
     {
       'x-datadog-parent-id' => '797643193680388254',
       'x-datadog-sampling-priority' => '1',
-      'x-datadog-trace-id' => '4110911582297405557'
+      'x-datadog-trace-id' => '4110911582297405557',
+      'x-datadog-origin' => 'lambda'
     }
   end
 
@@ -42,9 +43,7 @@ describe Datadog::Utils do
           .with(Datadog::Utils::START_INVOCATION_URI, 'null', Datadog::Utils.request_headers) { headers }
 
         # Call the start request with an empty event
-        Datadog::Utils.send_start_invocation_request(event: nil)
-
-        digest = Datadog::Tracing.active_trace.to_digest
+        digest = Datadog::Utils.send_start_invocation_request(event: nil)
 
         expect(digest.trace_id.to_s).to eq('4110911582297405557')
         expect(digest.span_id.to_s).to eq('797643193680388254')
