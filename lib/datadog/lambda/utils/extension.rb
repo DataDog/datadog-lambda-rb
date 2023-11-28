@@ -23,11 +23,6 @@ module Datadog
     END_INVOCATION_URI = URI(EXTENSION_BASE_URL + END_INVOCATION_PATH).freeze
 
     # Internal communications use Datadog tracing headers
-    # PROPAGATOR = Tracing::Distributed::Propagation.new(propagation_styles: {
-    #   Tracing::Configuration::Ext::Distributed::PROPAGATION_STYLE_DATADOG =>
-    #     Tracing::Distributed::Datadog.new(fetcher: Tracing::Contrib::HTTP::Distributed::Fetcher)
-    # })
-
     PROPAGATOR = Tracing::Distributed::Datadog.new(
       fetcher: Tracing::Contrib::HTTP::Distributed::Fetcher
     )
@@ -51,7 +46,7 @@ module Datadog
 
       PROPAGATOR.extract(response)
     rescue StandardError => e
-      Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e} #{e.backtrace}"
+      Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
     end
 
     def self.send_end_invocation_request(response:)
