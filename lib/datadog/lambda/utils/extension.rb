@@ -23,7 +23,10 @@ module Datadog
     END_INVOCATION_URI = URI(EXTENSION_BASE_URL + END_INVOCATION_PATH).freeze
 
     # Internal communications use Datadog tracing headers
-    PROPAGATOR = Tracing::Distributed::Datadog.new(fetcher: Tracing::Contrib::HTTP::Distributed::Fetcher)
+    PROPAGATOR = Tracing::Distributed::Propagation.new(propagation_styles: {
+      Tracing::Configuration::Ext::Distributed::PROPAGATION_STYLE_DATADOG =>
+        Tracing::Distributed::Datadog.new(fetcher: Tracing::Contrib::HTTP::Distributed::Fetcher)
+    })
 
     def self.extension_running?
       return @is_extension_running unless @is_extension_running.nil?
@@ -39,22 +42,15 @@ module Datadog
       return unless extension_running?
 
       response = Net::HTTP.post(START_INVOCATION_URI, event.to_json, request_headers)
-      trace_digest = PROPAGATOR.extract(response)
+      Datadog::Utils.logger.debug "[start] received event is #{event.to_json}"
+      Datadog::Utils.logger.debug "[start] response returned #{response.inspect}"
 
-      # Only continue trace from a new one if it exist, or else,
-      # it will create a new trace, which is not ideal here.
-      current_trace = Datadog::Tracing.active_trace
-      Datadog::Utils.logger.debug "[start] current active trace #{current_trace}"
-      _trace_digest = current_trace&.to_digest
-      Datadog::Utils.logger.debug "[start] current trace digest #{_trace_digest&.trace_id} #{_trace_digest&.span_id} #{_trace_digest&.span_name}"
-      if trace_digest
-        Datadog::Utils.logger.debug "[start] found a trace context #{trace_digest} continuing trace with it"
-        Datadog::Utils.logger.debug "[start] new trace digest #{_trace_digest&.trace_id} #{_trace_digest&.span_id} #{_trace_digest&.span_name}"
-      end
+      trace_digest = PROPAGATOR.extract(response)
+      Datadog::Utils.logger.debug "[start] extracted trace digest #{trace_digest.inspect}"
 
       trace_digest
     rescue StandardError => e
-      Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
+      Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e} #{e.backtrace}"
     end
 
     def self.send_end_invocation_request(response:)
@@ -65,7 +61,8 @@ module Datadog
       request[Datadog::Core::Transport::Ext::HTTP::HEADER_DD_INTERNAL_UNTRACED_REQUEST] = 1
 
       trace_digest = Datadog::Tracing.active_trace&.to_digest
-      Datadog::Utils.logger.debug "[end] current trace digest #{trace_digest&.trace_id} #{trace_digest&.span_id} #{trace_digest&.span_name}" if trace_digest
+      Datadog::Utils.logger.debug "[end] current trace_digest #{trace_digest.inspect} to inject"
+
       PROPAGATOR.inject!(trace_digest, request)
       Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|
         http.request(request)
