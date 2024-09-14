@@ -16,7 +16,7 @@ MAX_LAYER_UNCOMPRESSED_SIZE_KB=$(expr 100 \* 1024)
 
 LAYER_FILES_PREFIX="datadog-lambda_ruby"
 LAYER_DIR=".layers"
-VERSIONS=("2.7" "3.2")
+VERSIONS=("2.7" "3.2" "3.3")
 
 for version in "${VERSIONS[@]}"
 do
