@@ -10,15 +10,15 @@ end
 module Datadog
   # TraceListener tracks tracing context information
   module Trace
-    class <<self
+    class << self
       def apply_datadog_trace_context(context)
         unless context.nil?
           trace_id = context[:trace_id].to_i
           span_id = context[:parent_id].to_i
           sampling_priority = context[:sample_mode]
           trace_digest = Datadog::Tracing::TraceDigest.new(
-            span_id: span_id,
-            trace_id: trace_id,
+            span_id:,
+            trace_id:,
             trace_sampling_priority: sampling_priority
           )
           Datadog::Tracing.continue_trace!(trace_digest)

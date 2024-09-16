@@ -32,8 +32,8 @@ module Datadog
         Datadog::Trace.trace_context = trace_context
         Datadog::Utils.logger.debug "extracted trace context #{trace_context}"
         options = get_option_tags(
-          request_context: request_context,
-          cold_start: cold_start
+          request_context:,
+          cold_start:
         )
         context = Datadog::Trace.trace_context
         source = context[:source] if context
@@ -43,7 +43,7 @@ module Datadog
         options[:span_type] = 'serverless'
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
 
-        trace_digest = Datadog::Utils.send_start_invocation_request(event: event)
+        trace_digest = Datadog::Utils.send_start_invocation_request(event:)
         # Only continue trace from a new one if it exist, or else,
         # it will create a new trace, which is not ideal here.
         options[:continue_from] = trace_digest if trace_digest
@@ -53,7 +53,7 @@ module Datadog
       # rubocop:enable Metrics/AbcSize
 
       def on_end(response:)
-        Datadog::Utils.send_end_invocation_request(response: response)
+        Datadog::Utils.send_end_invocation_request(response:)
         @trace&.finish
       end
 
@@ -65,17 +65,16 @@ module Datadog
         function_arn = tk.length > 7 ? tk[0, 7].join(':') : function_arn
         function_version = tk.length > 7 ? tk[7] : '$LATEST'
         function_name = request_context.function_name
-        options = {
+        {
           tags: {
-            cold_start: cold_start,
-            function_arn: function_arn,
-            function_version: function_version,
+            cold_start:,
+            function_arn:,
+            function_version:,
             request_id: request_context.aws_request_id,
             functionname: function_name.nil? || function_name.empty? ? nil : function_name.downcase,
             resource_names: function_name
           }
         }
-        options
       end
     end
   end

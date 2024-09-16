@@ -12,12 +12,12 @@ def handle(event:, context:)
     }
     span = Datadog::Tracing.active_span
     Datadog::Lambda.metric('serverless.integration_test.execution', 1, function: 'http-request')
-    record_ids, event_type = process_event(event: event)
+    record_ids, event_type = process_event(:event)
     response_payload['recordIds'] = record_ids if record_ids
     if event_type
       response_payload['eventType'] = event_type
     else
-      request_id = get_api_gateway_request_id(event: event)
+      request_id = get_api_gateway_request_id(:event)
       if request_id
         response_payload['eventType'] = 'APIGateway'
         span.set_tag('api_gateway_request_id', request_id)

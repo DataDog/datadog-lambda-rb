@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.email                 = ['dev@datadoghq.com']
 
   spec.summary     = 'Instruments your Ruby AWS Lambda functions with Datadog'
-  spec.description = <<-MSG.gsub(/^[\s]+/, '')
+  spec.description = <<-MSG.gsub(/^\s+/, '')
     datadog-lambda is Datadog's AWS Lambda integration for ruby. It is used to perform
     distributed tracing between serverful and serverless environments, and send
     custom metrics to Datadog.
@@ -40,6 +40,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake', '~> 12.3'
   spec.add_development_dependency 'rspec', '~> 3.8'
   spec.add_development_dependency 'rspec-collection_matchers', '~> 1.1'
-  spec.add_development_dependency 'rubocop', '~> 0.74'
+  spec.add_development_dependency 'rubocop', '~> 1'
   spec.add_development_dependency 'solargraph', '~> 0.47.2'
 end

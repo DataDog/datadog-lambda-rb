@@ -14,7 +14,7 @@ module Datadog
   # Utils contains utility functions shared between modules
   module Utils
     def self.logger
-      @logger ||= Logger.new(STDOUT)
+      @logger ||= Logger.new($stdout)
     end
 
     def self.update_log_level
