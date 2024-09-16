@@ -8,7 +8,7 @@
 # Run unit tests in Docker
 set -e
 
-RUBY_VERSIONS=("3.2")
+RUBY_VERSIONS=("3.2" "3.3")
 
 for ruby_version in "${RUBY_VERSIONS[@]}"
 do
@@ -17,8 +17,7 @@ do
         -f scripts/Dockerfile_test . \
         --quiet \
         --build-arg image=ruby:$ruby_version
-    docker run --rm -v `pwd`:/datadog-lambda-layer-ruby \
-        -w /datadog-lambda-layer-ruby \
+    docker run --rm \
         datadog-lambda-layer-ruby-test:$ruby_version \
         bundle exec rake test
 done

@@ -19,9 +19,12 @@ We love pull requests. For new features, consider opening an issue to discuss th
 1. Build a testing Lambda layer and publish it to your own AWS account.
     ```bash
     # Build layers using docker
-    ./scripts/build_layers.sh
+    ./scripts/build_layers.sh 
 
-    # Publish the a testing layer to your own AWS account, and the ARN will be returned
+    # If you want to build a layer for a specific ruby version then
+    RUBY_VERSION=3.3 ./scripts/build_layers.sh
+
+    # Publish the testing layer to your own AWS account, and the ARN will be returned
     # Example: ./scripts/publish_layers.sh us-east-1
     ./scripts/publish_layers.sh <AWS_REGION>
     ```
