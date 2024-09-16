@@ -1,8 +1,8 @@
 *
+
 !test
 !lib
 !datadog-lambda.gemspec
 !.rubocop.yml
 !Gemfile
-!Gemfile.lock
 !Rakefile

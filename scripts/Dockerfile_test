@@ -1,8 +1,8 @@
 ARG image
 FROM $image
 
-COPY . datadog-lambda-ruby
-WORKDIR /datadog-lambda-ruby
+COPY . datadog-lambda-layer-ruby
+WORKDIR /datadog-lambda-layer-ruby
 ENV GEM_HOME="/usr/local/bundle"
 ENV PATH $GEM_HOME/bin:$GEM_HOME/gems/bin:$PATH
 RUN gem install bundler:2.2.15

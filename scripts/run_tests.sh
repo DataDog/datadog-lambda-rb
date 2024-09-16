@@ -17,8 +17,7 @@ do
         -f scripts/Dockerfile_test . \
         --quiet \
         --build-arg image=ruby:$ruby_version
-    docker run --rm -v `pwd`:/datadog-lambda-layer-ruby \
-        -w /datadog-lambda-layer-ruby \
+    docker run --rm \
         datadog-lambda-layer-ruby-test:$ruby_version \
         bundle exec rake test
 done
