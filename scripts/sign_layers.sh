@@ -9,8 +9,6 @@ set -e
 
 LAYER_DIR=".layers"
 LAYER_FILES=(
-    "datadog-lambda_ruby-amd64-2.7.zip"
-    "datadog-lambda_ruby-arm64-2.7.zip"
     "datadog-lambda_ruby-amd64-3.2.zip"
     "datadog-lambda_ruby-arm64-3.2.zip"
     "datadog-lambda_ruby-amd64-3.3.zip"

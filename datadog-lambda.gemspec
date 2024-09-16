@@ -7,7 +7,7 @@ require 'datadog/lambda/version'
 Gem::Specification.new do |spec|
   spec.name                  = 'datadog-lambda'
   spec.version               = Datadog::Lambda::VERSION::STRING
-  spec.required_ruby_version = '>= 2.7.0'
+  spec.required_ruby_version = '>= 3.2.0'
   spec.authors               = ['Datadog, Inc.']
   spec.email                 = ['dev@datadoghq.com']
 
@@ -48,6 +48,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake', '~> 12.3'
   spec.add_development_dependency 'rspec', '~> 3.8'
   spec.add_development_dependency 'rspec-collection_matchers', '~> 1.1'
-  spec.add_development_dependency 'rubocop', '~> 0.74'
+  spec.add_development_dependency 'rubocop', '~> 1'
   spec.add_development_dependency 'solargraph', '~> 0.47.2'
 end

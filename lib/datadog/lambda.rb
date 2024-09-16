@@ -61,7 +61,7 @@ module Datadog
       record_enhanced('invocations', context)
       begin
         cold = @is_cold_start
-        @listener&.on_start(event: event, request_context: context, cold_start: cold)
+        @listener&.on_start(event:, request_context: context, cold_start: cold)
         @response = block.call
       rescue StandardError => e
         record_enhanced('errors', context)
@@ -88,7 +88,7 @@ module Datadog
       raise 'name must be a string' unless name.is_a?(String)
       raise 'value must be a number' unless value.is_a?(Numeric)
 
-      @metrics_client.distribution(name, value, time: time, **tags)
+      @metrics_client.distribution(name, value, time:, **tags)
     end
 
     def self.dd_lambda_layer_tag
@@ -129,7 +129,7 @@ module Datadog
           tags[:executedversion] = context.function_version
         end
         # Append the alias to the resource tag
-        tags[:resource] = context.function_name + ':' + function_alias
+        tags[:resource] = "#{context.function_name}:#{function_alias}"
       end
 
       tags
@@ -196,7 +196,7 @@ module Datadog
         handler_name: handler,
         function_name: function,
         patch_http: @patch_http,
-        merge_xray_traces: merge_xray_traces
+        merge_xray_traces:
       )
     end
   end

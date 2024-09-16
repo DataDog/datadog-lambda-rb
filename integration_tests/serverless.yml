@@ -1,5 +1,6 @@
 # IAM permissions require service name to begin with 'integration-tests'
 service: integration-tests-rb
+frameworkVersion: "3"
 
 provider:
   name: aws

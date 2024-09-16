@@ -20,7 +20,7 @@ RUN rm -rf ./ruby/gems/$runtime/gems/debase-ruby_core_source*/
 # Remove aws-sdk related (2MB), included in runtime
 RUN rm -rf ./ruby/gems/$runtime/gems/aws*/
 # Remove binaries not needed in AWS Lambda
-RUN rm -rf ./**/*linux-musl/
+RUN find . -name '*linux-musl*' -prune -exec rm -rf {} +
 
 # Cache files zipped gem files, that aren't used by during runtime, only during 
 # installation, so they are safe to delete

@@ -30,9 +30,9 @@ module Datadog
           return nil
         end
         {
-          trace_id: trace_id,
-          parent_id: parent_id,
-          sample_mode: sample_mode,
+          trace_id:,
+          parent_id:,
+          sample_mode:,
           source: SOURCE_XRAY
         }
       end
@@ -95,7 +95,7 @@ module Datadog
         trace_id, parent_id, sampled = header.split(';')
                                              .map { |v| parse_assignment(v) }
 
-        return nil if trace_id.nil? || parent_id.nil? || sampled. nil?
+        return nil if trace_id.nil? || parent_id.nil? || sampled.nil?
 
         {
           xray_trace_id: trace_id,
