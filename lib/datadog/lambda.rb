@@ -61,7 +61,7 @@ module Datadog
       record_enhanced('invocations', context)
       begin
         cold = @is_cold_start
-        @listener&.on_start(event, request_context: context, cold_start: cold)
+        @listener&.on_start(event:, request_context: context, cold_start: cold)
         @response = block.call
       rescue StandardError => e
         record_enhanced('errors', context)
@@ -88,7 +88,7 @@ module Datadog
       raise 'name must be a string' unless name.is_a?(String)
       raise 'value must be a number' unless value.is_a?(Numeric)
 
-      @metrics_client.distribution(name, value, time, **tags)
+      @metrics_client.distribution(name, value, time:, **tags)
     end
 
     def self.dd_lambda_layer_tag
