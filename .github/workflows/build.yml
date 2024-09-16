@@ -70,7 +70,7 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install Serverless Framework
-        run: sudo yarn global add serverless --prefix /usr/local
+        run: sudo yarn global add serverless@3 --prefix /usr/local
 
       - name: Install dependencies
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
