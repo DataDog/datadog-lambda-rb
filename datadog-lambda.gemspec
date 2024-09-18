@@ -42,7 +42,7 @@ Gem::Specification.new do |spec|
 
   # We don't add this as a direct dependency, because it has
   # native modules that are difficult to package for lambda
-  spec.add_development_dependency 'ddtrace', '~>1.17.0'
+  spec.add_development_dependency 'ddtrace', '~>1.23.3'
 
   # Development dependencies
   spec.add_development_dependency 'rake', '~> 12.3'
