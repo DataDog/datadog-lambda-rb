@@ -56,7 +56,6 @@ module Datadog
     # @param context [Object] lambda context
     # @param block [Proc] implementation of the handler function.
     def self.wrap(event, context, &block)
-      Datadog::Utils.update_log_level
       @listener ||= initialize_listener
       record_enhanced('invocations', context)
       begin
