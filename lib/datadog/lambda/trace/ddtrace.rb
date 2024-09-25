@@ -2,9 +2,9 @@
 
 # `ddtrace`` is an optional dependency for the ruby package
 begin
-  require 'ddtrace'
+  require 'datadog'
 rescue LoadError
-  Datadog::Utils.logger.debug 'dd-trace unavailable'
+  Datadog::Utils.logger.debug 'datadog unavailable'
 end
 
 module Datadog

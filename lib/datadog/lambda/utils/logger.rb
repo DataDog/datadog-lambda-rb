@@ -14,21 +14,19 @@ module Datadog
   # Utils contains utility functions shared between modules
   module Utils
     def self.logger
-      @logger ||= Logger.new($stdout)
-    end
-
-    def self.update_log_level
-      log_level = (ENV['DD_LOG_LEVEL'] || 'error').downcase
-      logger.level = case log_level
-                     when 'debug'
-                       Logger::DEBUG
-                     when 'info'
-                       Logger::INFO
-                     when 'warn'
-                       Logger::WARN
-                     else
-                       Logger::ERROR
-                     end
+      @logger ||= Logger.new($stderr).tap do |logger|
+        log_level = (ENV['DD_LOG_LEVEL'] || 'error').downcase
+        logger.level = case log_level
+                       when 'debug'
+                         Logger::DEBUG
+                       when 'info'
+                         Logger::INFO
+                       when 'warn'
+                         Logger::WARN
+                       else
+                         Logger::ERROR
+                       end
+      end
     end
   end
 end

@@ -56,7 +56,6 @@ module Datadog
     # @param context [Object] lambda context
     # @param block [Proc] implementation of the handler function.
     def self.wrap(event, context, &block)
-      Datadog::Utils.update_log_level
       @listener ||= initialize_listener
       record_enhanced('invocations', context)
       begin
@@ -115,9 +114,9 @@ module Datadog
         datadog_lambda: Datadog::Lambda::VERSION::STRING.to_sym
       }
       begin
-        tags[:dd_trace] = Gem.loaded_specs['ddtrace'].version
+        tags[:datadog] = Gem.loaded_specs['datadog'].version
       rescue StandardError
-        Datadog::Utils.logger.debug 'dd-trace unavailable'
+        Datadog::Utils.logger.debug 'datadog unavailable'
       end
       # If we have an alias...
       unless function_alias.nil?
@@ -188,7 +187,7 @@ module Datadog
 
       # Only initialize listener if Tracing enabled.
       unless Datadog::Tracing.enabled?
-        Datadog::Utils.logger.debug 'dd-trace unavailable'
+        Datadog::Utils.logger.debug 'datadog unavailable'
         return nil
       end
 
