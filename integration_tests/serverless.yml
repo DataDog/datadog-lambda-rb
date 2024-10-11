@@ -11,6 +11,7 @@ provider:
   environment:
     DD_INTEGRATION_TEST: true
     DD_API_KEY: ${env:DD_API_KEY}
+  architecture: ${env:SLS_ARCH}
   timeout: 15
   deploymentBucket:
     name: integration-tests-serververless-deployment-bucket
@@ -21,7 +22,7 @@ provider:
 layers:
   ruby:
     package:
-      artifact: ../.layers/datadog-lambda_ruby-amd64-${env:RUBY_VERSION}.zip
+      artifact: ../.layers/datadog-lambda_ruby-${env:ARCH}-${env:RUBY_VERSION}.zip
 
 functions:
   # async-metrics
