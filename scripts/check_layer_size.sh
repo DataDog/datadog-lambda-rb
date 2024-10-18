@@ -45,7 +45,7 @@ fi
 
 for version in "${RUBY_VERSIONS[@]}"
 do
-    for arch in "{ARCHITECTURES[@]}"
+    for arch in "${ARCHITECTURES[@]}"
     do
         FILE=$LAYER_DIR/${LAYER_FILES_PREFIX}-${arch}-${version}.zip
         FILE_SIZE=$(stat --printf="%s" $FILE)

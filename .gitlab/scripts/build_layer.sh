@@ -11,8 +11,8 @@ LAYER_DIR=".layers"
 LAYER_FILES_PREFIX="datadog-lambda_ruby"
 AVAILABLE_RUBY_VERSIONS=("3.2" "3.3")
 
-if [ -z "$ARCHITECTURE" ]; then
-    echo "[ERROR]: ARCHITECTURE not specified"
+if [ -z "$ARCH" ]; then
+    echo "[ERROR]: ARCH not specified"
     exit 1
 fi
 
@@ -58,8 +58,8 @@ function docker_build_zip {
 rm -rf $LAYER_DIR
 mkdir $LAYER_DIR
 
-echo "Building layer for Ruby $RUBY_VERSION with architecture $ARCHITECTURE"
-docker_build_zip $RUBY_VERSION $LAYER_DIR/${LAYER_FILES_PREFIX}-${ARCHITECTURE}-${RUBY_VERSION}.zip $ARCHITECTURE
+echo "Building layer for Ruby $RUBY_VERSION with architecture $ARCH"
+docker_build_zip $RUBY_VERSION $LAYER_DIR/${LAYER_FILES_PREFIX}-${ARCH}-${RUBY_VERSION}.zip $ARCHITECTURE
 
 echo "Done creating layers:"
 ls $LAYER_DIR | xargs -I _ echo "$LAYER_DIR/_"

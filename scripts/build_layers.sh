@@ -41,15 +41,11 @@ function docker_build_zip {
         --build-arg "image=ruby:${1}" \
         --build-arg "runtime=${1}.0" \
         --platform linux/${arch} \
-        --load
-
-    # Run the image by runtime tag and copy the output /opt/ruby to the temp dir/opt/ruby
-    dockerId=$(docker create datadog-lambda-ruby-${arch}:$1)
-    mkdir $temp_dir/opt/
-    docker cp $dockerId:/opt/ruby $temp_dir/opt/ruby
+        --progress=plain \
+        -o $temp_dir
 
     # Zip to destination, and keep directory structure as based in $temp_dir
-    (cd $temp_dir/opt/ && zip -q -r $destination ./)
+    (cd $temp_dir && zip -q -r $destination ./)
 
     rm -rf $temp_dir
     echo "Done creating archive $destination"
