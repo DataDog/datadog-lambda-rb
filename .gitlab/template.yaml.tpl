@@ -26,7 +26,7 @@ build layer ({{ $runtime.name }}, {{ $runtime.arch }}):
     paths:
       - .layers/datadog-lambda_ruby-{{ $runtime.arch }}-{{ $runtime.ruby_version }}.zip
   script:
-    - RUBY_VERSION={{ $runtime.ruby_version }} ARCH={{ $runtime.arch }} ./scripts/build_layers.sh
+    - RUBY_VERSION={{ $runtime.ruby_version }} ARCH={{ $runtime.arch }} .gitlab/scripts/build_layer.sh
 
 check layer size ({{ $runtime.name }}, {{ $runtime.arch }}):
   stage: test
@@ -43,6 +43,7 @@ lint ({{$runtime.name}}, {{ $runtime.arch }}):
   stage: test
   tags: ["arch:amd64"]
   image: registry.ddbuild.io/images/mirror/ruby:{{ $runtime.image }}
+  needs: []
   cache: &{{ $runtime.name }}-{{ $runtime.arch }}-cache
   script: 
     - bundle exec rubocop
@@ -51,6 +52,7 @@ unit test ({{ $runtime.name }}, {{ $runtime.arch }}):
   stage: test
   tags: ["arch:amd64"]
   image: registry.ddbuild.io/images/mirror/ruby:{{ $runtime.image }}
+  needs: []
   cache: &{{ $runtime.name }}-{{ $runtime.arch }}-cache
   script: 
     - bundle exec rake test
