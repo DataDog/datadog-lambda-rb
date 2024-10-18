@@ -59,7 +59,7 @@ rm -rf $LAYER_DIR
 mkdir $LAYER_DIR
 
 echo "Building layer for Ruby $RUBY_VERSION with architecture $ARCH"
-docker_build_zip $RUBY_VERSION $LAYER_DIR/${LAYER_FILES_PREFIX}-${ARCH}-${RUBY_VERSION}.zip $ARCHITECTURE
+docker_build_zip $RUBY_VERSION $LAYER_DIR/${LAYER_FILES_PREFIX}-${ARCH}-${RUBY_VERSION}.zip $ARCH
 
 echo "Done creating layers:"
 ls $LAYER_DIR | xargs -I _ echo "$LAYER_DIR/_"
