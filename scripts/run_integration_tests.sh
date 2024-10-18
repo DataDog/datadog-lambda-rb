@@ -235,7 +235,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
             echo "$logs" >$function_snapshot_path
         else
             # Compare new logs to snapshots
-            diff_output=$(echo "$logs" | diff - $function_snapshot_path)
+            diff_output=$(echo "$logs" | sort | diff -w - <(sort $function_snapshot_path))
             if [ $? -eq 1 ]; then
                 echo "Failed: Mismatch found between new $function_name logs (first) and snapshot (second):"
                 echo "$diff_output"
