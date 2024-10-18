@@ -26,7 +26,7 @@ build layer ({{ $runtime.name }}, {{ $runtime.arch }}):
     paths:
       - .layers/datadog-lambda_ruby-{{ $runtime.arch }}-{{ $runtime.ruby_version }}.zip
   script:
-    - RUBY_VERSION={{ $runtime.ruby_version }} ARCH={{ $runtime.arch }} .gitlab/scripts/build_layer.sh
+    - RUBY_VERSION={{ $runtime.ruby_version }} ARCHITECTURE={{ $runtime.arch }} .gitlab/scripts/build_layer.sh
 
 check layer size ({{ $runtime.name }}, {{ $runtime.arch }}):
   stage: test
