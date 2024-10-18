@@ -18,10 +18,10 @@ AWS_CLI_RUBY_VERSIONS=(
 )
 RUBY_VERSIONS=("3.2-amd64" "3.2-arm64" "3.3-amd64" "3.3-arm64")
 LAYER_PATHS=(
-    ".layers/datadog_lambda_ruby-amd64-3.2.zip"
-    ".layers/datadog_lambda_ruby-arm64-3.2.zip"
-    ".layers/datadog_lambda_ruby-amd64-3.3.zip"
-    ".layers/datadog_lambda_ruby-arm64-3.3.zip"
+    ".layers/datadog-lambda_ruby-amd64-3.2.zip"
+    ".layers/datadog-lambda_ruby-arm64-3.2.zip"
+    ".layers/datadog-lambda_ruby-amd64-3.3.zip"
+    ".layers/datadog-lambda_ruby-arm64-3.3.zip"
 )
 LAYERS=(
     "Datadog-Ruby3-2"
