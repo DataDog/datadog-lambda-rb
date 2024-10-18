@@ -49,3 +49,6 @@ gemfiles/*
 gemfiles/.bundle
 
 .serverless
+
+# GitLab
+.gitlab/build-pipeline.yaml

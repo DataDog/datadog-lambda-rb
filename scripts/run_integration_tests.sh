@@ -53,6 +53,11 @@ if [ -z "$DD_API_KEY" ]; then
     exit 1
 fi
 
+if [ -z "$ARCH" ]; then
+    echo "No ARCH env var set, exiting"
+    exit 1
+fi
+
 if [ -n "$UPDATE_SNAPSHOTS" ]; then
     echo "Overwriting snapshots in this execution"
 fi
@@ -62,6 +67,13 @@ if [ -n "$BUILD_LAYERS" ]; then
     RUBY_VERSION=${!BUILD_LAYER_VERSION} source $scripts_dir/build_layers.sh
 else
     echo "Not building layers, ensure they've already been built or re-run with 'BUILD_LAYERS=true DD_API_KEY=XXXX ./scripts/run_integration_tests.sh'"
+fi
+
+SERVERLESS_FRAMEWORK_ARCH=""
+if [ "$ARCH" = "amd64" ]; then
+    SERVERLESS_FRAMEWORK_ARCH="x86_64"
+else
+    SERVERLESS_FRAMEWORK_ARCH="arm64"
 fi
 
 cd $integration_tests_dir
@@ -76,7 +88,7 @@ function remove_stack() {
         ruby_version=$parameters_set[1]
         run_id=$parameters_set[2]
         echo "Removing stack for stage : ${!run_id}"
-        RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
+        RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} SLS_ARCH=${SERVERLESS_FRAMEWORK_ARCH} \
             serverless remove --stage ${!run_id}
     done
 }
@@ -92,7 +104,7 @@ for parameters_set in "${PARAMETERS_SETS[@]}"; do
     echo "Deploying functions for runtime : $parameters_set, serverless runtime : ${!serverless_runtime}, \
 ruby version : ${!ruby_version} and run id : ${!run_id}"
 
-    RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
+    RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} SLS_ARCH=${SERVERLESS_FRAMEWORK_ARCH} \
         serverless deploy --stage ${!run_id}
 
     echo "Invoking functions for runtime $parameters_set"
@@ -107,7 +119,7 @@ ruby version : ${!ruby_version} and run id : ${!run_id}"
             input_event_name=$(echo "$input_event_file" | sed "s/.json//")
             snapshot_path="./snapshots/return_values/${handler_name}_${input_event_name}.json"
 
-            return_value=$(RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
+            return_value=$(RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} SLS_ARCH=${SERVERLESS_FRAMEWORK_ARCH} \
                 serverless invoke --stage ${!run_id} -f "$function_name" --path "./input_events/$input_event_file")
 
             if [ ! -f $snapshot_path ]; then
@@ -149,7 +161,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
         # Fetch logs with serverless cli, retrying to avoid AWS account-wide rate limit error
         retry_counter=0
         while [ $retry_counter -lt 10 ]; do
-            raw_logs=$(RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} \
+            raw_logs=$(RUBY_VERSION=${!ruby_version} RUNTIME=$parameters_set SERVERLESS_RUNTIME=${!serverless_runtime} SLS_ARCH=${SERVERLESS_FRAMEWORK_ARCH} \
                 serverless logs --stage ${!run_id} -f $function_name --startTime $script_utc_start_time)
             fetch_logs_exit_code=$?
             if [ $fetch_logs_exit_code -eq 1 ]; then
@@ -189,7 +201,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Normalize minor package version tag so that these snapshots aren't broken on version bumps
                 perl -p -e "s/(dd_lambda_layer:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
                 perl -p -e "s/(dd_trace:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
-                perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|x-datadog-trace-id|x-datadog-parent-id|datadog_lambda|dd_trace|allocations|date)":("?)[a-zA-Z0-9\.:\-\+]+("?)/"\1":\2XXXX\3/g' |
+                perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|x-datadog-trace-id|x-datadog-parent-id|datadog_lambda|dd_trace|allocations|date|os_name)":("?)[a-zA-Z0-9\.:\-\+\_]+("?)/"\1":\2XXXX\3/g' |
                 # Strip out run ID (from function name, resource, etc.)
                 perl -p -e "s/${!run_id}/XXXX/g" |
                 # Normalize line numbers in stack traces
@@ -223,7 +235,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
             echo "$logs" >$function_snapshot_path
         else
             # Compare new logs to snapshots
-            diff_output=$(echo "$logs" | diff - $function_snapshot_path)
+            diff_output=$(echo "$logs" | sort | diff -w - <(sort $function_snapshot_path))
             if [ $? -eq 1 ]; then
                 echo "Failed: Mismatch found between new $function_name logs (first) and snapshot (second):"
                 echo "$diff_output"

@@ -3,23 +3,27 @@
 # Unless explicitly stated otherwise all files in this repository are licensed
 # under the Apache License Version 2.0.
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
-# Copyright 2019 Datadog, Inc.
+# Copyright 2024 Datadog, Inc.
 
-# Builds Datadog ruby layers for lambda functions, using Docker
 set -e
 
 LAYER_DIR=".layers"
 LAYER_FILES_PREFIX="datadog-lambda_ruby"
-RUBY_VERSIONS=("3.2" "3.3")
+AVAILABLE_RUBY_VERSIONS=("3.2" "3.3")
 
+if [ -z "$ARCH" ]; then
+    echo "[ERROR]: ARCH not specified"
+    exit 1
+fi
+
+# Determine which Ruby version to build layer for
 if [ -z "$RUBY_VERSION" ]; then
-    echo "Ruby version not specified, running for all ruby versions."
+    echo "[ERROR]: RUBY_VERSION not specified"
+    exit 1
 else
-    echo "Ruby version is specified: $RUBY_VERSION"
-    if (printf '%s\n' "${RUBY_VERSIONS[@]}" | grep -xq $RUBY_VERSION); then
-        RUBY_VERSIONS=($RUBY_VERSION)
-    else
-        echo "Unsupported version found, valid options are : ${RUBY_VERSIONS[@]}"
+    echo "Ruby version specified: $RUBY_VERSION"
+    if [[ ! " ${AVAILABLE_RUBY_VERSIONS[@]} " =~ " ${RUBY_VERSION} " ]]; then
+        echo "Ruby version $RUBY_VERSION is not a valid option. Choose from: ${AVAILABLE_RUBY_VERSIONS[@]}"
         exit 1
     fi
 fi
@@ -54,15 +58,8 @@ function docker_build_zip {
 rm -rf $LAYER_DIR
 mkdir $LAYER_DIR
 
-for ruby_version in "${RUBY_VERSIONS[@]}"
-do
-    echo "Building layer for Ruby ${ruby_version} arch=arm64"
-    docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}-arm64-${ruby_version}.zip arm64
-
-    echo "Building layer for Ruby ${ruby_version} arch=amd64"
-    docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}-amd64-${ruby_version}.zip amd64
-done
-
+echo "Building layer for Ruby $RUBY_VERSION with architecture $ARCH"
+docker_build_zip $RUBY_VERSION $LAYER_DIR/${LAYER_FILES_PREFIX}-${ARCH}-${RUBY_VERSION}.zip $ARCH
 
 echo "Done creating layers:"
 ls $LAYER_DIR | xargs -I _ echo "$LAYER_DIR/_"
