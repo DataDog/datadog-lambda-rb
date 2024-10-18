@@ -7,12 +7,12 @@
 
 set -e
 
-# GEM_HOST_API_KEY=$(aws ssm get-parameter \
-#     --region us-east-1 \
-#     --name "ci.datadog-lambda-rb.rubygems-api-key" \
-#     --with-decryption \
-#     --query "Parameter.Value" \
-#     --out text)
+GEM_HOST_API_KEY=$(aws ssm get-parameter \
+    --region us-east-1 \
+    --name "ci.datadog-lambda-rb.rubygems-api-key" \
+    --with-decryption \
+    --query "Parameter.Value" \
+    --out text)
 
 if [ -z "$CI_COMMIT_TAG" ]; then
     printf "[Error] No CI_COMMIT_TAG found.\n"
