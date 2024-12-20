@@ -114,7 +114,7 @@ module Datadog
         datadog_lambda: Datadog::Lambda::VERSION::STRING.to_sym
       }
       begin
-        tags[:datadog] = Gem.loaded_specs['datadog'].version
+        tags[:dd_trace] = Gem.loaded_specs['datadog'].version
       rescue StandardError
         Datadog::Utils.logger.debug 'datadog unavailable'
       end
