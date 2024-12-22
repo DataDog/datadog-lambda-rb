@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# `ddtrace`` is an optional dependency for the ruby package
+# `datadog`` is an optional dependency for the ruby package
 begin
   require 'datadog'
 rescue LoadError
