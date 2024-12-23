@@ -19,6 +19,8 @@ module Datadog
     START_INVOCATION_PATH = '/lambda/start-invocation'
     END_INVOCATION_PATH = '/lambda/end-invocation'
 
+    DD_SPAN_ID_HEADER = 'x-datadog-span-id'
+
     START_INVOCATION_URI = URI(EXTENSION_BASE_URL + START_INVOCATION_PATH).freeze
     END_INVOCATION_URI = URI(EXTENSION_BASE_URL + END_INVOCATION_PATH).freeze
 
@@ -49,6 +51,7 @@ module Datadog
       Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
     end
 
+    # rubocop:disable Metrics/AbcSize
     def self.send_end_invocation_request(response:)
       return unless extension_running?
 
@@ -59,12 +62,17 @@ module Datadog
       trace_digest = Datadog::Tracing.active_trace&.to_digest
 
       PROPAGATOR.inject!(trace_digest, request)
+      # Propagator doesn't inject span_id, so we do it manually
+      # It is needed for the extension to take this span id
+      request[DD_SPAN_ID_HEADER] = trace_digest.span_id.to_s
+
       Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|
         http.request(request)
       end
     rescue StandardError => e
       Datadog::Utils.logger.debug "failed on end invocation request to extension: #{e}"
     end
+    # rubocop:enable Metrics/AbcSize
 
     def self.request_headers
       {
