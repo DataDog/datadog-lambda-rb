@@ -38,10 +38,9 @@ module Datadog
         context = Datadog::Trace.trace_context
         source = context[:source] if context
         options[:tags]['_dd.parent_source'] = source if source && source != 'ddtrace'
-        options[:resource] = @function_name
+        options[:resource] = 'dd-tracer-serverless-span'
         options[:service] = 'aws.lambda'
         options[:type] = 'serverless'
-        Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
 
         trace_digest = Datadog::Utils.send_start_invocation_request(event:)
         # Only continue trace from a new one if it exist, or else,
@@ -49,11 +48,13 @@ module Datadog
         options[:continue_from] = trace_digest if trace_digest
 
         @trace = Datadog::Tracing.trace('aws.lambda', **options)
+
+        Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
       end
       # rubocop:enable Metrics/AbcSize
 
       def on_end(response:)
-        Datadog::Utils.send_end_invocation_request(response:)
+        Datadog::Utils.send_end_invocation_request(response:, span_id: @trace.id)
         @trace&.finish
       end
 
