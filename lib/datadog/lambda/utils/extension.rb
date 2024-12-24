@@ -20,6 +20,7 @@ module Datadog
     END_INVOCATION_PATH = '/lambda/end-invocation'
 
     DD_SPAN_ID_HEADER = 'x-datadog-span-id'
+    DD_PARENT_ID_HEADER = Datadog::Tracing::Distributed::Datadog::PARENT_ID_KEY
 
     START_INVOCATION_URI = URI(EXTENSION_BASE_URL + START_INVOCATION_PATH).freeze
     END_INVOCATION_URI = URI(EXTENSION_BASE_URL + END_INVOCATION_PATH).freeze
@@ -52,7 +53,7 @@ module Datadog
     end
 
     # rubocop:disable Metrics/AbcSize
-    def self.send_end_invocation_request(response:)
+    def self.send_end_invocation_request(response:, span_id:)
       return unless extension_running?
 
       request = Net::HTTP::Post.new(END_INVOCATION_URI)
@@ -64,7 +65,10 @@ module Datadog
       PROPAGATOR.inject!(trace_digest, request)
       # Propagator doesn't inject span_id, so we do it manually
       # It is needed for the extension to take this span id
-      request[DD_SPAN_ID_HEADER] = trace_digest.span_id.to_s
+      request[DD_SPAN_ID_HEADER] = span_id.to_s
+      # Remove Parent ID if it is the same as the Span ID
+      request.delete(DD_PARENT_ID_HEADER) if request[DD_PARENT_ID_HEADER] == span_id.to_s
+      Datadog::Utils.logger.debug "End invocation request headers: #{request.to_hash}"
 
       Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|
         http.request(request)
