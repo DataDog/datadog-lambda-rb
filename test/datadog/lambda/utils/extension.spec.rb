@@ -92,13 +92,13 @@ describe Datadog::Utils do
         allow(Net::HTTP).to receive(:post) { nil }
 
         # Call the start request with an empty event
-        Datadog::Utils.send_end_invocation_request(response: nil)
+        Datadog::Utils.send_end_invocation_request(response: nil, span_id: nil)
       end
     end
 
     context 'when extension is not running' do
       it 'does nothing' do
-        result = Datadog::Utils.send_end_invocation_request(response: nil)
+        result = Datadog::Utils.send_end_invocation_request(response: nil, span_id: nil)
         expect(result).to eq(nil)
       end
     end
