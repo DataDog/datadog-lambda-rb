@@ -17,7 +17,7 @@ default:
 
 {{ range $runtime := (ds "runtimes").runtimes }}
 
-build layer ({{ $runtime.name }}, {{ $runtime.arch }}):
+build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   stage: build
   tags: ["arch:amd64"]
   image: ${CI_DOCKER_TARGET_IMAGE}:${CI_DOCKER_TARGET_VERSION}
@@ -28,18 +28,18 @@ build layer ({{ $runtime.name }}, {{ $runtime.arch }}):
   script:
     - RUBY_VERSION={{ $runtime.ruby_version }} ARCH={{ $runtime.arch }} .gitlab/scripts/build_layer.sh
 
-check layer size ({{ $runtime.name }}, {{ $runtime.arch }}):
+check layer size ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   stage: test
   tags: ["arch:amd64"]
   image: ${CI_DOCKER_TARGET_IMAGE}:${CI_DOCKER_TARGET_VERSION}
   needs: 
-    - build layer ({{ $runtime.name }}, {{ $runtime.arch }})
+    - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
   dependencies:
-    - build layer ({{ $runtime.name }}, {{ $runtime.arch }})
+    - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
   script: 
     - RUBY_VERSION={{ $runtime.ruby_version }} ARCH={{ $runtime.arch }} ./scripts/check_layer_size.sh
 
-lint ({{$runtime.name}}, {{ $runtime.arch }}):
+lint ({{$runtime.ruby_version}}, {{ $runtime.arch }}):
   stage: test
   tags: ["arch:amd64"]
   image: registry.ddbuild.io/images/mirror/ruby:{{ $runtime.image }}
@@ -49,7 +49,7 @@ lint ({{$runtime.name}}, {{ $runtime.arch }}):
     - bundle install
     - bundle exec rubocop
 
-unit test ({{ $runtime.name }}, {{ $runtime.arch }}):
+unit test ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   stage: test
   tags: ["arch:amd64"]
   image: registry.ddbuild.io/images/mirror/ruby:{{ $runtime.image }}
@@ -59,14 +59,14 @@ unit test ({{ $runtime.name }}, {{ $runtime.arch }}):
     - bundle install
     - bundle exec rake test
 
-integration test ({{ $runtime.name }}, {{ $runtime.arch }}):
+integration test ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   stage: test
   tags: ["arch:amd64"]
   image: ${CI_DOCKER_TARGET_IMAGE}:${CI_DOCKER_TARGET_VERSION}
   needs: 
-    - build layer ({{ $runtime.name }}, {{ $runtime.arch }})
+    - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
   dependencies:
-    - build layer ({{ $runtime.name }}, {{ $runtime.arch }})
+    - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
   cache: &{{ $runtime.name }}-{{ $runtime.arch }}-cache
   before_script:
     - EXTERNAL_ID_NAME=integration-test-externalid ROLE_TO_ASSUME=sandbox-integration-test-deployer AWS_ACCOUNT=425362996713 source .gitlab/scripts/get_secrets.sh
@@ -77,7 +77,7 @@ integration test ({{ $runtime.name }}, {{ $runtime.arch }}):
 {{ range $environment := (ds "environments").environments }}
 
 {{ if or (eq $environment.name "prod") }}
-sign layer ({{ $runtime.name }}, {{ $runtime.arch }}):
+sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   stage: sign
   tags: ["arch:amd64"]
   image: ${CI_DOCKER_TARGET_IMAGE}:${CI_DOCKER_TARGET_VERSION}
@@ -85,13 +85,13 @@ sign layer ({{ $runtime.name }}, {{ $runtime.arch }}):
     - if: '$CI_COMMIT_TAG =~ /^v.*/'
       when: manual
   needs:
-    - build layer ({{ $runtime.name }}, {{ $runtime.arch }})
-    - check layer size ({{ $runtime.name }}, {{ $runtime.arch }})
-    - lint ({{$runtime.name}}, {{ $runtime.arch }})
-    - unit test ({{ $runtime.name }}, {{ $runtime.arch }})
-    - integration test ({{ $runtime.name }}, {{ $runtime.arch }})
+    - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
+    - check layer size ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
+    - lint ({{$runtime.ruby_version}}, {{ $runtime.arch }})
+    - unit test ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
+    - integration test ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
   dependencies:
-    - build layer ({{ $runtime.name }}, {{ $runtime.arch }})
+    - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
   artifacts: # Re specify artifacts so the modified signed file is passed
     expire_in: 1 day # Signed layers should expire after 1 day
     paths:
@@ -102,7 +102,7 @@ sign layer ({{ $runtime.name }}, {{ $runtime.arch }}):
     - LAYER_FILE=datadog_lambda_ruby-{{ $runtime.arch}}-{{ $runtime.ruby_version }}.zip ./scripts/sign_layers.sh {{ $environment.name }}
 {{ end }}
 
-publish layer {{ $environment.name }} ({{ $runtime.name }}, {{ $runtime.arch }}):
+publish layer {{ $environment.name }} ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   stage: publish
   tags: ["arch:amd64"]
   image: registry.ddbuild.io/images/docker:20.10-py3
@@ -113,19 +113,19 @@ publish layer {{ $environment.name }} ({{ $runtime.name }}, {{ $runtime.arch }})
     - if: '$CI_COMMIT_TAG =~ /^v.*/'
   needs:
 {{ if or (eq $environment.name "prod") }}
-      - sign layer ({{ $runtime.name }}, {{ $runtime.arch }})
+      - sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
 {{ else }}
-      - build layer ({{ $runtime.name }}, {{ $runtime.arch }})
-      - check layer size ({{ $runtime.name }}, {{ $runtime.arch }})
-      - lint ({{$runtime.name}}, {{ $runtime.arch }})
-      - unit test ({{ $runtime.name }}, {{ $runtime.arch }})
-      - integration test ({{ $runtime.name }}, {{ $runtime.arch }})
+      - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
+      - check layer size ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
+      - lint ({{$runtime.ruby_version}}, {{ $runtime.arch }})
+      - unit test ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
+      - integration test ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
 {{ end }}
   dependencies:
 {{ if or (eq $environment.name "prod") }}
-      - sign layer ({{ $runtime.name }}, {{ $runtime.arch }})
+      - sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
 {{ else }}
-      - build layer ({{ $runtime.name }}, {{ $runtime.arch }})
+      - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
 {{ end }}
   parallel:
     matrix:
@@ -150,7 +150,7 @@ publish rubygems:
     - if: '$CI_COMMIT_TAG =~ /^v.*/'
   when: manual
   needs: {{ range $runtime := (ds "runtimes").runtimes }}
-    - sign layer ({{ $runtime.name }}, {{ $runtime.arch}})
+    - sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch}})
   {{- end }}
   script:
     - .gitlab/scripts/publish_rubygems.sh
