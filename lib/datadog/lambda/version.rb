@@ -11,9 +11,9 @@
 module Datadog
   module Lambda
     module VERSION
-      MAJOR = 2
-      MINOR = 23
-      PATCH = 1
+      MAJOR = 3
+      MINOR = 24
+      PATCH = 0
       PRE = nil
 
       STRING = [MAJOR, MINOR, PATCH, PRE].compact.join('.')
