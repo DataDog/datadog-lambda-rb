@@ -6,3 +6,4 @@
 !.rubocop.yml
 !Gemfile
 !Rakefile
+!handler.rb
