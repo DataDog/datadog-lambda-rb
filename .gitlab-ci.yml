@@ -12,10 +12,10 @@ ci image:
   tags: ["arch:arm64"]
   needs: []
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
-      changes:
-        - .gitlab/Dockerfile
-      when: on_success
+    # - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+    #   changes:
+    #     - .gitlab/Dockerfile
+    #   when: on_success
   variables:
     DOCKER_TARGET: ${DOCKER_TARGET_IMAGE}:${DOCKER_TARGET_VERSION}
   script:
