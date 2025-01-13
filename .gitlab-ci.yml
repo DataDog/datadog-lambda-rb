@@ -21,16 +21,6 @@ ci image:
   script:
     - docker buildx build --platform linux/amd64,linux/arm64 --no-cache --pull --push --tag ${DOCKER_TARGET} -f .gitlab/Dockerfile .
 
-test:
-  stage: build
-  tags: ["arch:amd64"]
-  image: ${DOCKER_TARGET_IMAGE}:${DOCKER_TARGET_VERSION}
-  cache: []
-  script:
-    - gem --version
-    - bundle --version
-    - ruby --version
-
 .go-cache: &go-cache
   key: datadog-lambda-rb-go-cache
   policy: pull
