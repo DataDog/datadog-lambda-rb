@@ -3,6 +3,9 @@ FROM registry.ddbuild.io/images/docker:24.0.5
 RUN apt-get update && apt-get install -y --fix-missing --no-install-recommends \
   curl gcc gnupg g++ make cmake unzip openssl g++ uuid-runtime xxd ca-certificates
 
+# Install Ruby 3.3
+RUN apt-get install ruby-full -y
+
 # Install NodeJS 18.x
 RUN mkdir -p /etc/apt/keyrings
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
