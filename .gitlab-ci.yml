@@ -24,7 +24,7 @@ ci image:
 test:
   stage: build
   tags: ["arch:amd64"]
-  image: ${CI_DOCKER_TARGET_IMAGE}:${CI_DOCKER_TARGET_VERSION}
+  image: ${DOCKER_TARGET_IMAGE}:${DOCKER_TARGET_VERSION}
   cache: []
   script:
     - gem --version
