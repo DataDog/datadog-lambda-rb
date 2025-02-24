@@ -35,9 +35,9 @@ Gem::Specification.new do |spec|
 
   ruby_version = Gem::Version.new(RUBY_VERSION) # rubocop:disable Gemspec/RubyVersionGlobalsUsage
   if ruby_version >= Gem::Version.new('3.3')
-    spec.add_dependency 'nokogiri', '~> 1.16.0'
+    spec.add_development_dependency 'nokogiri', '~> 1.16.0'
   else
-    spec.add_dependency 'nokogiri', '~> 1.15.6'
+    spec.add_development_dependency 'nokogiri', '~> 1.15.6'
   end
 
   # We don't add this as a direct dependency, because it has
