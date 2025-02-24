@@ -212,6 +212,8 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 perl -p -e "s/(datadog_lambda:v)[0-9\.]+/\1X.X.X/g" |
                 # Normalize runtime bugfix version
                 perl -p -e "s/(runtime:Ruby [0-9]+\.[0-9]+)\.[0-9]+/\1\.X/g" |
+                perl -p -e "s/\"(ruby-[0-9]+.[0-9]+)\.[0-9]+\"/\"\1.X\"/g" |
+                perl -p -e "s/\"lang_version\":\"([0-9]+.[0-9]+).[0-9]+\"/\"lang_version\":\"\1.X\"/g" |
                 # Filter XRAY line
                 sed '/XRAY TraceId:/d' |
                 # Warning Log for unresolved bug in dd-trace
