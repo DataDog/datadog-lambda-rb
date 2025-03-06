@@ -29,10 +29,9 @@ LAYERS=(
     "Datadog-Ruby3-3"
     "Datadog-Ruby3-3-ARM"
 )
-STAGES=('prod', 'sandbox', 'staging')
+STAGES=('prod', 'sandbox', 'staging', 'gov-staging', 'gov-prod')
 
 printf "Starting script...\n\n"
-printf "Installing dependencies\n"
 
 publish_layer() {
     region=$1
@@ -108,8 +107,14 @@ if [[ ! ${STAGES[@]} =~ $STAGE ]]; then
 fi
 
 layer="${LAYERS[$index]}"
+if [ -z "$LAYER_NAME_SUFFIX" ]; then
+    echo "No layer name suffix"
+else
+    layer="${layer}-${LAYER_NAME_SUFFIX}"
+fi
+echo "layer name: $layer"
 
-if [[ "$STAGE" =~ ^(staging|sandbox)$ ]]; then
+if [[ "$STAGE" =~ ^(staging|sandbox|gov-staging)$ ]]; then
     # Deploy latest version
     latest_version=$(aws lambda list-layer-versions --region $REGION --layer-name $layer --query 'LayerVersions[0].Version || `0`')
     VERSION=$(($latest_version + 1))
