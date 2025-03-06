@@ -179,17 +179,17 @@ layer bundle:
 
 signed layer bundle:
   stage: sign
-  image: registry.ddbuild.io/images/docker:20.10-py3
+  image: ${CI_DOCKER_TARGET_IMAGE}:${CI_DOCKER_TARGET_VERSION}
   tags: ["arch:amd64"]
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v.*/'
   needs:
     {{ range (ds "runtimes").runtimes }}
-    - build layer ({{ .ruby_version }}, {{ .arch }})
+    - sign layer ({{ .ruby_version }}, {{ .arch }})
     {{ end }}
   dependencies:
     {{ range (ds "runtimes").runtimes }}
-    - build layer ({{ .ruby_version }}, {{ .arch }})
+    - sign layer ({{ .ruby_version }}, {{ .arch }})
     {{ end }}
   artifacts:
     expire_in: 1 day
