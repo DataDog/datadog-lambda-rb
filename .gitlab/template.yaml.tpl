@@ -74,9 +74,6 @@ integration test ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   script:
     - RUNTIME_PARAM={{ $runtime.ruby_version }} ARCH={{ $runtime.arch }} ./scripts/run_integration_tests.sh
 
-{{ range $environment_name, $environment := (ds "environments").environments }}
-
-{{ if or (eq $environment_name "prod") }}
 sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   stage: sign
   tags: ["arch:amd64"]
@@ -97,10 +94,13 @@ sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
     paths:
       - .layers/datadog-lambda_ruby-{{ $runtime.arch }}-{{ $runtime.ruby_version }}.zip
   before_script:
+    {{ with $environment := (ds "environments").environments.prod }}
     - EXTERNAL_ID_NAME={{ $environment.external_id }} ROLE_TO_ASSUME={{ $environment.role_to_assume }} AWS_ACCOUNT={{ $environment.account }} source .gitlab/scripts/get_secrets.sh
+    {{ end }}
   script:
-    - LAYER_FILE=datadog-lambda_ruby-{{ $runtime.arch}}-{{ $runtime.ruby_version }}.zip ./scripts/sign_layers.sh {{ $environment_name }}
-{{ end }}
+    - LAYER_FILE=datadog-lambda_ruby-{{ $runtime.arch}}-{{ $runtime.ruby_version }}.zip ./scripts/sign_layers.sh prod
+
+{{ range $environment_name, $environment := (ds "environments").environments }}
 
 publish layer {{ $environment_name }} ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   stage: publish
@@ -112,7 +112,7 @@ publish layer {{ $environment_name }} ({{ $runtime.ruby_version }}, {{ $runtime.
       allow_failure: true
     - if: '$CI_COMMIT_TAG =~ /^v.*/'
   needs:
-{{ if or (eq $environment_name "prod") }}
+{{ if eq $environment_name "prod" }}
       - sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
 {{ else }}
       - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
@@ -122,7 +122,7 @@ publish layer {{ $environment_name }} ({{ $runtime.ruby_version }}, {{ $runtime.
       - integration test ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
 {{ end }}
   dependencies:
-{{ if or (eq $environment_name "prod") }}
+{{ if eq $environment_name "prod" }}
       - sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
 {{ else }}
       - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
