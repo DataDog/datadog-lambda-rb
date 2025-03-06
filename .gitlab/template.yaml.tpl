@@ -107,7 +107,7 @@ publish layer {{ $environment.name }} ({{ $runtime.ruby_version }}, {{ $runtime.
   tags: ["arch:amd64"]
   image: registry.ddbuild.io/images/docker:20.10-py3
   rules:
-    - if: '"{{ $environment.name }}" =~ /^(sandbox|staging)/'
+    - if: '"{{ $environment.name }}" == "sandbox"'
       when: manual
       allow_failure: true
     - if: '$CI_COMMIT_TAG =~ /^v.*/'
