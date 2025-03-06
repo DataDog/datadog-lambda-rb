@@ -33,13 +33,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'aws-xray-sdk', '~> 0.11.3'
   spec.add_dependency 'dogstatsd-ruby', '~> 5.0'
 
-  ruby_version = Gem::Version.new(RUBY_VERSION) # rubocop:disable Gemspec/RubyVersionGlobalsUsage
-  if ruby_version >= Gem::Version.new('3.3')
-    spec.add_dependency 'nokogiri', '~> 1.16.0'
-  else
-    spec.add_dependency 'nokogiri', '~> 1.15.6'
-  end
-
   # We don't add this as a direct dependency, because it has
   # native modules that are difficult to package for lambda
   spec.add_development_dependency 'datadog', '~> 2.0'
@@ -49,5 +42,4 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rspec', '~> 3.8'
   spec.add_development_dependency 'rspec-collection_matchers', '~> 1.1'
   spec.add_development_dependency 'rubocop', '~> 1'
-  spec.add_development_dependency 'solargraph', '~> 0.47.2'
 end
