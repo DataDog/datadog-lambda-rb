@@ -43,11 +43,7 @@ echo "Ensure you have access to gem account"
 ruby scripts/check_credentials.rb
 gem signin
 
-echo "Ensure you have access to the AWS GovCloud account"
-ddsaml2aws login -a govcloud-us1-fed-human-engineering
-aws-vault exec sso-govcloud-us1-fed-engineering -- aws sts get-caller-identity
-
-echo "Ensure you have access to the commercial AWS GovCloud account"
+echo "Ensure you have access to the commercial AWS account"
 aws-vault exec sso-prod-engineering -- aws sts get-caller-identity
 
 CURRENT_VERSION=$(gem build datadog-lambda | grep Version | sed -n -e 's/^.*Version: //p')
@@ -80,10 +76,6 @@ aws-vault exec sso-prod-engineering -- ./scripts/sign_layers.sh prod
 echo
 echo "Publishing layers to commercial AWS regions"
 VERSION=$LAYER_VERSION aws-vault exec sso-prod-engineering --no-session -- ./scripts/publish_layers.sh
-
-echo "Publishing layers to GovCloud AWS regions"
-ddsaml2aws login -a govcloud-us1-fed-human-engineering
-VERSION=$LAYER_VERSION aws-vault exec sso-govcloud-us1-fed-engineering -- ./scripts/publish_layers.sh
 
 read -p "Ready to publish gem $NEW_VERSION (y/n)?" CONT
 if [ "$CONT" != "y" ]; then

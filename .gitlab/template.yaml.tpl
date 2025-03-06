@@ -74,9 +74,6 @@ integration test ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   script:
     - RUNTIME_PARAM={{ $runtime.ruby_version }} ARCH={{ $runtime.arch }} ./scripts/run_integration_tests.sh
 
-{{ range $environment := (ds "environments").environments }}
-
-{{ if or (eq $environment.name "prod") }}
 sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   stage: sign
   tags: ["arch:amd64"]
@@ -97,22 +94,25 @@ sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
     paths:
       - .layers/datadog-lambda_ruby-{{ $runtime.arch }}-{{ $runtime.ruby_version }}.zip
   before_script:
+    {{ with $environment := (ds "environments").environments.prod }}
     - EXTERNAL_ID_NAME={{ $environment.external_id }} ROLE_TO_ASSUME={{ $environment.role_to_assume }} AWS_ACCOUNT={{ $environment.account }} source .gitlab/scripts/get_secrets.sh
+    {{ end }}
   script:
-    - LAYER_FILE=datadog-lambda_ruby-{{ $runtime.arch}}-{{ $runtime.ruby_version }}.zip ./scripts/sign_layers.sh {{ $environment.name }}
-{{ end }}
+    - LAYER_FILE=datadog-lambda_ruby-{{ $runtime.arch}}-{{ $runtime.ruby_version }}.zip ./scripts/sign_layers.sh prod
 
-publish layer {{ $environment.name }} ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
+{{ range $environment_name, $environment := (ds "environments").environments }}
+
+publish layer {{ $environment_name }} ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   stage: publish
   tags: ["arch:amd64"]
   image: registry.ddbuild.io/images/docker:20.10-py3
   rules:
-    - if: '"{{ $environment.name }}" =~ /^(sandbox|staging)/'
+    - if: '"{{ $environment_name }}" == "sandbox"'
       when: manual
       allow_failure: true
     - if: '$CI_COMMIT_TAG =~ /^v.*/'
   needs:
-{{ if or (eq $environment.name "prod") }}
+{{ if eq $environment_name "prod" }}
       - sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
 {{ else }}
       - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
@@ -122,7 +122,7 @@ publish layer {{ $environment.name }} ({{ $runtime.ruby_version }}, {{ $runtime.
       - integration test ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
 {{ end }}
   dependencies:
-{{ if or (eq $environment.name "prod") }}
+{{ if eq $environment_name "prod" }}
       - sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
 {{ else }}
       - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
@@ -135,7 +135,7 @@ publish layer {{ $environment.name }} ({{ $runtime.ruby_version }}, {{ $runtime.
   before_script:
     - EXTERNAL_ID_NAME={{ $environment.external_id }} ROLE_TO_ASSUME={{ $environment.role_to_assume }} AWS_ACCOUNT={{ $environment.account }} source .gitlab/scripts/get_secrets.sh
   script:
-    - STAGE={{ $environment.name }} RUBY_VERSION={{ $runtime.ruby_version }} ARCH={{ $runtime.arch }} .gitlab/scripts/publish_layer.sh
+    - STAGE={{ $environment_name }} RUBY_VERSION={{ $runtime.ruby_version }} ARCH={{ $runtime.arch }} .gitlab/scripts/publish_layer.sh
 
 {{- end }}
 
@@ -154,3 +154,49 @@ publish rubygems:
   {{- end }}
   script:
     - .gitlab/scripts/publish_rubygems.sh
+
+layer bundle:
+  stage: build
+  tags: ["arch:amd64"]
+  image: ${CI_DOCKER_TARGET_IMAGE}:${CI_DOCKER_TARGET_VERSION}
+  needs:
+    {{ range (ds "runtimes").runtimes }}
+    - build layer ({{ .ruby_version }}, {{ .arch }})
+    {{ end }}
+  dependencies:
+    {{ range (ds "runtimes").runtimes }}
+    - build layer ({{ .ruby_version }}, {{ .arch }})
+    {{ end }}
+  artifacts:
+    expire_in: 1 hr
+    paths:
+      - datadog-lambda_ruby-bundle-${CI_JOB_ID}/
+    name: datadog-lambda_ruby-bundle-${CI_JOB_ID}
+  script:
+    - rm -rf datadog-lambda_ruby-bundle-${CI_JOB_ID}
+    - mkdir -p datadog-lambda_ruby-bundle-${CI_JOB_ID}
+    - cp .layers/datadog-lambda_ruby-*.zip datadog-lambda_ruby-bundle-${CI_JOB_ID}
+
+signed layer bundle:
+  stage: sign
+  image: registry.ddbuild.io/images/docker:20.10-py3
+  tags: ["arch:amd64"]
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v.*/'
+  needs:
+    {{ range (ds "runtimes").runtimes }}
+    - build layer ({{ .ruby_version }}, {{ .arch }})
+    {{ end }}
+  dependencies:
+    {{ range (ds "runtimes").runtimes }}
+    - build layer ({{ .ruby_version }}, {{ .arch }})
+    {{ end }}
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - datadog-lambda_ruby-signed-bundle-${CI_JOB_ID}/
+    name: datadog-lambda_ruby-signed-bundle-${CI_JOB_ID}
+  script:
+    - rm -rf datadog-lambda_ruby-signed-bundle-${CI_JOB_ID}
+    - mkdir -p datadog-lambda_ruby-signed-bundle-${CI_JOB_ID}
+    - cp .layers/datadog-lambda_ruby-*.zip datadog-lambda_ruby-signed-bundle-${CI_JOB_ID}
