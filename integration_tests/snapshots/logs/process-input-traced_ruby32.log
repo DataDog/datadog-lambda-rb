@@ -1,16 +1,16 @@
 
 END Duration: XXXX ms (init: XXXX ms) Memory Used: XXXX MB
 END Duration: XXXX ms (init: XXXX) Memory Used: XXXX MB
-END Duration: XXXX ms (init: XXXX) Memory Used: XXXX MB
+END Duration: XXXX ms Memory Used: XXXX MB
 I, [XXXX]  INFO XXXX[datadog] DATADOG CONFIGURATION - CORE - {"date":"XXXX","os_name":"XXXX","version":"2.12.0","lang":"ruby","lang_version":"3.2.X","env":null,"service":"runtime","dd_version":null,"debug":false,"tags":"_dd.origin:lambda","runtime_metrics_enabled":false,"vm":"ruby-3.2.X","health_metrics_enabled":false,"profiling_enabled":false,"dynamic_instrumentation_enabled":false}
 I, [XXXX]  INFO XXXX[datadog] DATADOG CONFIGURATION - TRACING - {"enabled":true,"agent_url":null,"analytics_enabled":false,"sample_rate":null,"sampling_rules":null,"integrations_loaded":"aws@","partial_flushing_enabled":false}
 START
 START
 START
 W, [XXXX]  WARN XXXX[datadog] Unable to patch Datadog::Tracing::Contrib::Aws::Integration (Available?: false, Loaded? false, Compatible? false, Patchable? false)
-{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby32","functionname:integration-tests-rb-XXXX-process-input-traced_ruby32","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 3.2.X","resource:integration-tests-rb-XXXX-process-input-traced_ruby32","datadog_lambda:3.24.0","dd_trace:2.XX.X"],"v":1}
-{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby32","functionname:integration-tests-rb-XXXX-process-input-traced_ruby32","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 3.2.X","resource:integration-tests-rb-XXXX-process-input-traced_ruby32","datadog_lambda:3.24.0","dd_trace:2.XX.X"],"v":1}
-{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby32","functionname:integration-tests-rb-XXXX-process-input-traced_ruby32","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:true","runtime:Ruby 3.2.X","resource:integration-tests-rb-XXXX-process-input-traced_ruby32","datadog_lambda:3.24.0","dd_trace:2.XX.X"],"v":1}
+{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby32","functionname:integration-tests-rb-XXXX-process-input-traced_ruby32","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 3.2.X","resource:integration-tests-rb-XXXX-process-input-traced_ruby32","datadog_lambda:3.25.0","dd_trace:2.XX.X"],"v":1}
+{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby32","functionname:integration-tests-rb-XXXX-process-input-traced_ruby32","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 3.2.X","resource:integration-tests-rb-XXXX-process-input-traced_ruby32","datadog_lambda:3.25.0","dd_trace:2.XX.X"],"v":1}
+{"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby32","functionname:integration-tests-rb-XXXX-process-input-traced_ruby32","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:true","runtime:Ruby 3.2.X","resource:integration-tests-rb-XXXX-process-input-traced_ruby32","datadog_lambda:3.25.0","dd_trace:2.XX.X"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby32","function:http-request"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby32","function:http-request"],"v":1}
 {"e":XXXX,"m":"serverless.integration_test.execution","t":["dd_lambda_layer:datadog-ruby32","function:http-request"],"v":1}
