@@ -15,19 +15,25 @@ AWS_CLI_RUBY_VERSIONS=(
     "ruby3.2"
     "ruby3.3"
     "ruby3.3"
+    "ruby3.4"
+    "ruby3.4"
 )
-RUBY_VERSIONS=("3.2-amd64" "3.2-arm64" "3.3-amd64" "3.3-arm64")
+RUBY_VERSIONS=("3.2-amd64" "3.2-arm64" "3.3-amd64" "3.3-arm64" "3.4-amd64" "3.4-arm64")
 LAYER_PATHS=(
     ".layers/datadog-lambda_ruby-amd64-3.2.zip"
     ".layers/datadog-lambda_ruby-arm64-3.2.zip"
     ".layers/datadog-lambda_ruby-amd64-3.3.zip"
     ".layers/datadog-lambda_ruby-arm64-3.3.zip"
+    ".layers/datadog-lambda_ruby-amd64-3.4.zip"
+    ".layers/datadog-lambda_ruby-arm64-3.4.zip"
 )
 LAYERS=(
     "Datadog-Ruby3-2"
     "Datadog-Ruby3-2-ARM"
     "Datadog-Ruby3-3"
     "Datadog-Ruby3-3-ARM"
+    "Datadog-Ruby3-4"
+    "Datadog-Ruby3-4-ARM"
 )
 STAGES=('prod', 'sandbox', 'staging', 'gov-staging', 'gov-prod')
 
