@@ -16,7 +16,7 @@ MAX_LAYER_UNCOMPRESSED_SIZE_KB=$(expr 100 \* 1024)
 
 LAYER_FILES_PREFIX="datadog-lambda_ruby"
 LAYER_DIR=".layers"
-RUBY_VERSIONS=("3.2" "3.3")
+RUBY_VERSIONS=("3.2" "3.3" "3.4")
 ARCHITECTURES=("amd64" "arm64")
 
 if [ -z "$ARCH" ]; then
