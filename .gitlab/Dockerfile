@@ -3,7 +3,7 @@ FROM registry.ddbuild.io/images/docker:24.0.5
 RUN apt-get update && apt-get install -y --fix-missing --no-install-recommends \
   curl gcc gnupg g++ make cmake unzip openssl g++ uuid-runtime xxd ca-certificates
 
-# Install Ruby 3.3
+# Install Ruby 3.4
 RUN apt-get install ruby-full -y
 
 # Install NodeJS 18.x

@@ -13,6 +13,8 @@ LAYER_FILES=(
     "datadog-lambda_ruby-arm64-3.2.zip"
     "datadog-lambda_ruby-amd64-3.3.zip"
     "datadog-lambda_ruby-arm64-3.3.zip"
+    "datadog-lambda_ruby-amd64-3.4.zip"
+    "datadog-lambda_ruby-arm64-3.4.zip"
 )
 SIGNING_PROFILE_NAME="DatadogLambdaSigningProfile"
 

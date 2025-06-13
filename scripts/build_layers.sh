@@ -10,7 +10,7 @@ set -e
 
 LAYER_DIR=".layers"
 LAYER_FILES_PREFIX="datadog-lambda_ruby"
-RUBY_VERSIONS=("3.2" "3.3")
+RUBY_VERSIONS=("3.2" "3.3" "3.4")
 
 if [ -z "$RUBY_VERSION" ]; then
     echo "Ruby version not specified, running for all ruby versions."

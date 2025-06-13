@@ -12,7 +12,7 @@ set -e
 
 OLD_REGION='us-east-1'
 
-RUBY_VERSIONS_FOR_AWS_CLI=("ruby3.2" "ruby3.3")
+RUBY_VERSIONS_FOR_AWS_CLI=("ruby3.2" "ruby3.3" "ruby3.4")
 LAYER_NAMES=("Datadog-Ruby3-2" "Datadog-Ruby3-3")
 NEW_REGION=$1
 
