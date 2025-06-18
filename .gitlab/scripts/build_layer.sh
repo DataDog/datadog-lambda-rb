@@ -9,7 +9,7 @@ set -e
 
 LAYER_DIR=".layers"
 LAYER_FILES_PREFIX="datadog-lambda_ruby"
-AVAILABLE_RUBY_VERSIONS=("3.2" "3.3")
+AVAILABLE_RUBY_VERSIONS=("3.2" "3.3" "3.4")
 
 if [ -z "$ARCH" ]; then
     echo "[ERROR]: ARCH not specified"
