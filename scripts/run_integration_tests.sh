@@ -210,7 +210,7 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Remove metrics and metas in logged traces (their order is inconsistent)
                 perl -p -e 's/"(meta|metrics)":\{(.*?)\}/"\1":\{"XXXX": "XXXX"\}/g' |
                 # Normalize enhanced metric datadog_lambda tag
-                perl -p -e "s/(datadog_lambda:v)[0-9\.]+/\1X.X.X/g" |
+                perl -p -e "s/(datadog_lambda:)[0-9\.]+/\1X.X.X/g" |
                 # Normalize runtime bugfix version
                 perl -p -e "s/(runtime:Ruby [0-9]+\.[0-9]+)\.[0-9]+/\1\.X/g" |
                 perl -p -e "s/\"(ruby-[0-9]+.[0-9]+)\.[0-9]+\"/\"\1.X\"/g" |
