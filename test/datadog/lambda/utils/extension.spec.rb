@@ -4,6 +4,7 @@
 
 require 'datadog/lambda'
 require 'net/http'
+require_relative '../../lambdacontextversion'
 
 describe Datadog::Utils do
   let(:headers) do
@@ -25,6 +26,7 @@ describe Datadog::Utils do
 
   describe '#send_start_invocation_request' do
     context 'when extension is running' do
+      ctx = LambdaContextVersion.new
       before(:each) do
         # Stub the extension_running? method to return true
         allow(Datadog::Utils).to receive(:extension_running?).and_return(true)
@@ -43,7 +45,7 @@ describe Datadog::Utils do
           .with(Datadog::Utils::START_INVOCATION_URI, 'null', Datadog::Utils.request_headers) { headers }
 
         # Call the start request with an empty event
-        digest = Datadog::Utils.send_start_invocation_request(event: nil)
+        digest = Datadog::Utils.send_start_invocation_request(event: nil, request_context: ctx)
 
         expect(digest.trace_id.to_s).to eq('4110911582297405557')
         expect(digest.span_id.to_s).to eq('797643193680388254')
@@ -56,7 +58,7 @@ describe Datadog::Utils do
           .with(Datadog::Utils::START_INVOCATION_URI, 'null', Datadog::Utils.request_headers) { {} }
 
         # Call the start request with an empty event
-        Datadog::Utils.send_start_invocation_request(event: nil)
+        Datadog::Utils.send_start_invocation_request(event: nil, request_context: ctx)
 
         digest = Datadog::Tracing.active_trace.to_digest
 
@@ -66,8 +68,9 @@ describe Datadog::Utils do
     end
 
     context 'when extension is not running' do
+      ctx = LambdaContextVersion.new
       it 'does nothing' do
-        result = Datadog::Utils.send_start_invocation_request(event: nil)
+        result = Datadog::Utils.send_start_invocation_request(event: nil, request_context: ctx)
         expect(result).to eq(nil)
       end
     end
@@ -75,6 +78,7 @@ describe Datadog::Utils do
 
   describe '#send_end_invocation_request' do
     context 'when extension is running' do
+      ctx = LambdaContextVersion.new
       before(:each) do
         # Stub the extension_running? method to return true
         allow(Datadog::Utils).to receive(:extension_running?).and_return(true)
@@ -92,13 +96,14 @@ describe Datadog::Utils do
         allow(Net::HTTP).to receive(:post) { nil }
 
         # Call the start request with an empty event
-        Datadog::Utils.send_end_invocation_request(response: nil, span_id: nil)
+        Datadog::Utils.send_end_invocation_request(response: nil, span_id: nil, request_context: ctx)
       end
     end
 
     context 'when extension is not running' do
+      ctx = LambdaContextVersion.new
       it 'does nothing' do
-        result = Datadog::Utils.send_end_invocation_request(response: nil, span_id: nil)
+        result = Datadog::Utils.send_end_invocation_request(response: nil, span_id: nil, request_context: ctx)
         expect(result).to eq(nil)
       end
     end
