@@ -42,11 +42,10 @@ module Datadog
       File.exist?(EXTENSION_PATH)
     end
 
-    def self.send_start_invocation_request(event:, request_context: )
+    def self.send_start_invocation_request(event:, request_context:)
       return unless extension_running?
 
-      request_id_header = LAMBDA_RUNTIME_AWS_REQUEST_HEADER_ID.to_sym
-      request_headers[:request_id_header] = request_context.aws_request_id
+      request_headers[:LAMBDA_RUNTIME_AWS_REQUEST_HEADER_ID] = request_context.aws_request_id
       response = Net::HTTP.post(START_INVOCATION_URI, event.to_json, request_headers)
       # Add origin, since tracer expects it for extraction
       response[Datadog::Trace::DD_ORIGIN] = 'lambda'
