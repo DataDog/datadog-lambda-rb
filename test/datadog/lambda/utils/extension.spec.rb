@@ -41,8 +41,10 @@ describe Datadog::Utils do
 
       it 'applies trace context from extension' do
         # Stub POST request to return a trace context
+        all_headers = Datadog::Utils.request_headers
+        headers['lambda-runtime-aws-request-id'] = ctx.aws_request_id
         expect(Net::HTTP).to receive(:post)
-          .with(Datadog::Utils::START_INVOCATION_URI, 'null', Datadog::Utils.request_headers) { headers }
+          .with(Datadog::Utils::START_INVOCATION_URI, 'null', all_headers) { headers }
 
         # Call the start request with an empty event
         digest = Datadog::Utils.send_start_invocation_request(event: nil, request_context: ctx)
@@ -54,8 +56,10 @@ describe Datadog::Utils do
 
       it 'skips applying trace context when headers are not present' do
         # Stub POST request to return a trace context
+        all_headers = Datadog::Utils.request_headers
+        headers['lambda-runtime-aws-request-id'] = ctx.aws_request_id
         expect(Net::HTTP).to receive(:post)
-          .with(Datadog::Utils::START_INVOCATION_URI, 'null', Datadog::Utils.request_headers) { {} }
+          .with(Datadog::Utils::START_INVOCATION_URI, 'null', all_headers) { {} }
 
         # Call the start request with an empty event
         Datadog::Utils.send_start_invocation_request(event: nil, request_context: ctx)
