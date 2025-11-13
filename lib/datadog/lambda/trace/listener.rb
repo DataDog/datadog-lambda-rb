@@ -42,7 +42,7 @@ module Datadog
         options[:service] = 'aws.lambda'
         options[:type] = 'serverless'
 
-        trace_digest = Datadog::Utils.send_start_invocation_request(event:)
+        trace_digest = Datadog::Utils.send_start_invocation_request(event:, request_context:)
         # Only continue trace from a new one if it exist, or else,
         # it will create a new trace, which is not ideal here.
         options[:continue_from] = trace_digest if trace_digest
@@ -53,8 +53,8 @@ module Datadog
       end
       # rubocop:enable Metrics/AbcSize
 
-      def on_end(response:)
-        Datadog::Utils.send_end_invocation_request(response:, span_id: @trace.id)
+      def on_end(response:, request_context:)
+        Datadog::Utils.send_end_invocation_request(response:, span_id: @trace.id, request_context:)
         @trace&.finish
       end
 
