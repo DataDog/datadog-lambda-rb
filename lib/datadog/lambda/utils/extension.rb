@@ -33,6 +33,7 @@ module Datadog
     )
 
     def self.extension_running?
+      Datadog::Utils.logger.warn 'here'
       return @is_extension_running unless @is_extension_running.nil?
 
       @is_extension_running = check_extension_running
@@ -47,6 +48,7 @@ module Datadog
 
       request_headers[:LAMBDA_RUNTIME_AWS_REQUEST_HEADER_ID] = request_context.aws_request_id
       response = Net::HTTP.post(START_INVOCATION_URI, event.to_json, request_headers)
+      Datadog::Utils.logger.info "request headers start invocation: #{request_headers}"
       # Add origin, since tracer expects it for extraction
       response[Datadog::Trace::DD_ORIGIN] = 'lambda'
 
