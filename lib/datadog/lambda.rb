@@ -66,7 +66,7 @@ module Datadog
         record_enhanced('errors', context)
         raise e
       ensure
-        @listener&.on_end(response: @response)
+        @listener&.on_end(response: @response, request_context: context)
         @is_cold_start = false
         @metrics_client.close
       end

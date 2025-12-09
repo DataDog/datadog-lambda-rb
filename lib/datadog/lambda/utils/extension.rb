@@ -22,6 +22,8 @@ module Datadog
     DD_SPAN_ID_HEADER = 'x-datadog-span-id'
     DD_PARENT_ID_HEADER = Datadog::Tracing::Distributed::Datadog::PARENT_ID_KEY
 
+    LAMBDA_RUNTIME_AWS_REQUEST_HEADER_ID = 'lambda-runtime-aws-request-id'
+
     START_INVOCATION_URI = URI(EXTENSION_BASE_URL + START_INVOCATION_PATH).freeze
     END_INVOCATION_URI = URI(EXTENSION_BASE_URL + END_INVOCATION_PATH).freeze
 
@@ -40,10 +42,13 @@ module Datadog
       File.exist?(EXTENSION_PATH)
     end
 
-    def self.send_start_invocation_request(event:)
+    def self.send_start_invocation_request(event:, request_context:)
       return unless extension_running?
 
-      response = Net::HTTP.post(START_INVOCATION_URI, event.to_json, request_headers)
+      headers = request_headers
+      headers[LAMBDA_RUNTIME_AWS_REQUEST_HEADER_ID] = request_context.aws_request_id
+      response = Net::HTTP.post(START_INVOCATION_URI, event.to_json, headers)
+
       # Add origin, since tracer expects it for extraction
       response[Datadog::Trace::DD_ORIGIN] = 'lambda'
 
@@ -53,7 +58,7 @@ module Datadog
     end
 
     # rubocop:disable Metrics/AbcSize
-    def self.send_end_invocation_request(response:, span_id:)
+    def self.send_end_invocation_request(response:, span_id:, request_context:)
       return unless extension_running?
 
       request = Net::HTTP::Post.new(END_INVOCATION_URI)
@@ -66,6 +71,9 @@ module Datadog
       # Propagator doesn't inject span_id, so we do it manually
       # It is needed for the extension to take this span id
       request[DD_SPAN_ID_HEADER] = span_id.to_s
+
+      request[LAMBDA_RUNTIME_AWS_REQUEST_HEADER_ID] = request_context.aws_request_id
+
       # Remove Parent ID if it is the same as the Span ID
       request.delete(DD_PARENT_ID_HEADER) if request[DD_PARENT_ID_HEADER] == span_id.to_s
       Datadog::Utils.logger.debug "End invocation request headers: #{request.to_hash}"
