@@ -34,7 +34,7 @@ else
 fi
 
 echo "Setting local environment to Ruby 3.4"
-rbenv local 3.4
+rbenv local 3.4.7
 
 echo "Running tests"
 ./scripts/run_tests.sh
