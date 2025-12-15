@@ -2,9 +2,9 @@
 
 # Usage - run commands from repo root:
 # To check if new changes to the layer cause changes to any snapshots:
-#   BUILD_LAYERS=true DD_API_KEY=XXXX aws-vault exec sso-serverless-sandbox-account-admin -- ./scripts/run_integration_tests.sh
+#   BUILD_LAYERS=true DD_API_KEY=XXXX ARCH=[arm64|amd64] aws-vault exec sso-serverless-sandbox-account-admin -- ./scripts/run_integration_tests.sh
 # To regenerate snapshots:
-#   UPDATE_SNAPSHOTS=true DD_API_KEY=XXXX aws-vault exec sso-serverless-sandbox-account-admin -- ./scripts/run_integration_tests.sh
+#   UPDATE_SNAPSHOTS=true DD_API_KEY=XXXX ARCH=[arm64|amd64] aws-vault exec sso-serverless-sandbox-account-admin -- ./scripts/run_integration_tests.sh
 
 set -e
 
