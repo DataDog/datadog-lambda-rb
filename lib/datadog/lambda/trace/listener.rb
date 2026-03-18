@@ -54,7 +54,7 @@ module Datadog
       # rubocop:enable Metrics/AbcSize
 
       def on_end(response:, request_context:)
-        Datadog::Utils.send_end_invocation_request(response:, span_id: @trace.id, request_context:)
+        Datadog::Utils.send_end_invocation_request(response:, span_id: @trace.id, request_context:, span: @trace)
         @trace&.finish
       end
 

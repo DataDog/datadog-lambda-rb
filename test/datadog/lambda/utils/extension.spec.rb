@@ -102,6 +102,43 @@ describe Datadog::Utils do
         # Call the start request with an empty event
         Datadog::Utils.send_end_invocation_request(response: nil, span_id: nil, request_context: ctx)
       end
+
+      it 'forwards AppSec tags from span as headers' do
+        @trace.set_metric('_dd.appsec.enabled', 1.0)
+        @trace.set_tag('_dd.appsec.json', '{"triggers":[]}')
+
+        captured_request = nil
+        http_double = instance_double(Net::HTTP)
+        allow(Net::HTTP).to receive(:start).and_yield(http_double)
+        allow(http_double).to receive(:request) do |req|
+          captured_request = req
+          Net::HTTPResponse.new('1.1', '200', 'OK')
+        end
+
+        Datadog::Utils.send_end_invocation_request(
+          response: nil, span_id: nil, request_context: ctx, span: @trace
+        )
+
+        expect(captured_request['x-datadog-appsec-enabled']).to eq('1')
+        expect(captured_request['x-datadog-appsec-json']).to eq('{"triggers":[]}')
+      end
+
+      it 'does not send AppSec headers when tags are absent' do
+        captured_request = nil
+        http_double = instance_double(Net::HTTP)
+        allow(Net::HTTP).to receive(:start).and_yield(http_double)
+        allow(http_double).to receive(:request) do |req|
+          captured_request = req
+          Net::HTTPResponse.new('1.1', '200', 'OK')
+        end
+
+        Datadog::Utils.send_end_invocation_request(
+          response: nil, span_id: nil, request_context: ctx, span: @trace
+        )
+
+        expect(captured_request['x-datadog-appsec-enabled']).to be_nil
+        expect(captured_request['x-datadog-appsec-json']).to be_nil
+      end
     end
 
     context 'when extension is not running' do
