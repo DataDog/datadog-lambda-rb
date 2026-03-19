@@ -92,11 +92,17 @@ module Datadog
     def self.inject_appsec_data(request, span)
       return unless span
 
+      Datadog::Utils.logger.debug "[DEBUG:inject_appsec] span=#{span.name} span_id=#{span.id}"
+      Datadog::Utils.logger.debug "[DEBUG:inject_appsec] all meta keys: #{span.meta.keys rescue 'N/A'}"
+      Datadog::Utils.logger.debug "[DEBUG:inject_appsec] all metrics keys: #{span.metrics.keys rescue 'N/A'}"
+
       appsec_enabled = span.get_metric('_dd.appsec.enabled')
       request[DD_APPSEC_ENABLED_HEADER] = '1' if appsec_enabled
 
       appsec_json = span.get_tag('_dd.appsec.json')
       request[DD_APPSEC_JSON_HEADER] = appsec_json if appsec_json
+
+      Datadog::Utils.logger.debug "[DEBUG:inject_appsec] appsec_enabled=#{appsec_enabled.inspect} appsec_json=#{!appsec_json.nil?}"
     end
 
     def self.request_headers
