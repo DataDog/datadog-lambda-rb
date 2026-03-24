@@ -22,8 +22,6 @@ module Datadog
         @handler_name = handler_name
         @function_name = function_name
         @merge_xray_traces = merge_xray_traces
-        @appsec_context = nil
-        @gateway_request = nil
         @inferred_span = nil
 
         Datadog::Trace.patch_http if patch_http
@@ -192,40 +190,17 @@ module Datadog
 
         ensure_appsec_patched
 
-        security_engine = Datadog::AppSec.security_engine
-        return unless security_engine
-
-        active_trace = Datadog::Tracing.active_trace
-        @appsec_context = Datadog::AppSec::Context.activate(
-          Datadog::AppSec::Context.new(active_trace, @trace, security_engine.new_runner)
-        )
-
-        @trace.set_metric(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, 1)
-
-        @gateway_request = Datadog::AppSec::Contrib::AwsLambda::Gateway::Request.new(event)
-        Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.request.start', @gateway_request)
+        Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.request.start', event)
       rescue StandardError => e
-        Datadog::Utils.logger.debug "failed to start AppSec context: #{e}"
+        Datadog::Utils.logger.debug "failed to start AppSec: #{e}"
       end
 
       def finish_appsec(response)
-        return unless @appsec_context
+        return unless Datadog::AppSec::Context.active
 
-        gateway_response = Datadog::AppSec::Contrib::AwsLambda::Gateway::Response.new(
-          response, context: @appsec_context
-        )
-        Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.response.start', gateway_response)
-
-        Datadog::AppSec::Event.record(@appsec_context, request: @gateway_request)
-
-        @appsec_context.export_metrics
-        @appsec_context.export_request_telemetry
+        Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.response.start', response)
       rescue StandardError => e
-        Datadog::Utils.logger.debug "failed to finish AppSec context: #{e}"
-      ensure
-        Datadog::AppSec::Context.deactivate
-        @appsec_context = nil
-        @gateway_request = nil
+        Datadog::Utils.logger.debug "failed to finish AppSec: #{e}"
       end
 
       def appsec_enabled?
