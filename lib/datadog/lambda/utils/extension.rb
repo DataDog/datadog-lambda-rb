@@ -71,10 +71,13 @@ module Datadog
       trace_digest = Datadog::Tracing.active_trace&.to_digest
 
       PROPAGATOR.inject!(trace_digest, request)
+      # Propagator doesn't inject span_id, so we do it manually
+      # It is needed for the extension to take this span id
       request[DD_SPAN_ID_HEADER] = span_id.to_s
 
       request[LAMBDA_RUNTIME_AWS_REQUEST_HEADER_ID] = request_context.aws_request_id
 
+      # Remove Parent ID if it is the same as the Span ID
       request.delete(DD_PARENT_ID_HEADER) if request[DD_PARENT_ID_HEADER] == span_id.to_s
 
       inject_appsec_data(request, span)
@@ -92,17 +95,11 @@ module Datadog
     def self.inject_appsec_data(request, span)
       return unless span
 
-      Datadog::Utils.logger.debug "[DEBUG:inject_appsec] span=#{span.name} span_id=#{span.id}"
-      Datadog::Utils.logger.debug "[DEBUG:inject_appsec] all meta keys: #{span.meta.keys rescue 'N/A'}"
-      Datadog::Utils.logger.debug "[DEBUG:inject_appsec] all metrics keys: #{span.metrics.keys rescue 'N/A'}"
-
       appsec_enabled = span.get_metric('_dd.appsec.enabled')
       request[DD_APPSEC_ENABLED_HEADER] = '1' if appsec_enabled
 
       appsec_json = span.get_tag('_dd.appsec.json')
       request[DD_APPSEC_JSON_HEADER] = appsec_json if appsec_json
-
-      Datadog::Utils.logger.debug "[DEBUG:inject_appsec] appsec_enabled=#{appsec_enabled.inspect} appsec_json=#{!appsec_json.nil?}"
     end
 
     def self.request_headers
