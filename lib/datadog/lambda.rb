@@ -45,9 +45,11 @@ module Datadog
         end
         c.tags = { "_dd.origin": 'lambda' }
         # Enable AWS SDK instrumentation
-        c.tracing.instrument :aws if trace_managed_services?
+        c.tracing.instrument(:aws) if trace_managed_services?
 
         yield(c) if block_given?
+
+        c.appsec.instrument(:aws_lambda)
       end
     end
 

@@ -102,7 +102,7 @@ module Datadog
           end
 
           def managed_services_enabled?
-            ENV.fetch('DD_TRACE_MANAGED_SERVICES', 'true').downcase != 'false'
+            Datadog::Lambda.trace_managed_services?
           end
 
           def extract_status_code(response)

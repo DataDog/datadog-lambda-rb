@@ -7,8 +7,6 @@ module Datadog
         def on_start(event, trace, span)
           return unless enabled?
 
-          Datadog.configuration.appsec.instrument(:aws_lambda)
-
           trace ||= Datadog::Tracing.active_trace
           span ||= Datadog::Tracing.active_span
 
