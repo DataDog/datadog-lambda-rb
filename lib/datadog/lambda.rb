@@ -169,7 +169,7 @@ module Datadog
     # Read DD_TRACE_MANAGED_SERVICES environment variable
     # @return [boolean] true if we should trace AWS services
     def self.trace_managed_services?
-      dd_trace_managed_services = ENV[Trace::DD_TRACE_MANAGED_SERVICES]
+      dd_trace_managed_services = ENV[::Datadog::Trace::DD_TRACE_MANAGED_SERVICES]
       return true if dd_trace_managed_services.nil?
 
       dd_trace_managed_services.downcase == 'true'
@@ -191,7 +191,7 @@ module Datadog
         return nil
       end
 
-      Trace::Listener.new(
+      ::Datadog::Trace::Listener.new(
         handler_name: handler,
         function_name: function,
         patch_http: @patch_http,
