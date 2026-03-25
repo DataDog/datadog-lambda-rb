@@ -11,6 +11,7 @@ module Datadog
           span ||= Datadog::Tracing.active_span
 
           create_context(trace, span)
+          return unless Datadog::AppSec::Context.active
 
           Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.request.start', event)
         rescue StandardError => e

@@ -43,6 +43,7 @@ describe Datadog::Lambda::AppSec do
         allow(Datadog::AppSec).to receive(:enabled?).and_return(true)
         allow(Datadog::AppSec).to receive(:security_engine).and_return(security_engine)
         allow(Datadog::AppSec::Context).to receive(:activate)
+        allow(Datadog::AppSec::Context).to receive(:active).and_return(context)
         allow(Datadog::AppSec::Context).to receive(:new).and_return(context)
       end
 
@@ -74,16 +75,19 @@ describe Datadog::Lambda::AppSec do
       end
 
       context 'when security_engine is nil' do
-        before { allow(Datadog::AppSec).to receive(:security_engine).and_return(nil) }
+        before do
+          allow(Datadog::AppSec).to receive(:security_engine).and_return(nil)
+          allow(Datadog::AppSec::Context).to receive(:active).and_return(nil)
+        end
 
         it 'does not activate a context' do
           described_class.on_start(event, span)
           expect(Datadog::AppSec::Context).not_to have_received(:activate)
         end
 
-        it 'still pushes the gateway event' do
+        it 'does not push gateway events' do
           described_class.on_start(event, span)
-          expect(gateway).to have_received(:push).with('aws_lambda.request.start', event)
+          expect(gateway).not_to have_received(:push)
         end
       end
 

@@ -57,11 +57,8 @@ module Datadog
       Datadog::Utils.logger.debug "failed on start invocation request to extension: #{e}"
     end
 
-    DD_APPSEC_ENABLED_HEADER = 'x-datadog-appsec-enabled'
-    DD_APPSEC_JSON_HEADER = 'x-datadog-appsec-json'
-
     # rubocop:disable Metrics/AbcSize
-    def self.send_end_invocation_request(response:, span_id:, request_context:, span: nil)
+    def self.send_end_invocation_request(response:, span_id:, request_context:)
       return unless extension_running?
 
       request = Net::HTTP::Post.new(END_INVOCATION_URI)
@@ -80,8 +77,6 @@ module Datadog
       # Remove Parent ID if it is the same as the Span ID
       request.delete(DD_PARENT_ID_HEADER) if request[DD_PARENT_ID_HEADER] == span_id.to_s
 
-      inject_appsec_data(request, span)
-
       Datadog::Utils.logger.debug "End invocation request headers: #{request.to_hash}"
 
       Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|
@@ -91,16 +86,6 @@ module Datadog
       Datadog::Utils.logger.debug "failed on end invocation request to extension: #{e}"
     end
     # rubocop:enable Metrics/AbcSize
-
-    def self.inject_appsec_data(request, span)
-      return unless span
-
-      appsec_enabled = span.get_metric('_dd.appsec.enabled')
-      request[DD_APPSEC_ENABLED_HEADER] = '1' if appsec_enabled
-
-      appsec_json = span.get_tag('_dd.appsec.json')
-      request[DD_APPSEC_JSON_HEADER] = appsec_json if appsec_json
-    end
 
     def self.request_headers
       {
