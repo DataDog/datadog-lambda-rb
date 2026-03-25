@@ -11,7 +11,7 @@
 require 'datadog/lambda/trace/context'
 require 'datadog/lambda/trace/patch_http'
 require 'datadog/lambda/trace/ddtrace'
-require 'datadog/lambda/trace/inferred_span'
+require 'datadog/lambda/inferred_span'
 require 'datadog/lambda/appsec'
 
 module Datadog
@@ -47,7 +47,7 @@ module Datadog
 
         trace_digest = Datadog::Utils.send_start_invocation_request(event:, request_context:)
 
-        @inferred_span = Datadog::Lambda::Trace::InferredSpan.create(event, request_context, trace_digest)
+        @inferred_span = Datadog::Lambda::InferredSpan.create(event, request_context, trace_digest)
         options[:continue_from] = trace_digest if trace_digest && @inferred_span.nil?
 
         @span = Datadog::Tracing.trace('aws.lambda', **options)
@@ -65,7 +65,7 @@ module Datadog
 
         # NOTE: lambda span must finish before inferred span (its parent)
         @span&.finish
-        Datadog::Lambda::Trace::InferredSpan.finish(@inferred_span, response)
+        Datadog::Lambda::InferredSpan.finish(@inferred_span, response)
 
         @span = nil
         @inferred_span = nil

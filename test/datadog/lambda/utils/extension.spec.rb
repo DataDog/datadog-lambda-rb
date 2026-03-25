@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# rubocop:disable Metrics/BlockLength
-
 require 'datadog/lambda'
 require 'net/http'
 require_relative '../../lambdacontextversion'
@@ -12,42 +10,28 @@ describe Datadog::Utils do
       'x-datadog-parent-id' => '797643193680388254',
       'x-datadog-sampling-priority' => '1',
       'x-datadog-trace-id' => '4110911582297405557',
-      'x-datadog-origin' => 'lambda'
+      'x-datadog-origin' => 'lambda',
     }
   end
 
-  let(:trace_context) do
-    {
-      trace_id: '4110911582297405557',
-      sample_mode: '1',
-      parent_id: '797643193680388254'
-    }
-  end
+  let(:ctx) { LambdaContextVersion.new }
 
   describe '#send_start_invocation_request' do
     context 'when extension is running' do
-      ctx = LambdaContextVersion.new
-      before(:each) do
-        # Stub the extension_running? method to return true
-        allow(Datadog::Utils).to receive(:extension_running?).and_return(true)
-
-        # Start tracing for active span
+      before do
+        allow(described_class).to receive(:extension_running?).and_return(true)
         @trace = Datadog::Tracing.trace('aws.lambda')
       end
 
-      after(:each) do
-        @trace.finish
-      end
+      after { @trace.finish }
 
       it 'applies trace context from extension' do
-        # Stub POST request to return a trace context
-        all_headers = Datadog::Utils.request_headers
+        all_headers = described_class.request_headers
         all_headers['lambda-runtime-aws-request-id'] = ctx.aws_request_id
         expect(Net::HTTP).to receive(:post)
-          .with(Datadog::Utils::START_INVOCATION_URI, 'null', all_headers) { headers }
+          .with(described_class::START_INVOCATION_URI, 'null', all_headers) { headers }
 
-        # Call the start request with an empty event
-        digest = Datadog::Utils.send_start_invocation_request(event: nil, request_context: ctx)
+        digest = described_class.send_start_invocation_request(event: nil, request_context: ctx)
 
         expect(digest.trace_id.to_s).to eq('4110911582297405557')
         expect(digest.span_id.to_s).to eq('797643193680388254')
@@ -55,83 +39,63 @@ describe Datadog::Utils do
       end
 
       it 'skips applying trace context when headers are not present' do
-        # Stub POST request to return a trace context
-        all_headers = Datadog::Utils.request_headers
+        all_headers = described_class.request_headers
         all_headers['lambda-runtime-aws-request-id'] = ctx.aws_request_id
         expect(Net::HTTP).to receive(:post)
-          .with(Datadog::Utils::START_INVOCATION_URI, 'null', all_headers) { {} }
+          .with(described_class::START_INVOCATION_URI, 'null', all_headers) { {} }
 
-        # Call the start request with an empty event
-        Datadog::Utils.send_start_invocation_request(event: nil, request_context: ctx)
+        described_class.send_start_invocation_request(event: nil, request_context: ctx)
 
         digest = Datadog::Tracing.active_trace.to_digest
-
         expect(digest.trace_id.to_s).not_to eq('4110911582297405557')
         expect(digest.span_id.to_s).not_to eq('797643193680388254')
       end
     end
 
     context 'when extension is not running' do
-      ctx = LambdaContextVersion.new
-      it 'does nothing' do
-        result = Datadog::Utils.send_start_invocation_request(event: nil, request_context: ctx)
-        expect(result).to eq(nil)
-      end
+      it { expect(described_class.send_start_invocation_request(event: nil, request_context: ctx)).to be_nil }
     end
   end
 
   describe '#send_end_invocation_request' do
     context 'when extension is running' do
-      ctx = LambdaContextVersion.new
-      before(:each) do
-        # Stub the extension_running? method to return true
-        allow(Datadog::Utils).to receive(:extension_running?).and_return(true)
-
-        # Start tracing for active span
+      before do
+        allow(described_class).to receive(:extension_running?).and_return(true)
         @trace = Datadog::Tracing.trace('aws.lambda')
       end
 
-      after(:each) do
-        @trace.finish
-      end
+      after { @trace.finish }
 
-      it 'sends post request as expected' do
-        # Stub POST request to not do anything
+      it 'sends post request' do
         allow(Net::HTTP).to receive(:post) { nil }
-
-        # Call the start request with an empty event
-        Datadog::Utils.send_end_invocation_request(response: nil, span_id: nil, request_context: ctx)
+        described_class.send_end_invocation_request(response: nil, span_id: nil, request_context: ctx)
       end
 
-      it 'does not send AppSec headers to the extension' do
-        @trace.set_metric('_dd.appsec.enabled', 1.0)
-        @trace.set_tag('_dd.appsec.json', '{"triggers":[]}')
-
-        captured_request = nil
-        http_double = instance_double(Net::HTTP)
-        allow(Net::HTTP).to receive(:start).and_yield(http_double)
-        allow(http_double).to receive(:request) do |req|
-          captured_request = req
-          Net::HTTPResponse.new('1.1', '200', 'OK')
+      context 'when active span has appsec tags' do
+        before do
+          @trace.set_metric('_dd.appsec.enabled', 1.0)
+          @trace.set_tag('_dd.appsec.json', '{"triggers":[]}')
+          allow(Net::HTTP).to receive(:start).and_yield(http_double)
+          allow(http_double).to receive(:request) do |req|
+            @captured_request = req
+            Net::HTTPResponse.new('1.1', '200', 'OK')
+          end
         end
 
-        Datadog::Utils.send_end_invocation_request(
-          response: nil, span_id: nil, request_context: ctx
-        )
+        let(:http_double) { instance_double(Net::HTTP) }
 
-        expect(captured_request['x-datadog-appsec-enabled']).to be_nil
-        expect(captured_request['x-datadog-appsec-json']).to be_nil
+        it 'does not forward appsec headers to the extension' do
+          described_class.send_end_invocation_request(
+            response: nil, span_id: nil, request_context: ctx
+          )
+          expect(@captured_request['x-datadog-appsec-enabled']).to be_nil
+          expect(@captured_request['x-datadog-appsec-json']).to be_nil
+        end
       end
     end
 
     context 'when extension is not running' do
-      ctx = LambdaContextVersion.new
-      it 'does nothing' do
-        result = Datadog::Utils.send_end_invocation_request(response: nil, span_id: nil, request_context: ctx)
-        expect(result).to eq(nil)
-      end
+      it { expect(described_class.send_end_invocation_request(response: nil, span_id: nil, request_context: ctx)).to be_nil }
     end
   end
 end
-
-# rubocop:enable Metrics/BlockLength
