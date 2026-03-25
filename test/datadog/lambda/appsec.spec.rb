@@ -5,7 +5,7 @@ require 'datadog/lambda/appsec'
 
 describe Datadog::Lambda::AppSec do
   let(:event) { {'httpMethod' => 'GET', 'path' => '/'} }
-  let(:trace) { double('trace') }
+  let(:active_trace) { double('active_trace') }
   let(:span) { double('span', set_metric: nil) }
   let(:gateway) { double('gateway') }
   let(:runner) { double('runner') }
@@ -23,16 +23,17 @@ describe Datadog::Lambda::AppSec do
   before do
     allow(Datadog::AppSec::Instrumentation).to receive(:gateway).and_return(gateway)
     allow(gateway).to receive(:push)
+    allow(Datadog::Tracing).to receive(:active_trace).and_return(active_trace)
   end
 
   describe '.on_start' do
     context 'when appsec is disabled' do
       before { allow(Datadog::AppSec).to receive(:enabled?).and_return(false) }
 
-      it { expect(described_class.on_start(event, trace, span)).to be_nil }
+      it { expect(described_class.on_start(event, span)).to be_nil }
 
       it 'does not push gateway events' do
-        described_class.on_start(event, trace, span)
+        described_class.on_start(event, span)
         expect(gateway).not_to have_received(:push)
       end
     end
@@ -45,33 +46,29 @@ describe Datadog::Lambda::AppSec do
         allow(Datadog::AppSec::Context).to receive(:new).and_return(context)
       end
 
-      it 'creates and activates an AppSec context' do
-        described_class.on_start(event, trace, span)
-        expect(Datadog::AppSec::Context).to have_received(:new).with(trace, span, runner)
+      it 'creates context with active_trace and the given span' do
+        described_class.on_start(event, span)
+        expect(Datadog::AppSec::Context).to have_received(:new).with(active_trace, span, runner)
         expect(Datadog::AppSec::Context).to have_received(:activate).with(context)
       end
 
       it 'sets _dd.appsec.enabled metric on span' do
-        described_class.on_start(event, trace, span)
+        described_class.on_start(event, span)
         expect(span).to have_received(:set_metric).with(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, 1)
       end
 
       it 'pushes the request event to the gateway' do
-        described_class.on_start(event, trace, span)
+        described_class.on_start(event, span)
         expect(gateway).to have_received(:push).with('aws_lambda.request.start', event)
       end
 
-      context 'when trace and span are nil' do
-        let(:active_trace) { double('active_trace') }
+      context 'when span is not provided' do
         let(:active_span) { double('active_span', set_metric: nil) }
 
-        before do
-          allow(Datadog::Tracing).to receive(:active_trace).and_return(active_trace)
-          allow(Datadog::Tracing).to receive(:active_span).and_return(active_span)
-        end
+        before { allow(Datadog::Tracing).to receive(:active_span).and_return(active_span) }
 
-        it 'falls back to active trace and span' do
-          described_class.on_start(event, nil, nil)
+        it 'falls back to active span' do
+          described_class.on_start(event)
           expect(Datadog::AppSec::Context).to have_received(:new).with(active_trace, active_span, runner)
         end
       end
@@ -80,12 +77,12 @@ describe Datadog::Lambda::AppSec do
         before { allow(Datadog::AppSec).to receive(:security_engine).and_return(nil) }
 
         it 'does not activate a context' do
-          described_class.on_start(event, trace, span)
+          described_class.on_start(event, span)
           expect(Datadog::AppSec::Context).not_to have_received(:activate)
         end
 
         it 'still pushes the gateway event' do
-          described_class.on_start(event, trace, span)
+          described_class.on_start(event, span)
           expect(gateway).to have_received(:push).with('aws_lambda.request.start', event)
         end
       end
@@ -94,7 +91,7 @@ describe Datadog::Lambda::AppSec do
         before { allow(Datadog::AppSec::Context).to receive(:new).and_raise(StandardError, 'boom') }
 
         it 'rescues and logs' do
-          expect { described_class.on_start(event, trace, span) }.not_to raise_error
+          expect { described_class.on_start(event, span) }.not_to raise_error
         end
       end
     end

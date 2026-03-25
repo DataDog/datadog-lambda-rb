@@ -18,12 +18,12 @@ module Datadog
   module Trace
     # TraceListener tracks tracing context information
     class Listener
-      @trace = nil
       def initialize(handler_name:, function_name:, patch_http:,
                      merge_xray_traces:)
         @handler_name = handler_name
         @function_name = function_name
         @merge_xray_traces = merge_xray_traces
+        @span = nil
         @inferred_span = nil
 
         Datadog::Trace.patch_http if patch_http
@@ -50,20 +50,23 @@ module Datadog
         @inferred_span = Datadog::Lambda::Trace::InferredSpan.create(event, request_context, trace_digest)
         options[:continue_from] = trace_digest if trace_digest && @inferred_span.nil?
 
-        @trace = Datadog::Tracing.trace('aws.lambda', **options)
+        @span = Datadog::Tracing.trace('aws.lambda', **options)
 
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
-        Datadog::Lambda::AppSec.on_start(event, @trace, @inferred_span)
+        Datadog::Lambda::AppSec.on_start(event, @inferred_span)
       end
       # rubocop:enable Metrics/AbcSize
 
       def on_end(response:, request_context:)
         Datadog::Lambda::AppSec.on_finish(response)
-        Datadog::Utils.send_end_invocation_request(response:, span_id: @trace.id, request_context:, span: @trace)
+        Datadog::Utils.send_end_invocation_request(
+          response:, span_id: @span.id, request_context:, span: @inferred_span || @span
+        )
 
-        @trace&.finish
+        @span&.finish
         Datadog::Lambda::Trace::InferredSpan.finish(@inferred_span, response)
 
+        @span = nil
         @inferred_span = nil
       end
 
