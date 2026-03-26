@@ -14,8 +14,6 @@ module Datadog
 
       class << self
         def create(event, request_context, trace_digest)
-          return unless managed_services_enabled?
-
           parser = parser_for(event)
           return unless parser
 
@@ -74,9 +72,6 @@ module Datadog
           span
         end
 
-        def managed_services_enabled?
-          Datadog::Lambda.trace_managed_services?
-        end
       end
     end
   end

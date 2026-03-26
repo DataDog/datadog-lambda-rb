@@ -5,8 +5,6 @@ require 'datadog/lambda/inferred_span'
 require_relative '../lambdacontextversion'
 
 describe Datadog::Lambda::InferredSpan do
-  before { allow(Datadog::Lambda).to receive(:trace_managed_services?).and_return(true) }
-
   let(:request_context) { LambdaContextVersion.new }
   let(:trace_digest) { nil }
 
@@ -14,14 +12,6 @@ describe Datadog::Lambda::InferredSpan do
     subject(:created_span) { described_class.create(event, request_context, trace_digest) }
 
     after { created_span&.finish unless created_span&.finished? }
-
-    context 'when managed services is disabled' do
-      before { allow(Datadog::Lambda).to receive(:trace_managed_services?).and_return(false) }
-
-      let(:event) { {'httpMethod' => 'GET', 'requestContext' => {'stage' => 'prod'}} }
-
-      it { expect(created_span).to be_nil }
-    end
 
     context 'when event is not a Hash' do
       let(:event) { 'not a hash' }
