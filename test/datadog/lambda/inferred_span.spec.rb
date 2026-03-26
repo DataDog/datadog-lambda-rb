@@ -6,10 +6,9 @@ require_relative '../lambdacontextversion'
 
 describe Datadog::Lambda::InferredSpan do
   let(:request_context) { LambdaContextVersion.new }
-  let(:trace_digest) { nil }
 
   describe '.create' do
-    subject(:created_span) { described_class.create(event, request_context, trace_digest) }
+    subject(:created_span) { described_class.create(event, request_context, nil) }
 
     after { created_span&.finish unless created_span&.finished? }
 
@@ -93,6 +92,8 @@ describe Datadog::Lambda::InferredSpan do
       end
 
       context 'when trace_digest is provided' do
+        subject(:created_span) { described_class.create(event, request_context, trace_digest) }
+
         before do
           allow(Datadog::Tracing).to receive(:trace).and_wrap_original do |original, *args, **kwargs|
             @captured_kwargs = kwargs
@@ -100,7 +101,7 @@ describe Datadog::Lambda::InferredSpan do
           end
         end
 
-        let(:trace_digest) { double('trace_digest') }
+        let(:trace_digest) { instance_double(Datadog::Tracing::TraceDigest) }
 
         it 'continues from the existing trace' do
           created_span

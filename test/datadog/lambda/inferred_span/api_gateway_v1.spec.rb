@@ -47,12 +47,7 @@ RSpec.describe Datadog::Lambda::InferredSpan::ApiGatewayV1 do
   end
 
   context 'when optional fields are missing' do
-    let(:payload) do
-      {
-        'httpMethod' => 'POST',
-        'requestContext' => {'stage' => 'dev'},
-      }
-    end
+    let(:payload) { {'httpMethod' => 'POST', 'requestContext' => {'stage' => 'dev'}} }
 
     it { expect(parser.path).to eq('/') }
     it { expect(parser.resource_path).to eq('/') }

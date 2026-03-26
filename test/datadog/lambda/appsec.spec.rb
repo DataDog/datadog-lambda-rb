@@ -50,7 +50,7 @@ RSpec.describe Datadog::Lambda::AppSec do
       it 'creates and activates context with provided trace and span' do
         on_start
 
-        aggregate_failures do
+        aggregate_failures('context lifecycle') do
           expect(Datadog::AppSec::Context).to have_received(:new).with(trace, span, waf_runner)
           expect(Datadog::AppSec::Context).to have_received(:activate).with(appsec_context)
           expect(span).to have_received(:set_metric).with(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, 1)
@@ -71,7 +71,7 @@ RSpec.describe Datadog::Lambda::AppSec do
         it 'does not activate or push' do
           on_start
 
-          aggregate_failures do
+          aggregate_failures('skipped activation') do
             expect(Datadog::AppSec::Context).not_to have_received(:activate)
             expect(gateway).not_to have_received(:push)
           end
@@ -86,7 +86,7 @@ RSpec.describe Datadog::Lambda::AppSec do
         it 'does not activate or push' do
           on_start
 
-          aggregate_failures do
+          aggregate_failures('skipped activation') do
             expect(Datadog::AppSec::Context).not_to have_received(:activate)
             expect(gateway).not_to have_received(:push)
           end
@@ -101,7 +101,7 @@ RSpec.describe Datadog::Lambda::AppSec do
         it 'does not activate or push' do
           on_start
 
-          aggregate_failures do
+          aggregate_failures('skipped activation') do
             expect(Datadog::AppSec::Context).not_to have_received(:activate)
             expect(gateway).not_to have_received(:push)
           end
@@ -156,7 +156,7 @@ RSpec.describe Datadog::Lambda::AppSec do
       it 'pushes response and records events' do
         on_finish
 
-        aggregate_failures do
+        aggregate_failures('response processing') do
           expect(gateway).to have_received(:push).with('aws_lambda.response.start', response)
           expect(Datadog::AppSec::Event).to have_received(:record).with(appsec_context, request: nil)
         end
@@ -165,7 +165,7 @@ RSpec.describe Datadog::Lambda::AppSec do
       it 'exports telemetry and deactivates' do
         on_finish
 
-        aggregate_failures do
+        aggregate_failures('cleanup') do
           expect(appsec_context).to have_received(:export_metrics)
           expect(appsec_context).to have_received(:export_request_telemetry)
           expect(Datadog::AppSec::Context).to have_received(:deactivate)

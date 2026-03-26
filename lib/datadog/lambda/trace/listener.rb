@@ -61,9 +61,7 @@ module Datadog
 
       def on_end(response:, request_context:)
         Datadog::Lambda::AppSec.on_finish(response)
-        Datadog::Utils.send_end_invocation_request(
-          response:, span_id: @span.id, request_context:
-        )
+        Datadog::Utils.send_end_invocation_request(span_id: @span.id, response:, request_context:)
 
         # NOTE: lambda span must finish before inferred span (its parent)
         @span&.finish

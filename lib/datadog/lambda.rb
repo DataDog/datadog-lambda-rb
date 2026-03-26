@@ -49,6 +49,7 @@ module Datadog
 
         yield(c) if block_given?
 
+        # Activation is gated by AppSec.enabled? at runtime — this only registers the integration
         c.appsec.instrument(:aws_lambda)
       end
     end

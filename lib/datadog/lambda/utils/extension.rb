@@ -76,7 +76,6 @@ module Datadog
 
       # Remove Parent ID if it is the same as the Span ID
       request.delete(DD_PARENT_ID_HEADER) if request[DD_PARENT_ID_HEADER] == span_id.to_s
-
       Datadog::Utils.logger.debug "End invocation request headers: #{request.to_hash}"
 
       Net::HTTP.start(END_INVOCATION_URI.host, END_INVOCATION_URI.port) do |http|
