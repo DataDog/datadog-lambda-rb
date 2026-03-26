@@ -25,17 +25,6 @@ module Datadog
           nil
         end
 
-        def finish(inferred_span, response)
-          return unless inferred_span
-
-          status_code = extract_status_code(response)
-          inferred_span.set_tag('http.status_code', status_code.to_s) if status_code
-
-          inferred_span.finish
-        rescue StandardError => e
-          Datadog::Utils.logger.debug "failed to finish inferred span: #{e}"
-        end
-
         private
 
         def parser_for(event)
@@ -87,12 +76,6 @@ module Datadog
 
         def managed_services_enabled?
           Datadog::Lambda.trace_managed_services?
-        end
-
-        def extract_status_code(response)
-          return unless response.is_a?(Hash)
-
-          response['statusCode']
         end
       end
     end

@@ -65,7 +65,7 @@ module Datadog
 
         # NOTE: lambda span must finish before inferred span (its parent)
         @span&.finish
-        Datadog::Lambda::InferredSpan.finish(@inferred_span, response)
+        @inferred_span&.finish
 
         @span = nil
         @inferred_span = nil
