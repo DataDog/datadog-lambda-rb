@@ -9,10 +9,10 @@ RSpec.describe Datadog::Lambda::AppSec do
     allow(gateway).to receive(:push)
   end
 
-  let(:gateway) { double('gateway') }
+  let(:gateway) { instance_double(Datadog::AppSec::Instrumentation::Gateway) }
   let(:appsec_context) do
-    double(
-      'context',
+    instance_double(
+      Datadog::AppSec::Context,
       state: {},
       export_metrics: nil,
       export_request_telemetry: nil,
@@ -23,8 +23,8 @@ RSpec.describe Datadog::Lambda::AppSec do
     subject(:on_start) { described_class.on_start(event, trace: trace, span: span) }
 
     let(:event) { {'httpMethod' => 'GET', 'path' => '/'} }
-    let(:trace) { double('trace') }
-    let(:span) { double('span', set_metric: nil) }
+    let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
+    let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil) }
 
     context 'when appsec is disabled' do
       before { allow(Datadog::AppSec).to receive(:enabled?).and_return(false) }
@@ -44,14 +44,14 @@ RSpec.describe Datadog::Lambda::AppSec do
         allow(Datadog::AppSec::Context).to receive(:active).and_return(appsec_context)
       end
 
-      let(:security_engine) { double('security_engine', new_runner: runner) }
-      let(:runner) { double('runner') }
+      let(:security_engine) { instance_double(Datadog::AppSec::SecurityEngine::Engine, new_runner: waf_runner) }
+      let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner) }
 
       it 'creates and activates context with provided trace and span' do
         on_start
 
         aggregate_failures do
-          expect(Datadog::AppSec::Context).to have_received(:new).with(trace, span, runner)
+          expect(Datadog::AppSec::Context).to have_received(:new).with(trace, span, waf_runner)
           expect(Datadog::AppSec::Context).to have_received(:activate).with(appsec_context)
           expect(span).to have_received(:set_metric).with(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, 1)
         end
@@ -121,8 +121,23 @@ RSpec.describe Datadog::Lambda::AppSec do
 
     let(:response) { {'statusCode' => 200} }
 
+    context 'when appsec is disabled' do
+      before do
+        allow(Datadog::AppSec).to receive(:enabled?).and_return(false)
+        allow(Datadog::AppSec::Context).to receive(:active).and_return(appsec_context)
+      end
+
+      it 'does not push to gateway' do
+        on_finish
+        expect(gateway).not_to have_received(:push)
+      end
+    end
+
     context 'when no active context exists' do
-      before { allow(Datadog::AppSec::Context).to receive(:active).and_return(nil) }
+      before do
+        allow(Datadog::AppSec).to receive(:enabled?).and_return(true)
+        allow(Datadog::AppSec::Context).to receive(:active).and_return(nil)
+      end
 
       it 'does not push to gateway' do
         on_finish
@@ -132,6 +147,7 @@ RSpec.describe Datadog::Lambda::AppSec do
 
     context 'when active context exists' do
       before do
+        allow(Datadog::AppSec).to receive(:enabled?).and_return(true)
         allow(Datadog::AppSec::Context).to receive(:active).and_return(appsec_context)
         allow(Datadog::AppSec::Context).to receive(:deactivate)
         allow(Datadog::AppSec::Event).to receive(:record)

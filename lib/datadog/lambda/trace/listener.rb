@@ -29,7 +29,7 @@ module Datadog
         Datadog::Trace.patch_http if patch_http
       end
 
-      # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def on_start(event:, request_context:, cold_start:)
         trace_context = Datadog::Trace.extract_trace_context(event, @merge_xray_traces)
         Datadog::Trace.trace_context = trace_context
@@ -53,9 +53,11 @@ module Datadog
         @span = Datadog::Tracing.trace('aws.lambda', **options)
 
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
-        Datadog::Lambda::AppSec.on_start(event, trace: Datadog::Tracing.active_trace, span: @inferred_span || @span)
+        Datadog::Lambda::AppSec.on_start(
+          event, trace: Datadog::Tracing.active_trace, span: @inferred_span || @span
+        )
       end
-      # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
       def on_end(response:, request_context:)
         Datadog::Lambda::AppSec.on_finish(response)

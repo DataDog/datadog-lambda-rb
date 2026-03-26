@@ -16,11 +16,12 @@ module Datadog
         end
 
         def on_finish(response)
+          return unless enabled?
+
           context = Datadog::AppSec::Context.active
           return unless context
 
           Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.response.start', response)
-
           Datadog::AppSec::Event.record(context, request: context.state[:request])
 
           context.export_metrics
@@ -28,7 +29,7 @@ module Datadog
         rescue StandardError => e
           Datadog::Utils.logger.debug "failed to finish AppSec: #{e}"
         ensure
-          Datadog::AppSec::Context.deactivate
+          Datadog::AppSec::Context.deactivate if context
         end
 
         private
@@ -40,9 +41,10 @@ module Datadog
         end
 
         def create_context(trace, span)
+          return if trace.nil? || span.nil?
+
           security_engine = Datadog::AppSec.security_engine
           return unless security_engine
-          return if trace.nil? || span.nil?
 
           Datadog::AppSec::Context.activate(
             Datadog::AppSec::Context.new(trace, span, security_engine.new_runner)
