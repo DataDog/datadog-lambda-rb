@@ -4,11 +4,8 @@ module Datadog
   module Lambda
     module AppSec
       class << self
-        def on_start(event, span = nil)
+        def on_start(event, trace:, span:)
           return unless enabled?
-
-          trace = Datadog::Tracing.active_trace
-          span ||= Datadog::Tracing.active_span
 
           create_context(trace, span)
           return unless Datadog::AppSec::Context.active

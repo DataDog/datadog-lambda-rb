@@ -53,7 +53,7 @@ module Datadog
         @span = Datadog::Tracing.trace('aws.lambda', **options)
 
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
-        Datadog::Lambda::AppSec.on_start(event, @inferred_span)
+        Datadog::Lambda::AppSec.on_start(event, trace: Datadog::Tracing.active_trace, span: @inferred_span || @span)
       end
       # rubocop:enable Metrics/AbcSize
 
