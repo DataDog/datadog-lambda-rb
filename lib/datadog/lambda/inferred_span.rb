@@ -68,7 +68,6 @@ module Datadog
           span.set_metric('_dd._inferred_span', 1.0)
           span
         end
-
       end
     end
   end

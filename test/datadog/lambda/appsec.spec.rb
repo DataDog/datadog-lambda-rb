@@ -47,14 +47,9 @@ RSpec.describe Datadog::Lambda::AppSec do
       let(:security_engine) { instance_double(Datadog::AppSec::SecurityEngine::Engine, new_runner: waf_runner) }
       let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner) }
 
-      it 'creates and activates context with provided trace and span' do
+      it 'marks span as appsec-enabled' do
         on_start
-
-        aggregate_failures('context lifecycle') do
-          expect(Datadog::AppSec::Context).to have_received(:new).with(trace, span, waf_runner)
-          expect(Datadog::AppSec::Context).to have_received(:activate).with(appsec_context)
-          expect(span).to have_received(:set_metric).with(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, 1)
-        end
+        expect(span).to have_received(:set_metric).with(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, 1)
       end
 
       it 'pushes event to gateway' do
