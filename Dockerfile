@@ -2,8 +2,8 @@ ARG image
 FROM $image AS builder
 ARG runtime
 # Install dev dependencies
-COPY . /var/task/datadog-lambda-rb
-WORKDIR /var/task/datadog-lambda-rb
+COPY . /ruby
+WORKDIR /ruby
 RUN apt-get update
 RUN apt-get install -y gcc zip binutils
 
@@ -13,6 +13,9 @@ RUN gem build datadog-lambda
 # Install ddtrace gem
 RUN gem install datadog-lambda --install-dir "/opt/ruby/gems/$runtime"
 RUN gem install datadog -v 2.12 --install-dir "/opt/ruby/gems/$runtime"
+
+# Copy handler
+COPY handler.rb /opt
 
 WORKDIR /opt
 # Remove native extension debase-ruby_core_source (25MB) runtimes below Ruby 2.6
