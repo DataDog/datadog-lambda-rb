@@ -10,11 +10,13 @@ module Datadog
     #
     # @see https://docs.datadoghq.com/tracing/trace_collection/proxy_setup/apigateway/
     module InferredSpan
-      PARSERS = [ApiGatewayV1, ApiGatewayV2].freeze
+      EVENT_SOURCES = [ApiGatewayV1, ApiGatewayV2].freeze
+      ARN_REGION_INDEX = 3
+      ARN_SPLIT_LIMIT = 5
 
       class << self
         def create(event, request_context, trace_digest)
-          klass = PARSERS.find { |parser| parser.match?(event) }
+          klass = EVENT_SOURCES.find { |event_source| event_source.match?(event) }
           return unless klass
 
           build_span(klass.new(event), request_context, trace_digest)
@@ -25,44 +27,44 @@ module Datadog
 
         private
 
-        def build_span(parser, request_context, trace_digest)
-          resource = "#{parser.method} #{parser.resource_path}"
-          domain = parser.domain
-          http_url = domain.empty? ? parser.path : "https://#{domain}#{parser.path}"
+        def build_span(event_source, request_context, trace_digest)
+          resource = "#{event_source.method} #{event_source.resource_path}"
+          domain = event_source.domain
+          http_url = domain.empty? ? event_source.path : "https://#{domain}#{event_source.path}"
 
           tags = {
-            'http.method' => parser.method,
+            'http.method' => event_source.method,
             'http.url' => http_url,
-            'http.route' => parser.resource_path,
-            'endpoint' => parser.path,
+            'http.route' => event_source.resource_path,
+            'endpoint' => event_source.path,
             'resource_names' => resource,
             'span.kind' => 'server',
-            'apiid' => parser.api_id,
-            'apiname' => parser.api_id,
-            'stage' => parser.stage,
+            'apiid' => event_source.api_id,
+            'apiname' => event_source.api_id,
+            'stage' => event_source.stage,
             'request_id' => request_context.aws_request_id,
             '_inferred_span.synchronicity' => 'sync',
-            '_inferred_span.tag_source' => 'self',
+            '_inferred_span.tag_source' => 'self'
           }
 
           arn = request_context.invoked_function_arn.to_s
-          region = arn.split(':')[3] if arn.include?(':')
-          if region && !parser.api_id.empty? && !parser.stage.empty?
-            tags['dd_resource_key'] = "arn:aws:apigateway:#{region}::/#{parser.arn_path_prefix}/#{parser.api_id}/stages/#{parser.stage}"
+          region = arn.split(':', ARN_SPLIT_LIMIT)[ARN_REGION_INDEX] if arn.include?(':')
+          if region && !event_source.api_id.empty? && !event_source.stage.empty?
+            tags['dd_resource_key'] = "arn:aws:apigateway:#{region}::/#{event_source.arn_path_prefix}/#{event_source.api_id}/stages/#{event_source.stage}"
           end
 
-          tags['http.useragent'] = parser.user_agent if parser.user_agent
+          tags['http.useragent'] = event_source.user_agent if event_source.user_agent
 
           options = {
             service: domain.empty? ? nil : domain,
             resource: resource,
             type: 'web',
-            tags: tags,
+            tags: tags
           }
           options[:continue_from] = trace_digest if trace_digest
-          options[:start_time] = Time.at(parser.request_time_ms / 1000.0) if parser.request_time_ms
+          options[:start_time] = Time.at(event_source.request_time_ms / 1000.0) if event_source.request_time_ms
 
-          span = Datadog::Tracing.trace(parser.span_name, **options)
+          span = Datadog::Tracing.trace(event_source.span_name, **options)
           span.set_metric('_dd._inferred_span', 1.0)
           span
         end
