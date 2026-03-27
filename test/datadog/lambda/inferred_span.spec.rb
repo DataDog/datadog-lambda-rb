@@ -98,18 +98,16 @@ describe Datadog::Lambda::InferredSpan do
       context 'when trace_digest is provided' do
         subject(:span) { described_class.create(event, request_context, trace_digest) }
 
-        before do
-          allow(Datadog::Tracing).to receive(:trace).and_wrap_original do |original, *args, **kwargs|
-            @captured_kwargs = kwargs
-            original.call(*args, **kwargs.except(:continue_from))
-          end
-        end
+        before { allow(Datadog::Tracing).to receive(:trace).and_return(span_double) }
 
+        let(:span_double) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil) }
         let(:trace_digest) { instance_double(Datadog::Tracing::TraceDigest) }
 
-        it 'continues from the existing trace' do
+        it 'passes trace_digest as continue_from' do
           span
-          expect(@captured_kwargs[:continue_from]).to eq(trace_digest)
+          expect(Datadog::Tracing).to have_received(:trace).with(
+            'aws.apigateway', hash_including(continue_from: trace_digest)
+          )
         end
       end
 
