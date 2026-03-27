@@ -19,7 +19,7 @@ module Datadog
           klass = EVENT_SOURCES.find { |event_source| event_source.match?(event) }
           return unless klass
 
-          build_span(klass.new(event), request_context, trace_digest)
+          start_span(klass.new(event), request_context: request_context, trace_digest: trace_digest)
         rescue StandardError => e
           Datadog::Utils.logger.debug "failed to create inferred span: #{e}"
           nil
@@ -27,14 +27,12 @@ module Datadog
 
         private
 
-        def build_span(event_source, request_context, trace_digest)
+        def start_span(event_source, request_context:, trace_digest:)
           resource = "#{event_source.method} #{event_source.resource_path}"
-          domain = event_source.domain
-          http_url = domain.empty? ? event_source.path : "https://#{domain}#{event_source.path}"
 
           tags = {
             'http.method' => event_source.method,
-            'http.url' => http_url,
+            'http.url' => http_url_for(event_source),
             'http.route' => event_source.resource_path,
             'endpoint' => event_source.path,
             'resource_names' => resource,
@@ -47,26 +45,42 @@ module Datadog
             '_inferred_span.tag_source' => 'self'
           }
 
-          arn = request_context.invoked_function_arn.to_s
-          region = arn.split(':', ARN_SPLIT_LIMIT)[ARN_REGION_INDEX] if arn.include?(':')
-          if region && !event_source.api_id.empty? && !event_source.stage.empty?
-            tags['dd_resource_key'] = "arn:aws:apigateway:#{region}::/#{event_source.arn_path_prefix}/#{event_source.api_id}/stages/#{event_source.stage}"
-          end
-
+          resource_key = resource_key_for(event_source, request_context)
+          tags['dd_resource_key'] = resource_key if resource_key
           tags['http.useragent'] = event_source.user_agent if event_source.user_agent
 
           options = {
-            service: domain.empty? ? nil : domain,
+            service: event_source.domain.empty? ? nil : event_source.domain,
             resource: resource,
             type: 'web',
             tags: tags
           }
           options[:continue_from] = trace_digest if trace_digest
-          options[:start_time] = Time.at(event_source.request_time_ms / 1000.0) if event_source.request_time_ms
+          options[:start_time] = ms_to_time(event_source.request_time_ms) if event_source.request_time_ms
 
           span = Datadog::Tracing.trace(event_source.span_name, **options)
           span.set_metric('_dd._inferred_span', 1.0)
           span
+        end
+
+        def http_url_for(event_source)
+          return event_source.path if event_source.domain.empty?
+
+          "https://#{event_source.domain}#{event_source.path}"
+        end
+
+        def resource_key_for(event_source, request_context)
+          arn = request_context.invoked_function_arn.to_s
+          return unless arn.include?(':')
+
+          region = arn.split(':', ARN_SPLIT_LIMIT)[ARN_REGION_INDEX]
+          return if event_source.api_id.empty? || event_source.stage.empty?
+
+          "arn:aws:apigateway:#{region}::/#{event_source.arn_path_prefix}/#{event_source.api_id}/stages/#{event_source.stage}"
+        end
+
+        def ms_to_time(ms)
+          Time.at(ms / 1000.0)
         end
       end
     end
