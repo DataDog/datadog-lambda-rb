@@ -14,21 +14,16 @@ module Datadog
 
       class << self
         def create(event, request_context, trace_digest)
-          parser = parser_for(event)
-          return unless parser
+          klass = PARSERS.find { |parser| parser.match?(event) }
+          return unless klass
 
-          build_span(parser, request_context, trace_digest)
+          build_span(klass.new(event), request_context, trace_digest)
         rescue StandardError => e
           Datadog::Utils.logger.debug "failed to create inferred span: #{e}"
           nil
         end
 
         private
-
-        def parser_for(event)
-          klass = PARSERS.find { |parser| parser.match?(event) }
-          klass&.new(event)
-        end
 
         def build_span(parser, request_context, trace_digest)
           resource = "#{parser.method} #{parser.resource_path}"

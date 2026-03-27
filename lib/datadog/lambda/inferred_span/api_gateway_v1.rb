@@ -8,13 +8,17 @@ module Datadog
       #
       # @see https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
       class ApiGatewayV1
-        def self.match?(payload)
-          api_gateway?(payload) && payload.key?('httpMethod')
-        end
+        class << self
+          def match?(payload)
+            api_gateway?(payload) && payload.key?('httpMethod')
+          end
 
-        private_class_method def self.api_gateway?(payload)
-          payload.is_a?(Hash) &&
-            payload.key?('requestContext') && payload['requestContext'].key?('stage')
+          private
+
+          def api_gateway?(payload)
+            payload.is_a?(Hash) &&
+              payload.key?('requestContext') && payload['requestContext'].key?('stage')
+          end
         end
 
         def initialize(payload)

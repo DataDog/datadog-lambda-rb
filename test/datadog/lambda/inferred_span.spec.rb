@@ -5,35 +5,39 @@ require 'datadog/lambda/inferred_span'
 require_relative '../lambdacontextversion'
 
 describe Datadog::Lambda::InferredSpan do
-  let(:request_context) { LambdaContextVersion.new }
+  let(:request_context) do
+    instance_double(
+      LambdaContextVersion,
+      aws_request_id: 'test-request-id',
+      invoked_function_arn: 'arn:aws:lambda:us-east-1:123456789:function:test-function'
+    )
+  end
 
   describe '.create' do
-    subject(:created_span) { described_class.create(event, request_context, nil) }
-
-    after { created_span&.finish unless created_span&.finished? }
+    subject(:span) { described_class.create(event, request_context, nil) }
 
     context 'when event is not a Hash' do
       let(:event) { 'not a hash' }
 
-      it { expect(created_span).to be_nil }
+      it { expect(span).to be_nil }
     end
 
     context 'when event has no requestContext' do
       let(:event) { {} }
 
-      it { expect(created_span).to be_nil }
+      it { expect(span).to be_nil }
     end
 
     context 'when event has requestContext without stage' do
       let(:event) { {'requestContext' => {'apiId' => 'abc'}} }
 
-      it { expect(created_span).to be_nil }
+      it { expect(span).to be_nil }
     end
 
     context 'when event has no httpMethod or routeKey' do
       let(:event) { {'requestContext' => {'stage' => 'prod'}} }
 
-      it { expect(created_span).to be_nil }
+      it { expect(span).to be_nil }
     end
 
     context 'with API Gateway v1 event' do
@@ -54,30 +58,30 @@ describe Datadog::Lambda::InferredSpan do
 
       it 'creates a span representing the API Gateway' do
         aggregate_failures('span identity') do
-          expect(created_span.name).to eq('aws.apigateway')
-          expect(created_span.service).to eq('api.example.com')
-          expect(created_span.resource).to eq('GET /test')
-          expect(created_span.type).to eq('web')
-          expect(created_span.start_time).to eq(Time.at(1_700_000_000))
+          expect(span.name).to eq('aws.apigateway')
+          expect(span.service).to eq('api.example.com')
+          expect(span.resource).to eq('GET /test')
+          expect(span.type).to eq('web')
+          expect(span.start_time).to eq(Time.at(1_700_000_000))
         end
       end
 
       it 'sets tags for endpoint discovery' do
         aggregate_failures('http tags') do
-          expect(created_span.get_tag('http.method')).to eq('GET')
-          expect(created_span.get_tag('http.url')).to eq('https://api.example.com/test')
-          expect(created_span.get_tag('http.route')).to eq('/test')
-          expect(created_span.get_tag('http.useragent')).to eq('TestAgent/1.0')
-          expect(created_span.get_tag('span.kind')).to eq('server')
+          expect(span.get_tag('http.method')).to eq('GET')
+          expect(span.get_tag('http.url')).to eq('https://api.example.com/test')
+          expect(span.get_tag('http.route')).to eq('/test')
+          expect(span.get_tag('http.useragent')).to eq('TestAgent/1.0')
+          expect(span.get_tag('span.kind')).to eq('server')
         end
       end
 
       it 'sets tags for API Gateway resource correlation' do
         aggregate_failures('gateway tags') do
-          expect(created_span.get_tag('apiid')).to eq('abc123')
-          expect(created_span.get_tag('stage')).to eq('prod')
-          expect(created_span.get_tag('request_id')).to eq(request_context.aws_request_id)
-          expect(created_span.get_tag('dd_resource_key')).to eq(
+          expect(span.get_tag('apiid')).to eq('abc123')
+          expect(span.get_tag('stage')).to eq('prod')
+          expect(span.get_tag('request_id')).to eq('test-request-id')
+          expect(span.get_tag('dd_resource_key')).to eq(
             'arn:aws:apigateway:us-east-1::/restapis/abc123/stages/prod'
           )
         end
@@ -85,14 +89,14 @@ describe Datadog::Lambda::InferredSpan do
 
       it 'marks the span as inferred' do
         aggregate_failures('inferred span markers') do
-          expect(created_span.get_metric('_dd._inferred_span')).to eq(1.0)
-          expect(created_span.get_tag('_inferred_span.synchronicity')).to eq('sync')
-          expect(created_span.get_tag('_inferred_span.tag_source')).to eq('self')
+          expect(span.get_metric('_dd._inferred_span')).to eq(1.0)
+          expect(span.get_tag('_inferred_span.synchronicity')).to eq('sync')
+          expect(span.get_tag('_inferred_span.tag_source')).to eq('self')
         end
       end
 
       context 'when trace_digest is provided' do
-        subject(:created_span) { described_class.create(event, request_context, trace_digest) }
+        subject(:span) { described_class.create(event, request_context, trace_digest) }
 
         before do
           allow(Datadog::Tracing).to receive(:trace).and_wrap_original do |original, *args, **kwargs|
@@ -104,7 +108,7 @@ describe Datadog::Lambda::InferredSpan do
         let(:trace_digest) { instance_double(Datadog::Tracing::TraceDigest) }
 
         it 'continues from the existing trace' do
-          created_span
+          span
           expect(@captured_kwargs[:continue_from]).to eq(trace_digest)
         end
       end
@@ -124,8 +128,8 @@ describe Datadog::Lambda::InferredSpan do
           }
         end
 
-        it { expect(created_span.get_tag('http.url')).to eq('/test') }
-        it { expect(created_span.service).not_to eq('') }
+        it { expect(span.get_tag('http.url')).to eq('/test') }
+        it { expect(span.service).not_to eq('') }
       end
 
       context 'when requestTimeEpoch is nil' do
@@ -142,7 +146,7 @@ describe Datadog::Lambda::InferredSpan do
           }
         end
 
-        it { expect(created_span).not_to be_nil }
+        it { expect(span).not_to be_nil }
       end
 
       context 'when apiId is empty' do
@@ -159,7 +163,7 @@ describe Datadog::Lambda::InferredSpan do
           }
         end
 
-        it { expect(created_span.get_tag('dd_resource_key')).to be_nil }
+        it { expect(span.get_tag('dd_resource_key')).to be_nil }
       end
     end
 
@@ -180,28 +184,28 @@ describe Datadog::Lambda::InferredSpan do
 
       it 'creates a span representing the HTTP API' do
         aggregate_failures('span identity') do
-          expect(created_span.name).to eq('aws.httpapi')
-          expect(created_span.service).to eq('api.example.com')
-          expect(created_span.resource).to eq('GET /test')
-          expect(created_span.type).to eq('web')
+          expect(span.name).to eq('aws.httpapi')
+          expect(span.service).to eq('api.example.com')
+          expect(span.resource).to eq('GET /test')
+          expect(span.type).to eq('web')
         end
       end
 
       it 'sets tags for endpoint discovery' do
         aggregate_failures('http tags') do
-          expect(created_span.get_tag('http.method')).to eq('GET')
-          expect(created_span.get_tag('http.url')).to eq('https://api.example.com/test')
-          expect(created_span.get_tag('http.route')).to eq('/test')
-          expect(created_span.get_tag('http.useragent')).to eq('TestAgent/2.0')
-          expect(created_span.get_tag('span.kind')).to eq('server')
+          expect(span.get_tag('http.method')).to eq('GET')
+          expect(span.get_tag('http.url')).to eq('https://api.example.com/test')
+          expect(span.get_tag('http.route')).to eq('/test')
+          expect(span.get_tag('http.useragent')).to eq('TestAgent/2.0')
+          expect(span.get_tag('span.kind')).to eq('server')
         end
       end
 
       it 'sets tags for API Gateway resource correlation' do
         aggregate_failures('gateway tags') do
-          expect(created_span.get_tag('apiid')).to eq('xyz789')
-          expect(created_span.get_tag('stage')).to eq('prod')
-          expect(created_span.get_tag('dd_resource_key')).to eq(
+          expect(span.get_tag('apiid')).to eq('xyz789')
+          expect(span.get_tag('stage')).to eq('prod')
+          expect(span.get_tag('dd_resource_key')).to eq(
             'arn:aws:apigateway:us-east-1::/apis/xyz789/stages/prod'
           )
         end
@@ -224,8 +228,8 @@ describe Datadog::Lambda::InferredSpan do
 
         it 'uses routeKey as-is for route' do
           aggregate_failures('route and resource') do
-            expect(created_span.get_tag('http.route')).to eq('$default')
-            expect(created_span.resource).to eq('GET $default')
+            expect(span.get_tag('http.route')).to eq('$default')
+            expect(span.resource).to eq('GET $default')
           end
         end
       end
@@ -242,8 +246,7 @@ describe Datadog::Lambda::InferredSpan do
         }
       end
 
-      it { expect(created_span).to be_nil }
+      it { expect(span).to be_nil }
     end
   end
-
 end

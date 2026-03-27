@@ -68,7 +68,7 @@ RSpec.describe Datadog::Lambda::AppSec do
           allow(Datadog::AppSec::Context).to receive(:active).and_return(nil)
         end
 
-        it 'does not activate or push' do
+        it 'skips context activation and gateway push' do
           on_start
 
           aggregate_failures('skipped activation') do
@@ -83,7 +83,7 @@ RSpec.describe Datadog::Lambda::AppSec do
 
         before { allow(Datadog::AppSec::Context).to receive(:active).and_return(nil) }
 
-        it 'does not activate or push' do
+        it 'skips context activation and gateway push' do
           on_start
 
           aggregate_failures('skipped activation') do
@@ -98,7 +98,7 @@ RSpec.describe Datadog::Lambda::AppSec do
 
         before { allow(Datadog::AppSec::Context).to receive(:active).and_return(nil) }
 
-        it 'does not activate or push' do
+        it 'skips context activation and gateway push' do
           on_start
 
           aggregate_failures('skipped activation') do

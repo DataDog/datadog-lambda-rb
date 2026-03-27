@@ -23,14 +23,15 @@ module Datadog
         @handler_name = handler_name
         @function_name = function_name
         @merge_xray_traces = merge_xray_traces
-        @span = nil
-        @inferred_span = nil
 
         Datadog::Trace.patch_http if patch_http
       end
 
       # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def on_start(event:, request_context:, cold_start:)
+        @span = nil
+        @inferred_span = nil
+
         trace_context = Datadog::Trace.extract_trace_context(event, @merge_xray_traces)
         Datadog::Trace.trace_context = trace_context
         Datadog::Utils.logger.debug "extracted trace context #{trace_context}"
@@ -66,9 +67,6 @@ module Datadog
         # NOTE: lambda span must finish before inferred span (its parent)
         @span&.finish
         @inferred_span&.finish
-
-        @span = nil
-        @inferred_span = nil
       end
 
       private
