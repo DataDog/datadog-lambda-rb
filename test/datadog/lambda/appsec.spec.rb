@@ -39,7 +39,6 @@ RSpec.describe Datadog::Lambda::AppSec do
       before do
         allow(Datadog::AppSec).to receive(:enabled?).and_return(true)
         allow(Datadog::AppSec).to receive(:security_engine).and_return(security_engine)
-        allow(Datadog::AppSec::Context).to receive(:new).and_return(appsec_context)
         allow(Datadog::AppSec::Context).to receive(:activate)
         allow(Datadog::AppSec::Context).to receive(:active).and_return(appsec_context)
       end

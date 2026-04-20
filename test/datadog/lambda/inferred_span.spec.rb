@@ -4,7 +4,7 @@ require 'datadog/lambda'
 require 'datadog/lambda/inferred_span'
 require_relative '../lambdacontextversion'
 
-describe Datadog::Lambda::InferredSpan do
+RSpec.describe Datadog::Lambda::InferredSpan do
   let(:request_context) do
     instance_double(
       LambdaContextVersion,
@@ -13,8 +13,8 @@ describe Datadog::Lambda::InferredSpan do
     )
   end
 
-  describe '.create' do
-    subject(:span) { described_class.create(event, request_context, nil) }
+  describe '.try_create' do
+    subject(:span) { described_class.try_create(event, request_context, nil) }
 
     context 'when event is not a Hash' do
       let(:event) { 'not a hash' }
@@ -40,7 +40,7 @@ describe Datadog::Lambda::InferredSpan do
       it { expect(span).to be_nil }
     end
 
-    context 'with API Gateway v1 event' do
+    context 'when event is API Gateway v1' do
       let(:event) do
         {
           'httpMethod' => 'GET',
@@ -96,12 +96,12 @@ describe Datadog::Lambda::InferredSpan do
       end
 
       context 'when trace_digest is provided' do
-        subject(:span) { described_class.create(event, request_context, trace_digest) }
-
         before { allow(Datadog::Tracing).to receive(:trace).and_return(span_double) }
 
         let(:span_double) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil) }
         let(:trace_digest) { instance_double(Datadog::Tracing::TraceDigest) }
+
+        subject(:span) { described_class.try_create(event, request_context, trace_digest) }
 
         it 'passes trace_digest as continue_from' do
           span
@@ -111,14 +111,13 @@ describe Datadog::Lambda::InferredSpan do
         end
       end
 
-      context 'when domain is empty' do
+      context 'when domainName is missing' do
         let(:event) do
           {
             'httpMethod' => 'GET',
             'path' => '/test',
             'requestContext' => {
               'stage' => 'prod',
-              'domainName' => '',
               'apiId' => 'abc123',
               'resourcePath' => '/test',
               'requestTimeEpoch' => 1_700_000_000_000,
@@ -127,10 +126,10 @@ describe Datadog::Lambda::InferredSpan do
         end
 
         it { expect(span.get_tag('http.url')).to eq('/test') }
-        it { expect(span.service).not_to eq('') }
+        it { expect(span.service).not_to eq('api.example.com') }
       end
 
-      context 'when requestTimeEpoch is nil' do
+      context 'when requestTimeEpoch is missing' do
         let(:event) do
           {
             'httpMethod' => 'GET',
@@ -147,7 +146,7 @@ describe Datadog::Lambda::InferredSpan do
         it { expect(span).not_to be_nil }
       end
 
-      context 'when apiId is empty' do
+      context 'when apiId is missing' do
         let(:event) do
           {
             'httpMethod' => 'GET',
@@ -155,7 +154,6 @@ describe Datadog::Lambda::InferredSpan do
             'requestContext' => {
               'stage' => 'prod',
               'domainName' => 'api.example.com',
-              'apiId' => '',
               'resourcePath' => '/test',
             },
           }
@@ -165,7 +163,7 @@ describe Datadog::Lambda::InferredSpan do
       end
     end
 
-    context 'with API Gateway v2 event' do
+    context 'when event is API Gateway v2' do
       let(:event) do
         {
           'rawPath' => '/test',

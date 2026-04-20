@@ -65,8 +65,8 @@ RSpec.describe Datadog::Lambda::InferredSpan::ApiGatewayV2 do
 
     it { expect(parser.path).to eq('/') }
     it { expect(parser.resource_path).to eq('/data') }
-    it { expect(parser.domain).to eq('') }
-    it { expect(parser.api_id).to eq('') }
+    it { expect(parser.domain).to be_nil }
+    it { expect(parser.api_id).to be_nil }
     it { expect(parser.stage).to eq('dev') }
     it { expect(parser.request_time_ms).to be_nil }
     it { expect(parser.user_agent).to be_nil }

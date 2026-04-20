@@ -15,7 +15,7 @@ module Datadog
       ARN_SPLIT_LIMIT = 5
 
       class << self
-        def create(event, request_context, trace_digest)
+        def try_create(event, request_context, trace_digest)
           klass = EVENT_SOURCES.find { |event_source| event_source.match?(event) }
           return unless klass
 
@@ -50,7 +50,7 @@ module Datadog
           tags['http.useragent'] = event_source.user_agent if event_source.user_agent
 
           options = {
-            service: event_source.domain.empty? ? nil : event_source.domain,
+            service: event_source.domain,
             resource: resource,
             type: 'web',
             tags: tags
@@ -64,7 +64,7 @@ module Datadog
         end
 
         def http_url_for(event_source)
-          return event_source.path if event_source.domain.empty?
+          return event_source.path unless event_source.domain
 
           "https://#{event_source.domain}#{event_source.path}"
         end
@@ -74,7 +74,7 @@ module Datadog
           return unless arn.include?(':')
 
           region = arn.split(':', ARN_SPLIT_LIMIT)[ARN_REGION_INDEX]
-          return if event_source.api_id.empty? || event_source.stage.empty?
+          return unless event_source.api_id && event_source.stage
 
           "arn:aws:apigateway:#{region}::/#{event_source.arn_path_prefix}/#{event_source.api_id}/stages/#{event_source.stage}"
         end

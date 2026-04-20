@@ -30,9 +30,9 @@ module Datadog
         def method = @payload['httpMethod']
         def path = @payload.fetch('path', '/')
         def resource_path = @request_context.fetch('resourcePath', path)
-        def domain = @request_context.fetch('domainName', '')
-        def api_id = @request_context.fetch('apiId', '')
-        def stage = @request_context.fetch('stage', '')
+        def domain = @request_context['domainName']
+        def api_id = @request_context['apiId']
+        def stage = @request_context['stage']
         def request_time_ms = @request_context['requestTimeEpoch']
         def user_agent = @request_context.dig('identity', 'userAgent')
         def arn_path_prefix = 'restapis'
