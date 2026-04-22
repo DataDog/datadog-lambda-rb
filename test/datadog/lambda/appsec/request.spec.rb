@@ -7,9 +7,9 @@ RSpec.describe Datadog::Lambda::AppSec::Request do
 
   let(:event) do
     {
-      'headers' => {'Host' => 'example.com', 'User-Agent' => 'TestBot/1.0', 'Accept' => 'text/html'},
+      'headers' => { 'Host' => 'example.com', 'User-Agent' => 'TestBot/1.0', 'Accept' => 'text/html' },
       'requestContext' => {
-        'identity' => {'sourceIp' => '10.0.0.1'}
+        'identity' => { 'sourceIp' => '10.0.0.1' }
       }
     }
   end
@@ -24,7 +24,7 @@ RSpec.describe Datadog::Lambda::AppSec::Request do
     end
 
     context 'when event has no headers' do
-      let(:event) { {'requestContext' => {}} }
+      let(:event) { { 'requestContext' => {} } }
 
       it { expect(request.headers).to eq({}) }
     end
@@ -46,7 +46,7 @@ RSpec.describe Datadog::Lambda::AppSec::Request do
         {
           'headers' => {},
           'requestContext' => {
-            'http' => {'sourceIp' => '10.0.0.2'}
+            'http' => { 'sourceIp' => '10.0.0.2' }
           }
         }
       end
@@ -55,10 +55,9 @@ RSpec.describe Datadog::Lambda::AppSec::Request do
     end
 
     context 'when event has no requestContext' do
-      let(:event) { {'headers' => {}} }
+      let(:event) { { 'headers' => {} } }
 
       it { expect(request.remote_addr).to be_nil }
     end
   end
-
 end

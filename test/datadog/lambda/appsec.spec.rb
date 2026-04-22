@@ -15,14 +15,14 @@ RSpec.describe Datadog::Lambda::AppSec do
       Datadog::AppSec::Context,
       state: {},
       export_metrics: nil,
-      export_request_telemetry: nil,
+      export_request_telemetry: nil
     )
   end
 
   describe '.on_start' do
     subject(:on_start) { described_class.on_start(event, trace: trace, span: span) }
 
-    let(:event) { {'httpMethod' => 'GET', 'path' => '/'} }
+    let(:event) { { 'httpMethod' => 'GET', 'path' => '/' } }
     let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
     let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil) }
 
@@ -56,7 +56,9 @@ RSpec.describe Datadog::Lambda::AppSec do
       it 'pushes event to gateway' do
         on_start
 
-        expect(gateway).to have_received(:push).with('aws_lambda.request.start', event)
+        expect(gateway).to have_received(:push).with(
+          'aws_lambda.request.start', kind_of(Datadog::AppSec::Instrumentation::Gateway::DataContainer)
+        )
       end
 
       context 'when security_engine is nil' do
@@ -116,7 +118,7 @@ RSpec.describe Datadog::Lambda::AppSec do
   describe '.on_finish' do
     subject(:on_finish) { described_class.on_finish(response) }
 
-    let(:response) { {'statusCode' => 200} }
+    let(:response) { { 'statusCode' => 200 } }
 
     context 'when appsec is disabled' do
       before do
@@ -156,7 +158,9 @@ RSpec.describe Datadog::Lambda::AppSec do
         on_finish
 
         aggregate_failures('response processing') do
-          expect(gateway).to have_received(:push).with('aws_lambda.response.start', response)
+          expect(gateway).to have_received(:push).with(
+            'aws_lambda.response.start', kind_of(Datadog::AppSec::Instrumentation::Gateway::DataContainer)
+          )
           expect(Datadog::AppSec::Event).to have_received(:record).with(appsec_context, request: nil)
         end
       end
@@ -181,8 +185,8 @@ RSpec.describe Datadog::Lambda::AppSec do
 
         let(:event) do
           {
-            'headers' => {'Host' => 'example.com', 'User-Agent' => 'TestBot'},
-            'requestContext' => {'identity' => {'sourceIp' => '1.2.3.4'}}
+            'headers' => { 'Host' => 'example.com', 'User-Agent' => 'TestBot' },
+            'requestContext' => { 'identity' => { 'sourceIp' => '1.2.3.4' } }
           }
         end
         let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
