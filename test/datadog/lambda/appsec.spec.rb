@@ -31,6 +31,7 @@ RSpec.describe Datadog::Lambda::AppSec do
 
       it 'does not push to gateway' do
         on_start
+
         expect(gateway).not_to have_received(:push)
       end
     end
@@ -48,11 +49,13 @@ RSpec.describe Datadog::Lambda::AppSec do
 
       it 'marks span as appsec-enabled' do
         on_start
+
         expect(span).to have_received(:set_metric).with(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, 1)
       end
 
       it 'pushes event to gateway' do
         on_start
+
         expect(gateway).to have_received(:push).with('aws_lambda.request.start', event)
       end
 
@@ -123,6 +126,7 @@ RSpec.describe Datadog::Lambda::AppSec do
 
       it 'does not push to gateway' do
         on_finish
+
         expect(gateway).not_to have_received(:push)
       end
     end
@@ -135,6 +139,7 @@ RSpec.describe Datadog::Lambda::AppSec do
 
       it 'does not push to gateway' do
         on_finish
+
         expect(gateway).not_to have_received(:push)
       end
     end
@@ -166,14 +171,31 @@ RSpec.describe Datadog::Lambda::AppSec do
         end
       end
 
-      context 'when context has a request in state' do
-        before { appsec_context.state[:request] = request_data }
+      context 'when on_start was called with an event' do
+        before do
+          allow(Datadog::AppSec).to receive(:security_engine).and_return(security_engine)
+          allow(Datadog::AppSec::Context).to receive(:activate)
 
-        let(:request_data) { double('request') }
+          described_class.on_start(event, trace: trace, span: span)
+        end
 
-        it 'passes request to event recording' do
+        let(:event) do
+          {
+            'headers' => {'Host' => 'example.com', 'User-Agent' => 'TestBot'},
+            'requestContext' => {'identity' => {'sourceIp' => '1.2.3.4'}}
+          }
+        end
+        let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
+        let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil) }
+        let(:security_engine) { instance_double(Datadog::AppSec::SecurityEngine::Engine, new_runner: waf_runner) }
+        let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner) }
+
+        it 'passes gateway request to event recording' do
           on_finish
-          expect(Datadog::AppSec::Event).to have_received(:record).with(appsec_context, request: request_data)
+
+          expect(Datadog::AppSec::Event).to have_received(:record).with(
+            appsec_context, request: kind_of(Datadog::Lambda::AppSec::Request)
+          )
         end
       end
 
@@ -182,6 +204,7 @@ RSpec.describe Datadog::Lambda::AppSec do
 
         it 'still deactivates the context' do
           on_finish
+
           expect(Datadog::AppSec::Context).to have_received(:deactivate)
         end
       end

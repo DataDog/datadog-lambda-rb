@@ -1,15 +1,19 @@
 # frozen_string_literal: true
 
+require_relative 'appsec/request'
+
 module Datadog
   module Lambda
     module AppSec
       class << self
         def on_start(event, trace:, span:)
+          @request = nil
           return unless enabled?
 
           create_context(trace, span)
           return unless Datadog::AppSec::Context.active
 
+          @request = Request.from_event(event)
           Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.request.start', event)
         rescue StandardError => e
           Datadog::Utils.logger.debug "failed to start AppSec: #{e}"
@@ -22,7 +26,7 @@ module Datadog
           return unless context
 
           Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.response.start', response)
-          Datadog::AppSec::Event.record(context, request: context.state[:request])
+          Datadog::AppSec::Event.record(context, request: @request)
 
           context.export_metrics
           context.export_request_telemetry
