@@ -13,6 +13,7 @@ RSpec.describe Datadog::Lambda::AppSec do
   let(:appsec_context) do
     instance_double(
       Datadog::AppSec::Context,
+      span: instance_double(Datadog::Tracing::SpanOperation, get_tag: nil, get_metric: nil),
       state: {},
       export_metrics: nil,
       export_request_telemetry: nil
