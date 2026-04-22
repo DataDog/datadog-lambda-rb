@@ -27,6 +27,7 @@ module Datadog
 
         private
 
+        # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
         def start_span(event_source, request_context:, trace_digest:)
           resource = "#{event_source.method} #{event_source.resource_path}"
 
@@ -49,12 +50,7 @@ module Datadog
           tags['dd_resource_key'] = resource_key if resource_key
           tags['http.useragent'] = event_source.user_agent if event_source.user_agent
 
-          options = {
-            service: event_source.domain,
-            resource: resource,
-            type: 'web',
-            tags: tags
-          }
+          options = { service: event_source.domain, resource: resource, type: 'web', tags: tags }
           options[:continue_from] = trace_digest if trace_digest
           options[:start_time] = ms_to_time(event_source.request_time_ms) if event_source.request_time_ms
 
@@ -62,6 +58,7 @@ module Datadog
           span.set_metric('_dd._inferred_span', 1.0)
           span
         end
+        # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
         def http_url_for(event_source)
           return event_source.path unless event_source.domain
@@ -76,11 +73,12 @@ module Datadog
           region = arn.split(':', ARN_SPLIT_LIMIT)[ARN_REGION_INDEX]
           return unless event_source.api_id && event_source.stage
 
-          "arn:aws:apigateway:#{region}::/#{event_source.arn_path_prefix}/#{event_source.api_id}/stages/#{event_source.stage}"
+          stage_path = "/#{event_source.arn_path_prefix}/#{event_source.api_id}/stages/#{event_source.stage}"
+          "arn:aws:apigateway:#{region}::#{stage_path}"
         end
 
-        def ms_to_time(ms)
-          Time.at(ms / 1000.0)
+        def ms_to_time(milliseconds)
+          Time.at(milliseconds / 1000.0)
         end
       end
     end
