@@ -4,17 +4,22 @@ require_relative 'appsec/request'
 
 module Datadog
   module Lambda
+    # AppSec integration for AWS Lambda invocations.
     module AppSec
       class << self
         def on_start(event, trace:, span:)
           @request = nil
           return unless enabled?
 
-          create_context(trace, span)
+          context = create_context(trace, span)
           return unless Datadog::AppSec::Context.active
 
           @request = Request.from_event(event)
-          Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.request.start', event)
+
+          payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
+            event, context: context
+          )
+          Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.request.start', payload)
         rescue StandardError => e
           Datadog::Utils.logger.debug "failed to start AppSec: #{e}"
         end
@@ -25,7 +30,11 @@ module Datadog
           context = Datadog::AppSec::Context.active
           return unless context
 
-          Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.response.start', response)
+          payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
+            response, context: context
+          )
+
+          Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.response.start', payload)
           Datadog::AppSec::Event.record(context, request: @request)
 
           context.export_metrics
@@ -50,11 +59,12 @@ module Datadog
           security_engine = Datadog::AppSec.security_engine
           return unless security_engine
 
-          Datadog::AppSec::Context.activate(
-            Datadog::AppSec::Context.new(trace, span, security_engine.new_runner)
-          )
+          context = Datadog::AppSec::Context.new(trace, span, security_engine.new_runner)
+          Datadog::AppSec::Context.activate(context)
 
           span.set_metric(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, 1)
+
+          context
         end
       end
     end
