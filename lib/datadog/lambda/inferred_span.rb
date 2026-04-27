@@ -42,13 +42,12 @@ module Datadog
             'apiname' => event_source.api_id,
             'stage' => event_source.stage,
             'request_id' => request_context.aws_request_id,
+            'dd_resource_key' => resource_key_for(event_source, request_context),
+            'http.useragent' => event_source.user_agent,
             '_inferred_span.synchronicity' => 'sync',
             '_inferred_span.tag_source' => 'self'
           }
-
-          resource_key = resource_key_for(event_source, request_context)
-          tags['dd_resource_key'] = resource_key if resource_key
-          tags['http.useragent'] = event_source.user_agent if event_source.user_agent
+          tags.compact!
 
           options = { service: event_source.domain, resource: resource, type: 'web', tags: tags }
           options[:continue_from] = trace_digest if trace_digest

@@ -159,7 +159,9 @@ RSpec.describe Datadog::Lambda::InferredSpan do
           }
         end
 
-        it { expect(span.get_tag('dd_resource_key')).to be_nil }
+        it { expect(span).not_to have_tag('apiid') }
+        it { expect(span).not_to have_tag('apiname') }
+        it { expect(span).not_to have_tag('dd_resource_key') }
       end
     end
 
