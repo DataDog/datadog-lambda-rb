@@ -11,12 +11,13 @@
 require 'datadog/lambda/trace/context'
 require 'datadog/lambda/trace/patch_http'
 require 'datadog/lambda/trace/ddtrace'
+require 'datadog/lambda/inferred_span'
+require 'datadog/lambda/appsec'
 
 module Datadog
   module Trace
     # TraceListener tracks tracing context information
     class Listener
-      @trace = nil
       def initialize(handler_name:, function_name:, patch_http:,
                      merge_xray_traces:)
         @handler_name = handler_name
@@ -26,8 +27,11 @@ module Datadog
         Datadog::Trace.patch_http if patch_http
       end
 
-      # rubocop:disable Metrics/AbcSize
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def on_start(event:, request_context:, cold_start:)
+        @span = nil
+        @inferred_span = nil
+
         trace_context = Datadog::Trace.extract_trace_context(event, @merge_xray_traces)
         Datadog::Trace.trace_context = trace_context
         Datadog::Utils.logger.debug "extracted trace context #{trace_context}"
@@ -43,19 +47,26 @@ module Datadog
         options[:type] = 'serverless'
 
         trace_digest = Datadog::Utils.send_start_invocation_request(event:, request_context:)
-        # Only continue trace from a new one if it exist, or else,
-        # it will create a new trace, which is not ideal here.
-        options[:continue_from] = trace_digest if trace_digest
 
-        @trace = Datadog::Tracing.trace('aws.lambda', **options)
+        @inferred_span = Datadog::Lambda::InferredSpan.try_create(event, request_context, trace_digest)
+        options[:continue_from] = trace_digest if trace_digest && @inferred_span.nil?
+
+        @span = Datadog::Tracing.trace('aws.lambda', **options)
 
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
+        Datadog::Lambda::AppSec.on_start(
+          event, trace: Datadog::Tracing.active_trace, span: @span, inferred_span: @inferred_span
+        )
       end
-      # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
       def on_end(response:, request_context:)
-        Datadog::Utils.send_end_invocation_request(response:, span_id: @trace.id, request_context:)
-        @trace&.finish
+        Datadog::Lambda::AppSec.on_finish(response)
+        Datadog::Utils.send_end_invocation_request(span_id: @span.id, response:, request_context:)
+
+        # NOTE: lambda span must finish before inferred span (its parent)
+        @span&.finish
+        @inferred_span&.finish
       end
 
       private

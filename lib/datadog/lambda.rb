@@ -29,6 +29,8 @@ module Datadog
     # Configures Datadog's APM tracer with lambda specific defaults.
     # Same options can be given as Datadog.configure in tracer
     # See https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md#quickstart-for-ruby-applications
+    #
+    # rubocop:disable Metrics/AbcSize
     def self.configure_apm
       require 'datadog/tracing'
       require 'datadog/tracing/transport/io'
@@ -48,8 +50,12 @@ module Datadog
         c.tracing.instrument :aws if trace_managed_services?
 
         yield(c) if block_given?
+
+        # Activation is gated by AppSec.enabled? at runtime — this only registers the integration
+        c.appsec.instrument(:aws_lambda)
       end
     end
+    # rubocop:enable Metrics/AbcSize
 
     # Wrap the body of a lambda invocation
     # @param event [Object] event sent to lambda
