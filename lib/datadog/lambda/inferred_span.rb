@@ -44,7 +44,7 @@ module Datadog
 
           tags = {
             'http.method' => event_source.method,
-            'http.url' => http_url_for(event_source),
+            'http.url' => event_source.http_url,
             'http.route' => event_source.resource_path,
             'endpoint' => event_source.path,
             'resource_names' => resource,
@@ -69,12 +69,6 @@ module Datadog
           span
         end
         # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
-
-        def http_url_for(event_source)
-          return event_source.path unless event_source.domain
-
-          "https://#{event_source.domain}#{event_source.path}"
-        end
 
         def resource_key_for(event_source, request_context)
           arn = request_context.invoked_function_arn.to_s

@@ -14,6 +14,7 @@ require 'datadog/lambda/trace/ddtrace'
 require 'datadog/lambda/event_source'
 require 'datadog/lambda/inferred_span'
 require 'datadog/lambda/appsec'
+require 'datadog/lambda/utils/version'
 
 module Datadog
   module Trace
@@ -28,7 +29,7 @@ module Datadog
         Datadog::Trace.patch_http if patch_http
       end
 
-      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
       def on_start(event:, request_context:, cold_start:)
         @span = nil
         @inferred_span = nil
@@ -54,13 +55,14 @@ module Datadog
         options[:continue_from] = trace_digest if trace_digest && @inferred_span.nil?
 
         @span = Datadog::Tracing.trace('aws.lambda', **options)
+        set_http_tags(@span, event_source) if event_source
 
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
         Datadog::Lambda::AppSec.on_start(
           event, trace: Datadog::Tracing.active_trace, span: @span, inferred_span: @inferred_span
         )
       end
-      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
       def on_end(response:, request_context:)
         Datadog::Lambda::AppSec.on_finish(response)
@@ -73,22 +75,39 @@ module Datadog
 
       private
 
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       def get_option_tags(request_context:, cold_start:)
         function_arn = request_context.invoked_function_arn.to_s.downcase
         tk = function_arn.split(':')
         function_arn = tk.length > 7 ? tk[0, 7].join(':') : function_arn
         function_version = tk.length > 7 ? tk[7] : '$LATEST'
         function_name = request_context.function_name
-        {
+
+        result = {
           tags: {
+            'span.kind' => 'server',
             cold_start:,
             function_arn:,
             function_version:,
             request_id: request_context.aws_request_id,
             functionname: function_name.nil? || function_name.empty? ? nil : function_name.downcase,
-            resource_names: function_name
+            resource_names: function_name,
+            datadog_lambda: Datadog::Lambda::VERSION::STRING
           }
         }
+
+        if (dd_trace = Datadog::Utils.dd_trace_version)
+          result[:tags][:dd_trace] = dd_trace
+        end
+
+        result
+      end
+      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+
+      def set_http_tags(span, event_source)
+        span.set_tag('http.method', event_source.method)
+        span.set_tag('http.url', event_source.http_url)
+        span.set_tag('http.useragent', event_source.user_agent)
       end
     end
   end

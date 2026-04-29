@@ -43,6 +43,12 @@ module Datadog
         def stage = @request_context['stage']
         def request_time_ms = @request_context['timeEpoch']
         def user_agent = @http['userAgent']
+
+        def http_url
+          return path unless domain
+
+          "https://#{domain}#{path}"
+        end
       end
     end
   end

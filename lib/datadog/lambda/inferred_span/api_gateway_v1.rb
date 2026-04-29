@@ -17,7 +17,8 @@ module Datadog
 
         def_delegators :@event_source,
                        :method, :path, :resource_path, :domain,
-                       :api_id, :stage, :request_time_ms, :user_agent
+                       :api_id, :stage, :request_time_ms, :user_agent,
+                       :http_url
 
         def initialize(event_source)
           @event_source = event_source

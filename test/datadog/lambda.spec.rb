@@ -145,6 +145,15 @@ describe Datadog::Lambda do
     end
   end
 
+  context 'when datadog gem is unavailable' do
+    before { allow(Datadog::Utils).to receive(:dd_trace_version).and_return(nil) }
+
+    it 'excludes dd_trace from enhanced tags' do
+      tags = Datadog::Lambda.gen_enhanced_tags(ctx)
+      expect(tags).not_to have_key(:dd_trace)
+    end
+  end
+
   describe '#metric' do
     context 'when extension is running' do
       subject(:lambda_module) { Datadog::Lambda }

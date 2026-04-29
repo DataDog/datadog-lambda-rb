@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# rubocop:disable Metrics/BlockLength
-
 require 'datadog/lambda/trace/context'
 require 'datadog/lambda/trace/constants'
 require 'datadog/lambda/trace/listener'
@@ -204,12 +202,15 @@ describe Datadog::Trace do
       res = listener.send(:get_option_tags, request_context: ctx, cold_start: false)
       expect(res).to eq(
         tags: {
+          'span.kind' => 'server',
           cold_start: false,
           function_arn: 'arn:aws:lambda:us-east-1:172597598159:function:hello-dog-ruby-dev-hello',
           request_id: 'dcbfed85-c904-4367-bd54-984ca201ef47',
           resource_names: "hello-dog-ruby-dev-helloRuby#{RUBY_VERSION[0, 3].tr('.', '')}",
           functionname: "hello-dog-ruby-dev-helloRuby#{RUBY_VERSION[0, 3].tr('.', '')}".downcase,
-          function_version: '$LATEST'
+          function_version: '$LATEST',
+          datadog_lambda: '3.27.0',
+          dd_trace: '2.29.0'
         }
       )
     end
@@ -227,12 +228,15 @@ describe Datadog::Trace do
       res = listener.send(:get_option_tags, request_context: ctx, cold_start: false)
       expect(res).to eq(
         tags: {
+          'span.kind' => 'server',
           cold_start: false,
           function_arn: 'arn:aws:lambda:us-east-1:172597598159:function:ruby-test',
           request_id: 'dcbfed85-c904-4367-bd54-984ca201ef47',
           resource_names: 'Ruby-test',
           functionname: 'ruby-test',
-          function_version: '1'
+          function_version: '1',
+          datadog_lambda: '3.27.0',
+          dd_trace: '2.29.0'
         }
       )
     end
@@ -250,16 +254,34 @@ describe Datadog::Trace do
       res = listener.send(:get_option_tags, request_context: ctx, cold_start: false)
       expect(res).to eq(
         tags: {
+          'span.kind' => 'server',
           cold_start: false,
           function_arn: 'arn:aws:lambda:us-east-1:172597598159:function:ruby-test',
           request_id: 'dcbfed85-c904-4367-bd54-984ca201ef47',
           resource_names: 'Ruby-test',
           functionname: 'ruby-test',
-          function_version: 'my-alias'
+          function_version: 'my-alias',
+          datadog_lambda: '3.27.0',
+          dd_trace: '2.29.0'
         }
       )
     end
   end
-end
 
-# rubocop:enable Metrics/BlockLength
+  context 'when datadog gem is unavailable' do
+    before { allow(Datadog::Utils).to receive(:dd_trace_version).and_return(nil) }
+
+    let(:result) { listener.send(:get_option_tags, request_context: ctx, cold_start: false) }
+    let(:ctx) { LambdaContext.new }
+    let(:listener) do
+      Datadog::Trace::Listener.new(
+        handler_name: 'foo', function_name: 'bar',
+        patch_http: true, merge_xray_traces: false
+      )
+    end
+
+    it 'excludes dd_trace from option tags' do
+      expect(result[:tags]).not_to have_key(:dd_trace)
+    end
+  end
+end
