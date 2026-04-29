@@ -43,8 +43,8 @@ module Datadog
         context = Datadog::Trace.trace_context
         source = context[:source] if context
         options[:tags]['_dd.parent_source'] = source if source && source != 'ddtrace'
-        options[:resource] = 'dd-tracer-serverless-span'
-        options[:service] = 'aws.lambda'
+        options[:resource] = @function_name || 'aws.lambda'
+        options[:service] = Datadog.configuration.service || @function_name || 'aws.lambda'
         options[:type] = 'serverless'
 
         trace_digest = Datadog::Utils.send_start_invocation_request(event:, request_context:)
