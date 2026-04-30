@@ -28,7 +28,7 @@ module Datadog
         Datadog::Trace.patch_http if patch_http
       end
 
-      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
       def on_start(event:, request_context:, cold_start:)
         @span = nil
         @inferred_span = nil
@@ -58,7 +58,7 @@ module Datadog
 
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
       end
-      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+      # rubocop:enable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
       def on_end(response:, request_context:)
         Datadog::Utils.send_end_invocation_request(span_id: @span.id, response:, request_context:)
