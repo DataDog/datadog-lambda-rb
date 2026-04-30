@@ -41,6 +41,13 @@ RUN gem uninstall ffi --all --ignore-dependencies --executables --force \
 RUN MAKEFLAGS="-j$(nproc)" \
     gem install ffi --platform ruby --install-dir "/opt/ruby/gems/$runtime" --no-document
 
+# Recompile FFI from source — precompiled binaries have glibc mismatch with Lambda AL2
+# NOTE: runs after datadog gem as a defensive measure — force-replaces whatever
+#       transitive FFI variant was pulled, regardless of version resolution.
+RUN gem install ffi --platform ruby --force --install-dir "/opt/ruby/gems/$runtime" --no-document
+RUN rm -rf /opt/ruby/gems/$runtime/gems/ffi-*-*-linux-* \
+           /opt/ruby/gems/$runtime/specifications/ffi-*-*-linux-*.gemspec
+
 WORKDIR /opt
 # Remove native extension debase-ruby_core_source (25MB) runtimes below Ruby 2.6
 RUN rm -rf ./ruby/gems/$runtime/gems/debase-ruby_core_source*/

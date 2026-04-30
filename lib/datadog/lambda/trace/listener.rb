@@ -11,11 +11,16 @@
 require 'datadog/lambda/trace/context'
 require 'datadog/lambda/trace/patch_http'
 require 'datadog/lambda/trace/ddtrace'
+require 'datadog/lambda/appsec'
 
 module Datadog
   module Trace
     # TraceListener tracks tracing context information
     class Listener
+      # AppSec blocking response that replaces the handler result.
+      # Set during either on_start or on_end when WAF decides to block.
+      attr_reader :response_override
+
       @trace = nil
       def initialize(handler_name:, function_name:, patch_http:,
                      merge_xray_traces:)
@@ -50,10 +55,14 @@ module Datadog
         @trace = Datadog::Tracing.trace('aws.lambda', **options)
 
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
+        @response_override = Datadog::Lambda::AppSec.on_start(
+          event, trace: Datadog::Tracing.active_trace, span: @trace
+        )
       end
       # rubocop:enable Metrics/AbcSize
 
       def on_end(response:, request_context:)
+        @response_override = Datadog::Lambda::AppSec.on_finish(response)
         Datadog::Utils.send_end_invocation_request(response:, span_id: @trace.id, request_context:)
         @trace&.finish
       end

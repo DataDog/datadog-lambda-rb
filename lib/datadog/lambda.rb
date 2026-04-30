@@ -29,6 +29,8 @@ module Datadog
     # Configures Datadog's APM tracer with lambda specific defaults.
     # Same options can be given as Datadog.configure in tracer
     # See https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md#quickstart-for-ruby-applications
+    #
+    # rubocop:disable Metrics/AbcSize
     def self.configure_apm
       require 'datadog/tracing'
       require 'datadog/tracing/transport/io'
@@ -48,30 +50,36 @@ module Datadog
         c.tracing.instrument :aws if trace_managed_services?
 
         yield(c) if block_given?
+
+        c.appsec.instrument(:aws_lambda)
       end
     end
+    # rubocop:enable Metrics/AbcSize
 
     # Wrap the body of a lambda invocation
     # @param event [Object] event sent to lambda
     # @param context [Object] lambda context
     # @param block [Proc] implementation of the handler function.
+    # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     def self.wrap(event, context, &block)
       @listener ||= initialize_listener
       record_enhanced('invocations', context)
       begin
         cold = @is_cold_start
         @listener&.on_start(event:, request_context: context, cold_start: cold)
-        @response = block.call
+        @response = @listener&.response_override || block.call
       rescue StandardError => e
         record_enhanced('errors', context)
         raise e
       ensure
         @listener&.on_end(response: @response, request_context: context)
+        @response = @listener&.response_override || @response
         @is_cold_start = false
         @metrics_client.close
       end
       @response
     end
+    # rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
 
     # Gets the current tracing context
     def self.trace_context
