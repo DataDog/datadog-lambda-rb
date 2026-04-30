@@ -191,6 +191,8 @@ describe Datadog::Trace do
   end
 
   context 'get_option_tags_for_function' do
+    before { allow(Datadog::Utils).to receive(:dd_trace_version).and_return('2.29.0') }
+
     ctx = LambdaContext.new
     listener = Datadog::Trace::Listener.new(
       handler_name: 'foo',
@@ -217,6 +219,8 @@ describe Datadog::Trace do
   end
 
   context 'get_option_tags_for_function_with_version' do
+    before { allow(Datadog::Utils).to receive(:dd_trace_version).and_return('2.29.0') }
+
     ctx = LambdaContextVersion.new
     listener = Datadog::Trace::Listener.new(
       handler_name: 'foo',
@@ -243,6 +247,8 @@ describe Datadog::Trace do
   end
 
   context 'get_option_tags_for_function_with_alias' do
+    before { allow(Datadog::Utils).to receive(:dd_trace_version).and_return('2.29.0') }
+
     ctx = LambdaContextAlias.new
     listener = Datadog::Trace::Listener.new(
       handler_name: 'foo',
