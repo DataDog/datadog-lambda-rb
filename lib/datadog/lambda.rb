@@ -13,6 +13,7 @@ require 'datadog/lambda/metrics'
 require 'datadog/lambda/trace/listener'
 require 'datadog/lambda/utils/logger'
 require 'datadog/lambda/utils/extension'
+require 'datadog/lambda/utils/version'
 require 'datadog/lambda/trace/patch_http'
 require 'json'
 require 'datadog/lambda/version'
@@ -113,10 +114,8 @@ module Datadog
         resource: context.function_name,
         datadog_lambda: Datadog::Lambda::VERSION::STRING.to_sym
       }
-      begin
-        tags[:dd_trace] = Gem.loaded_specs['datadog'].version
-      rescue StandardError
-        Datadog::Utils.logger.debug 'datadog unavailable'
+      if (dd_trace = Datadog::Utils.dd_trace_version)
+        tags[:dd_trace] = dd_trace
       end
       # If we have an alias...
       unless function_alias.nil?
