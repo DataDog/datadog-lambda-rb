@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative 'appsec/request'
+require_relative 'appsec/event_normalizer'
 
 module Datadog
   module Lambda
@@ -14,7 +15,8 @@ module Datadog
           context = create_context(trace, span)
           return unless Datadog::AppSec::Context.active
 
-          @request = Request.from_event(event)
+          event = EventNormalizer.normalize(event)
+          @request = Request.from_normalized(event)
 
           payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
             event, context: context

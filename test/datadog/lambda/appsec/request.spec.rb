@@ -3,19 +3,17 @@
 require 'datadog/lambda/appsec/request'
 
 RSpec.describe Datadog::Lambda::AppSec::Request do
-  subject(:request) { described_class.from_event(event) }
+  subject(:request) { described_class.from_normalized(event) }
 
   let(:event) do
     {
-      'headers' => { 'Host' => 'example.com', 'User-Agent' => 'TestBot/1.0', 'Accept' => 'text/html' },
-      'requestContext' => {
-        'identity' => { 'sourceIp' => '10.0.0.1' }
-      }
+      'headers' => {'Host' => 'example.com', 'User-Agent' => 'TestBot/1.0', 'Accept' => 'text/html'},
+      'source_ip' => '10.0.0.1',
     }
   end
 
   describe '#headers' do
-    it 'normalizes header keys to lowercase' do
+    it 'lowercases header keys' do
       expect(request.headers).to eq(
         'host' => 'example.com',
         'user-agent' => 'TestBot/1.0',
@@ -24,7 +22,7 @@ RSpec.describe Datadog::Lambda::AppSec::Request do
     end
 
     context 'when event has no headers' do
-      let(:event) { { 'requestContext' => {} } }
+      let(:event) { {'source_ip' => '10.0.0.1'} }
 
       it { expect(request.headers).to eq({}) }
     end
@@ -41,21 +39,8 @@ RSpec.describe Datadog::Lambda::AppSec::Request do
   describe '#remote_addr' do
     it { expect(request.remote_addr).to eq('10.0.0.1') }
 
-    context 'when event is API Gateway v2 format' do
-      let(:event) do
-        {
-          'headers' => {},
-          'requestContext' => {
-            'http' => { 'sourceIp' => '10.0.0.2' }
-          }
-        }
-      end
-
-      it { expect(request.remote_addr).to eq('10.0.0.2') }
-    end
-
-    context 'when event has no requestContext' do
-      let(:event) { { 'headers' => {} } }
+    context 'when source_ip is absent' do
+      let(:event) { {'headers' => {}} }
 
       it { expect(request.remote_addr).to be_nil }
     end

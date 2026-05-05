@@ -13,23 +13,21 @@ module Datadog
         attr_reader :host, :user_agent, :remote_addr, :headers
 
         class << self
-          def from_event(event)
-            headers = normalize_headers(event)
-            remote_addres = event.dig('requestContext', 'identity', 'sourceIp') ||
-                            event.dig('requestContext', 'http', 'sourceIp')
+          def from_normalized(event)
+            headers = lowercase_headers(event)
 
             new(
               host: headers['host'],
               user_agent: headers['user-agent'],
-              remote_addr: remote_addres,
+              remote_addr: event['source_ip'],
               headers: headers
             )
           end
 
           private
 
-          def normalize_headers(event)
-            event.fetch('headers', {}).each_with_object({}) do |(key, value), hash|
+          def lowercase_headers(event)
+            (event['headers'] || {}).each_with_object({}) do |(key, value), hash|
               hash[key.downcase] = value
             end
           end

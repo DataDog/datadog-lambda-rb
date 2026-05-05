@@ -205,8 +205,9 @@ RSpec.describe Datadog::Lambda::AppSec do
 
         let(:event) do
           {
-            'headers' => { 'Host' => 'example.com', 'User-Agent' => 'TestBot' },
-            'requestContext' => { 'identity' => { 'sourceIp' => '1.2.3.4' } }
+            'httpMethod' => 'GET',
+            'headers' => {'Host' => 'example.com', 'User-Agent' => 'TestBot'},
+            'requestContext' => {'identity' => {'sourceIp' => '1.2.3.4'}},
           }
         end
         let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
