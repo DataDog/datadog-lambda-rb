@@ -56,7 +56,7 @@ module Datadog
 
         Datadog::Trace.apply_datadog_trace_context(Datadog::Trace.trace_context)
         @response_override = Datadog::Lambda::AppSec.on_start(
-          event, trace: Datadog::Tracing.active_trace, span: @trace
+          event, trace: Datadog::Tracing.active_trace, span: @trace, cold_start: cold_start
         )
       end
       # rubocop:enable Metrics/AbcSize

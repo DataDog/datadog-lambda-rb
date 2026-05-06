@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'json'
 require_relative 'appsec/request'
 require_relative 'appsec/event_normalizer'
 
@@ -8,12 +9,15 @@ module Datadog
     # AppSec integration for AWS Lambda invocations.
     module AppSec
       class << self
-        def on_start(event, trace:, span:)
+        # rubocop:disable Metrics/AbcSize
+        def on_start(event, trace:, span:, cold_start: false)
           @request = nil
           return unless enabled?
 
           context = create_context(trace, span)
           return unless Datadog::AppSec::Context.active
+
+          tag_and_keep(context, cold_start: cold_start)
 
           event = EventNormalizer.normalize(event)
           @request = Request.from_normalized(event)
@@ -34,6 +38,7 @@ module Datadog
         rescue StandardError => e
           Datadog::Utils.logger.debug("failed to start AppSec: #{e}")
         end
+        # rubocop:enable Metrics/AbcSize
 
         def on_finish(response)
           return unless enabled?
@@ -80,9 +85,35 @@ module Datadog
           context = Datadog::AppSec::Context.new(trace, span, security_engine.new_runner)
           Datadog::AppSec::Context.activate(context)
 
-          span.set_metric(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, 1)
-
           context
+        end
+
+        def tag_and_keep(context, cold_start:)
+          span = context.span
+          trace = context.trace
+
+          return unless trace && span
+
+          span.set_metric(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, 1)
+          span.set_tag('_dd.runtime_family', 'ruby')
+          span.set_tag('_dd.appsec.waf.version', Datadog::AppSec::WAF::VERSION::BASE_STRING)
+
+          ruleset_version = context.waf_runner_ruleset_version
+          return unless ruleset_version
+
+          span.set_tag('_dd.appsec.event_rules.version', ruleset_version)
+
+          return unless cold_start
+
+          span.set_tag(
+            '_dd.appsec.event_rules.addresses', JSON.dump(context.waf_runner_known_addresses)
+          )
+
+          trace.keep!
+          trace.set_tag(
+            Datadog::Tracing::Metadata::Ext::Distributed::TAG_DECISION_MAKER,
+            Datadog::Tracing::Sampling::Ext::Decision::ASM
+          )
         end
 
         def response_override(interrupt_params, headers:)

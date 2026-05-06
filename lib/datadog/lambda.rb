@@ -62,6 +62,7 @@ module Datadog
     # @param block [Proc] implementation of the handler function.
     # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
     def self.wrap(event, context, &block)
+      @response = nil
       @listener ||= initialize_listener
       record_enhanced('invocations', context)
       begin

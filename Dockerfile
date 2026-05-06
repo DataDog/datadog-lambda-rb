@@ -20,7 +20,7 @@ RUN set -eux; \
     if [ -z "${git_ref:-}" ]; then \
         # NOTE: datadog gem must be >= 2.24 to install on Ruby 4.0.x.
         MAKEFLAGS="-j$(nproc)" \
-        gem install datadog -v 2.30 --install-dir "/opt/ruby/gems/$runtime" --no-document; \
+        gem install datadog -v 2.33 --install-dir "/opt/ruby/gems/$runtime" --no-document; \
     else \
         echo "building tracer from ref: $git_ref\n"; \
         git clone https://github.com/DataDog/dd-trace-rb.git --depth 1 --single-branch -b $git_ref /tmp/dd-trace-rb; \
@@ -40,13 +40,6 @@ RUN gem uninstall ffi --all --ignore-dependencies --executables --force \
         --install-dir "/opt/ruby/gems/$runtime" || true
 RUN MAKEFLAGS="-j$(nproc)" \
     gem install ffi --platform ruby --install-dir "/opt/ruby/gems/$runtime" --no-document
-
-# Recompile FFI from source — precompiled binaries have glibc mismatch with Lambda AL2
-# NOTE: runs after datadog gem as a defensive measure — force-replaces whatever
-#       transitive FFI variant was pulled, regardless of version resolution.
-RUN gem install ffi --platform ruby --force --install-dir "/opt/ruby/gems/$runtime" --no-document
-RUN rm -rf /opt/ruby/gems/$runtime/gems/ffi-*-*-linux-* \
-           /opt/ruby/gems/$runtime/specifications/ffi-*-*-linux-*.gemspec
 
 WORKDIR /opt
 # Remove native extension debase-ruby_core_source (25MB) runtimes below Ruby 2.6

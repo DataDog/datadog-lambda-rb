@@ -5,15 +5,17 @@ require 'datadog/lambda/appsec'
 
 RSpec.describe Datadog::Lambda::AppSec do
   before do
+    stub_const('Datadog::AppSec::WAF::VERSION::BASE_STRING', '1.30.0')
     allow(Datadog::AppSec::Instrumentation).to receive(:gateway).and_return(gateway)
     allow(gateway).to receive(:push)
   end
 
   let(:gateway) { instance_double(Datadog::AppSec::Instrumentation::Gateway) }
+  let(:context_span) { instance_double(Datadog::Tracing::SpanOperation, set_tag: nil, set_metric: nil) }
   let(:appsec_context) do
     instance_double(
       Datadog::AppSec::Context,
-      span: instance_double(Datadog::Tracing::SpanOperation, get_tag: nil, get_metric: nil),
+      span: context_span,
       state: {},
       export_metrics: nil,
       export_request_telemetry: nil
@@ -21,11 +23,12 @@ RSpec.describe Datadog::Lambda::AppSec do
   end
 
   describe '.on_start' do
-    subject(:on_start) { described_class.on_start(event, trace: trace, span: span) }
+    subject(:on_start) do
+      described_class.on_start({'httpMethod' => 'GET', 'path' => '/'}, trace: trace, span: span)
+    end
 
-    let(:event) { { 'httpMethod' => 'GET', 'path' => '/' } }
     let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
-    let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil) }
+    let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil) }
 
     context 'when appsec is disabled' do
       before { allow(Datadog::AppSec).to receive(:enabled?).and_return(false) }
@@ -39,14 +42,12 @@ RSpec.describe Datadog::Lambda::AppSec do
 
     context 'when appsec is enabled' do
       before do
-        allow(Datadog::AppSec).to receive(:enabled?).and_return(true)
-        allow(Datadog::AppSec).to receive(:security_engine).and_return(security_engine)
-        allow(Datadog::AppSec::Context).to receive(:activate)
-        allow(Datadog::AppSec::Context).to receive(:active).and_return(appsec_context)
+        allow(Datadog::AppSec).to receive_messages(enabled?: true, security_engine: security_engine)
+        allow(Datadog::AppSec::Context).to receive_messages(activate: nil, active: appsec_context)
       end
 
       let(:security_engine) { instance_double(Datadog::AppSec::SecurityEngine::Engine, new_runner: waf_runner) }
-      let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner) }
+      let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner, ruleset_version: nil) }
 
       it 'marks span as appsec-enabled' do
         on_start
@@ -79,7 +80,9 @@ RSpec.describe Datadog::Lambda::AppSec do
       end
 
       context 'when trace is nil' do
-        subject(:on_start) { described_class.on_start(event, trace: nil, span: span) }
+        subject(:on_start) do
+          described_class.on_start({'httpMethod' => 'GET', 'path' => '/'}, trace: nil, span: span)
+        end
 
         before { allow(Datadog::AppSec::Context).to receive(:active).and_return(nil) }
 
@@ -94,7 +97,9 @@ RSpec.describe Datadog::Lambda::AppSec do
       end
 
       context 'when span is nil' do
-        subject(:on_start) { described_class.on_start(event, trace: trace, span: nil) }
+        subject(:on_start) do
+          described_class.on_start({'httpMethod' => 'GET', 'path' => '/'}, trace: trace, span: nil)
+        end
 
         before { allow(Datadog::AppSec::Context).to receive(:active).and_return(nil) }
 
@@ -111,7 +116,11 @@ RSpec.describe Datadog::Lambda::AppSec do
       context 'when gateway push triggers a blocking interrupt' do
         before do
           allow(Datadog::AppSec::Context).to receive(:new).and_return(appsec_context)
-          allow(appsec_context).to receive(:mark_as_interrupted!)
+          allow(appsec_context).to receive_messages(
+            trace: trace,
+            waf_runner_ruleset_version: nil,
+            mark_as_interrupted!: nil
+          )
 
           allow(gateway).to receive(:push).and_invoke(lambda { |_name, _payload|
             throw(Datadog::AppSec::Ext::INTERRUPT, {'status_code' => 403, 'type' => 'auto'})
@@ -132,13 +141,126 @@ RSpec.describe Datadog::Lambda::AppSec do
 
         it { expect { on_start }.not_to raise_error }
       end
+
+      context 'when waf ruleset is loaded' do
+        before do
+          allow(Datadog::AppSec::Context).to receive(:new).and_return(appsec_context)
+          allow(appsec_context).to receive_messages(
+            waf_runner_ruleset_version: '1.12.0',
+            waf_runner_known_addresses: ['server.request.headers.no_cookies']
+          )
+
+          allow(trace).to receive_messages(keep!: nil, set_tag: nil)
+          allow(span).to receive(:set_tag)
+        end
+
+        let(:appsec_context) do
+          instance_double(
+            Datadog::AppSec::Context,
+            span: span,
+            trace: trace,
+            state: {},
+            export_metrics: nil,
+            export_request_telemetry: nil
+          )
+        end
+
+        it 'sets runtime family and WAF version on the span' do
+          on_start
+
+          aggregate_failures('appsec span tags') do
+            expect(span).to have_received(:set_tag).with('_dd.runtime_family', 'ruby')
+            expect(span).to have_received(:set_tag).with('_dd.appsec.waf.version', '1.30.0')
+          end
+        end
+
+        it 'sets event rules version from the WAF runner' do
+          on_start
+
+          expect(span).to have_received(:set_tag).with('_dd.appsec.event_rules.version', '1.12.0')
+        end
+
+        context 'when cold_start is true' do
+          subject(:on_start) do
+            described_class.on_start(
+              {'httpMethod' => 'GET', 'path' => '/'},
+              trace: trace, span: span, cold_start: true
+            )
+          end
+
+          it 'sets known addresses and keeps trace' do
+            on_start
+
+            aggregate_failures('cold start tags') do
+              expect(span).to have_received(:set_tag).with(
+                '_dd.appsec.event_rules.addresses',
+                '["server.request.headers.no_cookies"]'
+              )
+              expect(trace).to have_received(:keep!)
+              expect(trace).to have_received(:set_tag).with(
+                Datadog::Tracing::Metadata::Ext::Distributed::TAG_DECISION_MAKER,
+                Datadog::Tracing::Sampling::Ext::Decision::ASM
+              )
+            end
+          end
+        end
+
+        context 'when cold_start is false' do
+          it 'does not send cold start tags' do
+            on_start
+
+            aggregate_failures('no cold start tags') do
+              expect(span).not_to have_received(:set_tag).with('_dd.appsec.event_rules.addresses', anything)
+              expect(trace).not_to have_received(:keep!)
+            end
+          end
+        end
+
+        context 'when ruleset version is not set' do
+          before { allow(appsec_context).to receive(:waf_runner_ruleset_version).and_return(nil) }
+
+          it 'skips event rules tags' do
+            on_start
+
+            aggregate_failures('skipped rules tags') do
+              expect(span).not_to have_received(:set_tag).with('_dd.appsec.event_rules.version', anything)
+              expect(span).not_to have_received(:set_tag).with('_dd.appsec.event_rules.addresses', anything)
+            end
+          end
+        end
+
+        context 'when span is not set' do
+          subject(:on_start) do
+            described_class.on_start({'httpMethod' => 'GET', 'path' => '/'}, trace: trace, span: nil)
+          end
+
+          before { allow(Datadog::AppSec::Context).to receive(:active).and_return(nil) }
+
+          it 'does not set any appsec tags' do
+            on_start
+
+            expect(span).not_to have_received(:set_tag)
+          end
+        end
+
+        context 'when context trace is not set' do
+          before { allow(appsec_context).to receive(:trace).and_return(nil) }
+
+          it 'does not set any tags' do
+            on_start
+
+            aggregate_failures('no tags when trace nil') do
+              expect(span).not_to have_received(:set_tag)
+              expect(span).not_to have_received(:set_metric).with(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, anything)
+            end
+          end
+        end
+      end
     end
   end
 
   describe '.on_finish' do
-    subject(:on_finish) { described_class.on_finish(response) }
-
-    let(:response) { { 'statusCode' => 200 } }
+    subject(:on_finish) { described_class.on_finish({ 'statusCode' => 200 }) }
 
     context 'when appsec is disabled' do
       before do
@@ -169,8 +291,7 @@ RSpec.describe Datadog::Lambda::AppSec do
     context 'when active context exists' do
       before do
         allow(Datadog::AppSec).to receive(:enabled?).and_return(true)
-        allow(Datadog::AppSec::Context).to receive(:active).and_return(appsec_context)
-        allow(Datadog::AppSec::Context).to receive(:deactivate)
+        allow(Datadog::AppSec::Context).to receive_messages(active: appsec_context, deactivate: nil)
         allow(Datadog::AppSec::Event).to receive(:record)
       end
 
@@ -181,7 +302,7 @@ RSpec.describe Datadog::Lambda::AppSec do
           expect(gateway).to have_received(:push).with(
             'aws_lambda.response.start', kind_of(Datadog::AppSec::Instrumentation::Gateway::DataContainer)
           )
-          expect(Datadog::AppSec::Event).to have_received(:record).with(appsec_context, request: nil)
+          expect(Datadog::AppSec::Event).to have_received(:record).with(appsec_context, request: anything)
         end
       end
 
@@ -200,20 +321,20 @@ RSpec.describe Datadog::Lambda::AppSec do
           allow(Datadog::AppSec).to receive(:security_engine).and_return(security_engine)
           allow(Datadog::AppSec::Context).to receive(:activate)
 
-          described_class.on_start(event, trace: trace, span: span)
+          described_class.on_start(
+            {
+              'httpMethod' => 'GET',
+              'headers' => {'Host' => 'example.com', 'User-Agent' => 'TestBot'},
+              'requestContext' => {'identity' => {'sourceIp' => '1.2.3.4'}}
+            },
+            trace: trace, span: span
+          )
         end
 
-        let(:event) do
-          {
-            'httpMethod' => 'GET',
-            'headers' => {'Host' => 'example.com', 'User-Agent' => 'TestBot'},
-            'requestContext' => {'identity' => {'sourceIp' => '1.2.3.4'}},
-          }
-        end
         let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
-        let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil) }
+        let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil) }
         let(:security_engine) { instance_double(Datadog::AppSec::SecurityEngine::Engine, new_runner: waf_runner) }
-        let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner) }
+        let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner, ruleset_version: nil) }
 
         it 'records security event with request' do
           on_finish
@@ -226,11 +347,23 @@ RSpec.describe Datadog::Lambda::AppSec do
 
       context 'when gateway push triggers a blocking interrupt' do
         before do
+          allow(Datadog::AppSec).to receive(:security_engine).and_return(security_engine)
+          allow(Datadog::AppSec::Context).to receive(:activate)
+          allow(appsec_context).to receive(:mark_as_interrupted!)
           allow(gateway).to receive(:push).and_invoke(lambda { |_name, _payload|
             throw(Datadog::AppSec::Ext::INTERRUPT, {'status_code' => 403, 'type' => 'auto'})
           })
-          allow(appsec_context).to receive(:mark_as_interrupted!)
+
+          described_class.on_start(
+            {'httpMethod' => 'GET', 'headers' => {'Accept' => 'application/json'}},
+            trace: trace, span: span
+          )
         end
+
+        let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
+        let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil) }
+        let(:security_engine) { instance_double(Datadog::AppSec::SecurityEngine::Engine, new_runner: waf_runner) }
+        let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner, ruleset_version: nil) }
 
         it 'returns a Lambda-shaped blocking response' do
           expect(on_finish).to include(
