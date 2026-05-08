@@ -1,6 +1,12 @@
 variables:
   CI_DOCKER_TARGET_IMAGE: registry.ddbuild.io/ci/datadog-lambda-rb
   CI_DOCKER_TARGET_VERSION: latest
+  GIT_REF:
+    description: branch/ref of dd-trace-rb to build the layer from. leave empty to use the latest release
+    value:
+  UPDATE_SNAPSHOTS:
+    description: whether or not to create new snapshots
+    value: false
 
 stages:
  - build
