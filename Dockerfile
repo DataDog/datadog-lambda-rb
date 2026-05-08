@@ -19,9 +19,8 @@ RUN set -eux; \
     if [ -z "${git_ref:-}" ]; then \
         gem install datadog -v 2.12 --install-dir "/opt/ruby/gems/$runtime"; \
     else \
-        git clone https://github.com/DataDog/dd-trace-rb.git /tmp/dd-trace-rb; \
+        git clone https://github.com/DataDog/dd-trace-rb.git --depth 1 --single-branch -b $git_ref /tmp/dd-trace-rb; \
         cd /tmp/dd-trace-rb; \
-        git checkout "$git_ref"; \
         gem build datadog.gemspec; \
         gem install ./datadog-*.gem --install-dir "/opt/ruby/gems/$runtime"; \
     fi
