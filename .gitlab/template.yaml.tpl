@@ -63,11 +63,17 @@ integration test ({{ $runtime.ruby_version }}, {{ $runtime.arch }}):
   stage: test
   tags: ["arch:amd64"]
   image: ${CI_DOCKER_TARGET_IMAGE}:${CI_DOCKER_TARGET_VERSION}
-  needs: 
+  needs:
     - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
   dependencies:
     - build layer ({{ $runtime.ruby_version }}, {{ $runtime.arch }})
   cache: &{{ $runtime.name }}-{{ $runtime.arch }}-cache
+  artifacts:
+    when: always
+    expire_in: 1 week
+    name: snapshots-{{ $runtime.ruby_version }}-{{ $runtime.arch }}-${CI_JOB_ID}
+    paths:
+      - integration_tests/snapshots/
   before_script:
     - EXTERNAL_ID_NAME=integration-test-externalid ROLE_TO_ASSUME=sandbox-integration-test-deployer AWS_ACCOUNT=425362996713 source .gitlab/scripts/get_secrets.sh
     - cd integration_tests && yarn install && cd ..
