@@ -10,9 +10,9 @@
 # VERSION is required.
 set -e
 
-RUBY_VERSIONS_FOR_AWS_CLI=("ruby3.2" "ruby3.2" "ruby3.3" "ruby3.3" "ruby3.4" "ruby3.4")
-LAYER_PATHS=(".layers/datadog-lambda_ruby-amd64-3.2.zip" ".layers/datadog-lambda_ruby-arm64-3.2.zip" ".layers/datadog-lambda_ruby-amd64-3.3.zip" ".layers/datadog-lambda_ruby-arm64-3.3.zip" ".layers/datadog-lambda_ruby-amd64-3.4.zip" ".layers/datadog-lambda_ruby-arm64-3.4.zip")
-AVAILABLE_LAYERS=("Datadog-Ruby3-2" "Datadog-Ruby3-2-ARM" "Datadog-Ruby3-3" "Datadog-Ruby3-3-ARM" "Datadog-Ruby3-4" "Datadog-Ruby3-4-ARM")
+RUBY_VERSIONS_FOR_AWS_CLI=("ruby3.2" "ruby3.2" "ruby3.3" "ruby3.3" "ruby3.4" "ruby3.4" "ruby4.0" "ruby4.0")
+LAYER_PATHS=(".layers/datadog-lambda_ruby-amd64-3.2.zip" ".layers/datadog-lambda_ruby-arm64-3.2.zip" ".layers/datadog-lambda_ruby-amd64-3.3.zip" ".layers/datadog-lambda_ruby-arm64-3.3.zip" ".layers/datadog-lambda_ruby-amd64-3.4.zip" ".layers/datadog-lambda_ruby-arm64-3.4.zip" ".layers/datadog-lambda_ruby-amd64-4.0.zip" ".layers/datadog-lambda_ruby-arm64-4.0.zip")
+AVAILABLE_LAYERS=("Datadog-Ruby3-2" "Datadog-Ruby3-2-ARM" "Datadog-Ruby3-3" "Datadog-Ruby3-3-ARM" "Datadog-Ruby3-4" "Datadog-Ruby3-4-ARM" "Datadog-Ruby4-0" "Datadog-Ruby4-0-ARM")
 AVAILABLE_REGIONS=$(aws ec2 describe-regions | jq -r '.[] | .[] | .RegionName')
 
 
