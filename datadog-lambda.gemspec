@@ -38,7 +38,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'datadog', '~> 2.12'
 
   # Development dependencies
-  spec.add_development_dependency 'rake', '~> 12.3'
+  # NOTE: rake >= 13 is required for Ruby 4.0 support — rake 12.x pulls in
+  #       ostruct at load time, which is no longer a default gem in Ruby 4.0.
+  spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'rspec', '~> 3.8'
   spec.add_development_dependency 'rspec-collection_matchers', '~> 1.1'
   spec.add_development_dependency 'rubocop', '~> 1'

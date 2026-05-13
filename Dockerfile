@@ -12,7 +12,8 @@ RUN gem build datadog-lambda
 
 # Install ddtrace gem
 RUN gem install datadog-lambda --install-dir "/opt/ruby/gems/$runtime"
-RUN gem install datadog -v 2.12 --install-dir "/opt/ruby/gems/$runtime"
+# NOTE: datadog gem must be >= 2.24 to install on Ruby 4.0.x.
+RUN gem install datadog -v 2.30 --install-dir "/opt/ruby/gems/$runtime"
 
 WORKDIR /opt
 # Remove native extension debase-ruby_core_source (25MB) runtimes below Ruby 2.6
