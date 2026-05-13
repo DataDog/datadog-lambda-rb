@@ -6,7 +6,7 @@ variables:
     value: ""
   UPDATE_SNAPSHOTS:
     description: whether or not to create new snapshots
-    value: "false"
+    value: ""
 
 stages:
   - pre
@@ -51,6 +51,9 @@ generator:
 build:
   stage: build
   trigger:
+    forward:
+      pipeline_variables: true
+      yaml_variables: true
     include:
       - artifact: .gitlab/build-pipeline.yaml
         job: generator
