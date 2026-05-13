@@ -23,7 +23,7 @@ We love pull requests. For new features, consider opening an issue to discuss th
    ./scripts/build_layers.sh
 
    # If you want to build a layer for a specific ruby version then
-   RUBY_VERSION=3.4 ./scripts/build_layers.sh
+   RUBY_VERSION=4.0 ./scripts/build_layers.sh
 
    # Publish the testing layer to your own AWS account, and the ARN will be returned
    # Example: ./scripts/publish_layers.sh us-east-1

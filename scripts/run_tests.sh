@@ -8,7 +8,7 @@
 # Run unit tests in Docker
 set -e
 
-RUBY_VERSIONS=("3.2" "3.3" "3.4")
+RUBY_VERSIONS=("3.2" "3.3" "3.4" "4.0")
 
 for ruby_version in "${RUBY_VERSIONS[@]}"
 do
