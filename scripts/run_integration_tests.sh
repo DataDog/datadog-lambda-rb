@@ -11,7 +11,7 @@ set -e
 # These values need to be in sync with serverless.yml, where there needs to be a function
 # defined for every handler_runtime combination
 LAMBDA_HANDLERS=("async-metrics" "sync-metrics" "http-requests" "process-input-traced")
-RUNTIMES=("ruby32" "ruby33")
+RUNTIMES=("ruby32" "ruby33" "ruby34" "ruby40")
 
 LOGS_WAIT_SECONDS=45
 
@@ -31,8 +31,9 @@ mismatch_found=false
 ruby32=("ruby3.2" "3.2" $(xxd -l 4 -c 4 -p </dev/random))
 ruby33=("ruby3.3" "3.3" $(xxd -l 4 -c 4 -p </dev/random))
 ruby34=("ruby3.4" "3.4" $(xxd -l 4 -c 4 -p </dev/random))
+ruby40=("ruby4.0" "4.0" $(xxd -l 4 -c 4 -p </dev/random))
 
-PARAMETERS_SETS=("ruby32" "ruby33" "ruby34")
+PARAMETERS_SETS=("ruby32" "ruby33" "ruby34" "ruby40")
 
 if [ -z "$RUNTIME_PARAM" ]; then
     echo "Ruby version not specified, running for all ruby versions."
@@ -202,6 +203,9 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Normalize minor package version tag so that these snapshots aren't broken on version bumps
                 perl -p -e "s/(dd_lambda_layer:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
                 perl -p -e "s/(dd_trace:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
+                # Normalize integrations_loaded gem versions (e.g. aws-sdk-core version
+                # appears here on Ruby 4 where the AWS contrib detects as Available)
+                perl -p -e 's/aws@[0-9.]+/aws@/g' |
                 perl -p -e 's/"(span_id|parent_id|trace_id|start|duration|tcp\.local\.address|tcp\.local\.port|dns\.address|request_id|function_arn|x-datadog-trace-id|x-datadog-parent-id|datadog_lambda|dd_trace|allocations|date|os_name)":("?)[a-zA-Z0-9\.:\-\+\_]+("?)/"\1":\2XXXX\3/g' |
                 # Strip out run ID (from function name, resource, etc.)
                 perl -p -e "s/${!run_id}/XXXX/g" |

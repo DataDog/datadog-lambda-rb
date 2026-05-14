@@ -96,7 +96,7 @@ do
 
     export REGION=$region
 
-    for ruby_version in "3.2" "3.3" "3.4"; do
+    for ruby_version in "3.2" "3.3" "3.4" "4.0"; do
         for arch in "amd64" "arm64"; do
             export RUBY_VERSION=$ruby_version
             export ARCH=$arch
