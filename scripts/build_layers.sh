@@ -33,6 +33,7 @@ function docker_build_zip {
 
     destination=$(make_path_absolute $2)
     arch=$3
+    ref=$4
 
     # Install datadog ruby in a docker container to avoid the mess from switching
     # between different ruby runtimes.
@@ -40,6 +41,7 @@ function docker_build_zip {
     docker buildx build -t datadog-lambda-ruby-${arch}:$1 . --no-cache \
         --build-arg "image=ruby:${1}" \
         --build-arg "runtime=${1}.0" \
+        --build-arg "git_ref=${ref}" \
         --platform linux/${arch} \
         --progress=plain \
         -o $temp_dir
@@ -57,10 +59,10 @@ mkdir $LAYER_DIR
 for ruby_version in "${RUBY_VERSIONS[@]}"
 do
     echo "Building layer for Ruby ${ruby_version} arch=arm64"
-    docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}-arm64-${ruby_version}.zip arm64
+    docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}-arm64-${ruby_version}.zip arm64 $GIT_REF
 
     echo "Building layer for Ruby ${ruby_version} arch=amd64"
-    docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}-amd64-${ruby_version}.zip amd64
+    docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}-amd64-${ruby_version}.zip amd64 $GIT_REF
 done
 
 
