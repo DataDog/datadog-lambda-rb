@@ -14,11 +14,11 @@ ci image:
     DDSIGN_ID_TOKEN:
       aud: image-integrity
   needs: []
-  # rules:
-  #   - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
-  #     changes:
-  #       - .gitlab/Dockerfile
-  #     when: on_success
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        - .gitlab/Dockerfile
+      when: on_success
   variables:
     DOCKER_TARGET: ${DOCKER_TARGET_IMAGE}:${DOCKER_TARGET_VERSION}
   script:
