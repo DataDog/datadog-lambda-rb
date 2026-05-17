@@ -26,6 +26,14 @@ module Datadog
     @patch_http = true
     @metrics_client = Metrics::Client.instance
 
+    # AppSec is not supported on AWS Lambda. Force-disable via env before
+    # dd-trace-rb loads so autoload and configuration both see AppSec as disabled.
+    def self.disable_appsec_on_lambda!
+      return unless ENV.key?('AWS_LAMBDA_FUNCTION_NAME')
+
+      ENV[Trace::DD_APPSEC_ENABLED] = 'false'
+    end
+
     # Configures Datadog's APM tracer with lambda specific defaults.
     # Same options can be given as Datadog.configure in tracer
     # See https://github.com/DataDog/dd-trace-rb/blob/master/docs/GettingStarted.md#quickstart-for-ruby-applications
@@ -200,4 +208,6 @@ module Datadog
     end
   end
 end
+
+Datadog::Lambda.disable_appsec_on_lambda!
 # rubocop:enable Metrics/ModuleLength

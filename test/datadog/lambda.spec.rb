@@ -104,6 +104,63 @@ describe Datadog::Lambda do
       expect(Datadog::Lambda.trace_managed_services?).to eq(true)
     end
   end
+
+  describe '.disable_appsec_on_lambda!' do
+    subject(:disable_appsec_on_lambda) { Datadog::Lambda.disable_appsec_on_lambda! }
+
+    context 'when AWS_LAMBDA_FUNCTION_NAME is not set' do
+      around do |example|
+        orig_fn = ENV['AWS_LAMBDA_FUNCTION_NAME']
+        orig_appsec = ENV['DD_APPSEC_ENABLED']
+        ENV.delete('AWS_LAMBDA_FUNCTION_NAME')
+        ENV['DD_APPSEC_ENABLED'] = 'true'
+        example.run
+      ensure
+        if orig_fn
+          ENV['AWS_LAMBDA_FUNCTION_NAME'] = orig_fn
+        else
+          ENV.delete('AWS_LAMBDA_FUNCTION_NAME')
+        end
+        if orig_appsec
+          ENV['DD_APPSEC_ENABLED'] = orig_appsec
+        else
+          ENV.delete('DD_APPSEC_ENABLED')
+        end
+      end
+
+      it 'does not change DD_APPSEC_ENABLED' do
+        disable_appsec_on_lambda
+        expect(ENV['DD_APPSEC_ENABLED']).to eq('true')
+      end
+    end
+
+    context 'when AWS_LAMBDA_FUNCTION_NAME is set' do
+      around do |example|
+        orig_fn = ENV['AWS_LAMBDA_FUNCTION_NAME']
+        orig_appsec = ENV['DD_APPSEC_ENABLED']
+        ENV['AWS_LAMBDA_FUNCTION_NAME'] = 'my-function'
+        ENV['DD_APPSEC_ENABLED'] = 'true'
+        example.run
+      ensure
+        if orig_fn
+          ENV['AWS_LAMBDA_FUNCTION_NAME'] = orig_fn
+        else
+          ENV.delete('AWS_LAMBDA_FUNCTION_NAME')
+        end
+        if orig_appsec
+          ENV['DD_APPSEC_ENABLED'] = orig_appsec
+        else
+          ENV.delete('DD_APPSEC_ENABLED')
+        end
+      end
+
+      it 'sets DD_APPSEC_ENABLED to false' do
+        disable_appsec_on_lambda
+        expect(ENV['DD_APPSEC_ENABLED']).to eq('false')
+      end
+    end
+  end
+
   context 'enhanced tags' do
     it 'makes tags from a Lambda context' do
       ctx = LambdaContext.new
