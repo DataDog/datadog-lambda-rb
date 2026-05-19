@@ -4,8 +4,8 @@ ARG git_ref
 ARG runtime
 RUN echo "git_ref: $git_ref"
 # Install dev dependencies
-COPY . /var/task/datadog-lambda-rb
-WORKDIR /var/task/datadog-lambda-rb
+COPY . /ruby
+WORKDIR /ruby
 RUN apt-get update
 RUN apt-get install -y gcc zip binutils
 
@@ -25,6 +25,9 @@ RUN set -eux; \
         gem build datadog.gemspec; \
         gem install ./datadog-*.gem --install-dir "/opt/ruby/gems/$runtime"; \
     fi
+
+# Copy handler
+COPY handler.rb /opt
 
 WORKDIR /opt
 # Remove native extension debase-ruby_core_source (25MB) runtimes below Ruby 2.6
