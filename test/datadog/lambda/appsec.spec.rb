@@ -392,6 +392,94 @@ RSpec.describe Datadog::Lambda::AppSec do
           expect(Datadog::AppSec::Context).to have_received(:deactivate)
         end
       end
+
+      context 'when request-time override is clobbered by on_finish returning nil' do
+        before do
+          allow(Datadog::AppSec).to receive(:security_engine).and_return(security_engine)
+          allow(Datadog::AppSec::Context).to receive(:activate)
+          allow(appsec_context).to receive_messages(
+            trace: trace,
+            waf_runner_ruleset_version: nil,
+            mark_as_interrupted!: nil
+          )
+
+          allow(gateway).to receive(:push).and_invoke(
+            lambda { |name, _payload|
+              if name == 'aws_lambda.request.start'
+                throw(Datadog::AppSec::Ext::INTERRUPT, {'status_code' => 403, 'type' => 'auto'})
+              end
+            }
+          )
+
+          described_class.on_start(
+            {'httpMethod' => 'GET', 'headers' => {'Accept' => 'application/json'}},
+            trace: trace, span: span
+          )
+
+          allow(Datadog::Trace).to receive(:extract_trace_context).and_return({})
+          allow(Datadog::Trace).to receive(:trace_context).and_return({})
+          allow(Datadog::Trace).to receive(:apply_datadog_trace_context)
+          allow(Datadog::Tracing).to receive(:trace).and_return(span)
+          allow(Datadog::Tracing).to receive(:active_trace).and_return(trace)
+          allow(Datadog::Utils).to receive_messages(
+            send_start_invocation_request: nil,
+            send_end_invocation_request: nil
+          )
+          allow(span).to receive(:id).and_return(1)
+          allow(span).to receive(:finish)
+        end
+
+        let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
+        let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil) }
+        let(:security_engine) { instance_double(Datadog::AppSec::SecurityEngine::Engine, new_runner: waf_runner) }
+        let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner, ruleset_version: nil) }
+        let(:request_context) do
+          instance_double(
+            'LambdaContext',
+            invoked_function_arn: 'arn:aws:lambda:us-east-1:123:function:test',
+            function_name: 'test',
+            aws_request_id: 'req-1',
+            function_version: '$LATEST'
+          )
+        end
+
+        it 'preserves request-time override after on_end with no response-time interrupt' do
+          listener = Datadog::Trace::Listener.new(
+            handler_name: 'handler', function_name: 'test',
+            patch_http: false, merge_xray_traces: false
+          )
+          listener.instance_variable_set(:@response_override, {'statusCode' => 403})
+          listener.instance_variable_set(:@trace, span)
+
+          listener.on_end(response: {'statusCode' => 200}, request_context: request_context)
+
+          expect(listener.response_override).to include('statusCode' => 403)
+        end
+      end
+    end
+  end
+
+  describe 'cross-invocation context cleanup' do
+    context 'when on_start raises after activating context' do
+      before do
+        allow(Datadog::AppSec).to receive_messages(enabled?: true, security_engine: security_engine)
+        allow(Datadog::AppSec::Context).to receive_messages(activate: nil, active: appsec_context, deactivate: nil)
+        allow(Datadog::Lambda::AppSec::EventNormalizer).to receive(:normalize).and_raise(StandardError, 'bad event')
+      end
+
+      let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
+      let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil) }
+      let(:security_engine) { instance_double(Datadog::AppSec::SecurityEngine::Engine, new_runner: waf_runner) }
+      let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner, ruleset_version: nil) }
+
+      it 'deactivates context so next invocation gets a fresh one' do
+        described_class.on_start(
+          {'httpMethod' => 'GET', 'path' => '/'},
+          trace: trace, span: span
+        )
+
+        expect(Datadog::AppSec::Context).to have_received(:deactivate)
+      end
     end
   end
 end

@@ -39,6 +39,24 @@ describe Datadog::Lambda do
       end
     end
 
+    context 'when previous invocation successful response followed by a failing invocation' do
+      before do
+        Datadog::Lambda.instance_variable_set(:@listener, listener)
+        Datadog::Lambda.wrap('1', ctx) { {'statusCode' => 200} }
+        Datadog::Lambda.wrap('1', ctx) { raise 'boom' } rescue nil
+      end
+
+      after { Datadog::Lambda.instance_variable_set(:@listener, nil) }
+
+      let(:listener) do
+        instance_double(Datadog::Trace::Listener, on_start: nil, on_end: nil, response_override: nil)
+      end
+
+      it 'passes response of the failing invocation as nil' do
+        expect(listener).to have_received(:on_end).with(response: nil, request_context: ctx)
+      end
+    end
+
     context 'with a handler that sends a custom metric' do
       subject(:handler) do
         Datadog::Lambda.wrap(event, context) do
