@@ -3,6 +3,7 @@
 require 'json'
 require_relative 'appsec/request'
 require_relative 'appsec/event_normalizer'
+require_relative 'appsec/response_normalizer'
 
 module Datadog
   module Lambda
@@ -40,12 +41,14 @@ module Datadog
         end
         # rubocop:enable Metrics/AbcSize
 
+        # rubocop:disable Metrics/AbcSize
         def on_finish(response)
           return unless enabled?
 
           context = Datadog::AppSec::Context.active
           return unless context
 
+          response = ResponseNormalizer.normalize(response)
           payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
             response, context: context
           )
@@ -67,6 +70,7 @@ module Datadog
         ensure
           Datadog::AppSec::Context.deactivate if context
         end
+        # rubocop:enable Metrics/AbcSize
 
         private
 

@@ -4,6 +4,11 @@ module Datadog
   module Lambda
     module AppSec
       # Normalizes API Gateway v1/v2 event payloads into a standard key set.
+      #
+      # NOTE: The REST API (v1) event does NOT have a version field.
+      #       Only the HTTP API events have "version": "1.0" or "version": "2.0".
+      #
+      # @see https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format-structure
       module EventNormalizer
         module_function
 
