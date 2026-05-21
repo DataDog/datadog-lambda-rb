@@ -37,6 +37,7 @@ module Datadog
           context.mark_as_interrupted!
           response_override(interrupt_params, headers: @request.headers)
         rescue StandardError => e
+          Datadog::AppSec::Context.deactivate if context
           Datadog::Utils.logger.debug("failed to start AppSec: #{e}")
         end
         # rubocop:enable Metrics/AbcSize

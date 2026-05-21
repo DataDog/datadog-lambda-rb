@@ -62,7 +62,10 @@ module Datadog
       # rubocop:enable Metrics/AbcSize
 
       def on_end(response:, request_context:)
-        @response_override = Datadog::Lambda::AppSec.on_finish(response)
+        if (override = Datadog::Lambda::AppSec.on_finish(response))
+          @response_override = override
+        end
+
         Datadog::Utils.send_end_invocation_request(response:, span_id: @trace.id, request_context:)
         @trace&.finish
       end
