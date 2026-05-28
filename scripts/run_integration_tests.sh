@@ -10,7 +10,7 @@ set -e
 
 # These values need to be in sync with serverless.yml, where there needs to be a function
 # defined for every handler_runtime combination
-LAMBDA_HANDLERS=("async-metrics" "sync-metrics" "http-requests" "process-input-traced")
+LAMBDA_HANDLERS=("async-metrics" "sync-metrics" "http-requests" "process-input-traced" "appsec-request")
 RUNTIMES=("ruby32" "ruby33" "ruby34" "ruby40")
 
 LOGS_WAIT_SECONDS=45

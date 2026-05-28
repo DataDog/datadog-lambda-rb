@@ -60,3 +60,15 @@ functions:
       - { Ref: RubyLambdaLayer }
     environment:
       DD_FLUSH_TO_LOG: true
+
+  # appsec-request
+  appsec-request_ruby:
+    name: integration-tests-rb-${sls:stage}-appsec-request_${env:RUNTIME}
+    handler: appsec_request.handle
+    runtime: ${env:SERVERLESS_RUNTIME}
+    memorySize: 1024
+    layers:
+      - { Ref: RubyLambdaLayer }
+    environment:
+      DD_FLUSH_TO_LOG: true
+      DD_APPSEC_ENABLED: true
