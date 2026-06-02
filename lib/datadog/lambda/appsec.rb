@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
 require 'json'
+
+require 'datadog/tracing/client_ip'
+require 'datadog/core/header_collection'
+require 'datadog/appsec/default_header_tags'
+
 require_relative 'appsec/request'
 require_relative 'appsec/event_normalizer'
 require_relative 'appsec/response_normalizer'
@@ -23,6 +28,7 @@ module Datadog
           event = EventNormalizer.normalize(event)
           @request = Request.from_normalized(event)
 
+          add_request_tags(context, @request)
           payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
             event, context: context
           )
@@ -50,6 +56,8 @@ module Datadog
           return unless context
 
           response = ResponseNormalizer.normalize(response)
+
+          add_response_tags(context, response)
           payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
             response, context: context
           )
@@ -91,6 +99,34 @@ module Datadog
           Datadog::AppSec::Context.activate(context)
 
           context
+        end
+
+        def add_request_tags(context, request)
+          span = context.span
+          return unless span
+
+          headers = Datadog::Core::HeaderCollection.from_hash(request.headers)
+          Datadog::AppSec::DefaultHeaderTags.tag_request(span, headers)
+
+          return if span.get_tag(Datadog::Tracing::Metadata::Ext::HTTP::TAG_CLIENT_IP)
+
+          Datadog::Tracing::ClientIp.set_client_ip_tag!(
+            span, headers: headers, remote_ip: request.remote_addr
+          )
+        end
+
+        def add_response_tags(context, response)
+          span = context.span
+          return unless span
+
+          headers = Datadog::Core::HeaderCollection.from_hash(response['headers'] || {})
+          Datadog::AppSec::DefaultHeaderTags.tag_response(span, headers)
+
+          return if headers.get('content-length')
+
+          if (body = response['body'])
+            span.set_tag('http.response.headers.content-length', body.bytesize.to_s)
+          end
         end
 
         def tag_and_keep(context, cold_start:)
