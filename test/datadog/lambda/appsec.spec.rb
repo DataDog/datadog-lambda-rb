@@ -12,17 +12,18 @@ RSpec.describe Datadog::Lambda::AppSec do
   end
 
   let(:gateway) { instance_double(Datadog::AppSec::Instrumentation::Gateway) }
-  let(:context_span) { instance_double(Datadog::Tracing::SpanOperation, set_tag: nil, set_metric: nil) }
+  let(:context_span) { instance_double(Datadog::Tracing::SpanOperation, set_tag: nil, set_metric: nil, get_tag: nil) }
   let(:appsec_context) do
     instance_double(
       Datadog::AppSec::Context,
-      span: context_span, state: {}, export_metrics: nil, export_request_telemetry: nil
+      span: context_span, state: {}, interrupted?: false,
+      export_metrics: nil, export_request_telemetry: nil
     )
   end
 
   describe '.on_start' do
     let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
-    let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil) }
+    let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil, get_tag: nil) }
 
     context 'when appsec is disabled' do
       before do
@@ -283,6 +284,7 @@ RSpec.describe Datadog::Lambda::AppSec do
         allow(Datadog::AppSec).to receive(:enabled?).and_return(true)
         allow(Datadog::AppSec::Context).to receive_messages(active: appsec_context, deactivate: nil)
         allow(Datadog::AppSec::Event).to receive(:record)
+        allow(Datadog::AppSec::APISecurity).to receive(:enabled?).and_return(false)
       end
 
       it 'pushes response and records events' do
@@ -323,7 +325,7 @@ RSpec.describe Datadog::Lambda::AppSec do
         end
 
         let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
-        let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil) }
+        let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil, get_tag: nil) }
         let(:security_engine) { instance_double(Datadog::AppSec::SecurityEngine::Engine, new_runner: waf_runner) }
         let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner, ruleset_version: nil) }
 
@@ -350,7 +352,7 @@ RSpec.describe Datadog::Lambda::AppSec do
         end
 
         let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
-        let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil) }
+        let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil, get_tag: nil) }
         let(:security_engine) { instance_double(Datadog::AppSec::SecurityEngine::Engine, new_runner: waf_runner) }
         let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner, ruleset_version: nil) }
 

@@ -8,6 +8,7 @@ require 'datadog/appsec/default_header_tags'
 require 'datadog/appsec/api_security'
 
 require_relative 'appsec/request'
+require_relative 'appsec/response'
 require_relative 'appsec/event_normalizer'
 require_relative 'appsec/response_normalizer'
 
@@ -56,13 +57,14 @@ module Datadog
           context = Datadog::AppSec::Context.active
           return unless context
 
-          response = ResponseNormalizer.normalize(response)
+          normalized = ResponseNormalizer.normalize(response)
+          response = Response.from_normalized(normalized)
 
           interrupt_params = nil
           unless context.interrupted?
             add_response_tags(context, response)
             payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
-              response, context: context
+              normalized, context: context
             )
 
             interrupt_params = catch(Datadog::AppSec::Ext::INTERRUPT) do
@@ -89,15 +91,11 @@ module Datadog
 
         private
 
-        SamplingResponse = Struct.new(:status)
-
         def extract_api_security_schema(context, response)
           return unless @request
           return unless Datadog::AppSec::APISecurity.enabled?
           return unless Datadog::AppSec::APISecurity.sample_trace?(context.trace)
-          return unless Datadog::AppSec::APISecurity.sample?(
-            @request, SamplingResponse.new(response['status_code'].to_i)
-          )
+          return unless Datadog::AppSec::APISecurity.sample?(@request, response)
 
           context.extract_schema!
         end
@@ -138,12 +136,12 @@ module Datadog
           span = context.span
           return unless span
 
-          headers = Datadog::Core::HeaderCollection.from_hash(response['headers'] || {})
+          headers = Datadog::Core::HeaderCollection.from_hash(response.headers)
           Datadog::AppSec::DefaultHeaderTags.tag_response(span, headers)
 
           return if headers.get('content-length')
 
-          if (body = response['body'])
+          if (body = response.body)
             span.set_tag('http.response.headers.content-length', body.bytesize.to_s)
           end
         end
