@@ -5,6 +5,7 @@ require 'json'
 require 'datadog/tracing/client_ip'
 require 'datadog/core/header_collection'
 require 'datadog/appsec/default_header_tags'
+require 'datadog/appsec/api_security'
 
 require_relative 'appsec/request'
 require_relative 'appsec/event_normalizer'
@@ -57,17 +58,22 @@ module Datadog
 
           response = ResponseNormalizer.normalize(response)
 
-          add_response_tags(context, response)
-          payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
-            response, context: context
-          )
+          interrupt_params = nil
+          unless context.interrupted?
+            add_response_tags(context, response)
+            payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
+              response, context: context
+            )
 
-          interrupt_params = catch(Datadog::AppSec::Ext::INTERRUPT) do
-            Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.response.start', payload)
-            nil
+            interrupt_params = catch(Datadog::AppSec::Ext::INTERRUPT) do
+              Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.response.start', payload)
+              nil
+            end
+
+            context.mark_as_interrupted! if interrupt_params
           end
 
-          context.mark_as_interrupted! if interrupt_params
+          extract_api_security_schema(context, response)
 
           Datadog::AppSec::Event.record(context, request: @request)
           context.export_metrics
@@ -82,6 +88,19 @@ module Datadog
         # rubocop:enable Metrics/AbcSize
 
         private
+
+        SamplingResponse = Struct.new(:status)
+
+        def extract_api_security_schema(context, response)
+          return unless @request
+          return unless Datadog::AppSec::APISecurity.enabled?
+          return unless Datadog::AppSec::APISecurity.sample_trace?(context.trace)
+          return unless Datadog::AppSec::APISecurity.sample?(
+            @request, SamplingResponse.new(response['status_code'].to_i)
+          )
+
+          context.extract_schema!
+        end
 
         def enabled?
           defined?(Datadog::AppSec) &&
@@ -146,14 +165,13 @@ module Datadog
 
           return unless cold_start
 
-          span.set_tag(
-            '_dd.appsec.event_rules.addresses', JSON.dump(context.waf_runner_known_addresses)
-          )
-
           trace.keep!
           trace.set_tag(
             Datadog::Tracing::Metadata::Ext::Distributed::TAG_DECISION_MAKER,
             Datadog::Tracing::Sampling::Ext::Decision::ASM
+          )
+          span.set_tag(
+            '_dd.appsec.event_rules.addresses', JSON.dump(context.waf_runner_known_addresses)
           )
         end
 
