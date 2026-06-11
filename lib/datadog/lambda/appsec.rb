@@ -75,7 +75,7 @@ module Datadog
             context.mark_as_interrupted! if interrupt_params
           end
 
-          extract_api_security_schema(context, response)
+          extract_api_security_schema(context, request: @request, response: response)
 
           Datadog::AppSec::Event.record(context, request: @request)
           context.export_metrics
@@ -91,13 +91,14 @@ module Datadog
 
         private
 
-        def extract_api_security_schema(context, response)
-          return unless @request
-          return unless Datadog::AppSec::APISecurity.enabled?
-          return unless Datadog::AppSec::APISecurity.sample_trace?(context.trace)
-          return unless Datadog::AppSec::APISecurity.sample?(@request, response)
+        def extract_api_security_schema(context, request:, response:)
+          return unless request && response
 
-          context.extract_schema!
+          if Datadog::AppSec::APISecurity.enabled? &&
+             Datadog::AppSec::APISecurity.sample_trace?(context.trace) &&
+             Datadog::AppSec::APISecurity.sample?(request, response)
+            context.extract_schema!
+          end
         end
 
         def enabled?
