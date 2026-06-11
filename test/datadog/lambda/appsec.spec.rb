@@ -254,6 +254,50 @@ RSpec.describe Datadog::Lambda::AppSec do
     end
   end
 
+  describe '.catch_interrupt' do
+    context 'when the handler returns normally' do
+      it { expect(described_class.catch_interrupt { 'result' }).to eq('result') }
+      it { expect(described_class.catch_interrupt { nil }).to be_nil }
+    end
+
+    context 'when the handler throws a blocking interrupt' do
+      before do
+        allow(Datadog::AppSec).to receive_messages(enabled?: true, security_engine: security_engine)
+        allow(Datadog::AppSec::Context).to receive_messages(new: appsec_context, activate: nil, active: appsec_context)
+        allow(appsec_context).to receive_messages(
+          trace: trace, waf_runner_ruleset_version: nil, mark_as_interrupted!: nil
+        )
+
+        described_class.on_start({'httpMethod' => 'GET', 'path' => '/'}, trace: trace, span: span)
+      end
+
+      let(:security_engine) { instance_double(Datadog::AppSec::SecurityEngine::Engine, new_runner: waf_runner) }
+      let(:waf_runner) { instance_double(Datadog::AppSec::SecurityEngine::Runner, ruleset_version: nil) }
+      let(:trace) { instance_double(Datadog::Tracing::TraceOperation) }
+      let(:span) { instance_double(Datadog::Tracing::SpanOperation, set_metric: nil, set_tag: nil, get_tag: nil) }
+
+      it 'returns a Lambda-shaped blocking response' do
+        result = described_class.catch_interrupt do
+          throw(Datadog::AppSec::Ext::INTERRUPT, {'status_code' => 403, 'type' => 'auto'})
+        end
+
+        expect(result).to include(
+          'statusCode' => 403,
+          'headers' => {'Content-Type' => 'application/json'},
+          'body' => include('blocked')
+        )
+      end
+
+      it 'marks the context as interrupted' do
+        described_class.catch_interrupt do
+          throw(Datadog::AppSec::Ext::INTERRUPT, {'status_code' => 403, 'type' => 'auto'})
+        end
+
+        expect(appsec_context).to have_received(:mark_as_interrupted!)
+      end
+    end
+  end
+
   describe '.on_finish' do
     context 'when appsec is disabled' do
       before do

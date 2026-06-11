@@ -68,7 +68,7 @@ module Datadog
       begin
         cold = @is_cold_start
         @listener&.on_start(event:, request_context: context, cold_start: cold)
-        @response = @listener&.response_override || block.call
+        @response = @listener ? @listener.with_appsec(&block) : block.call
       rescue StandardError => e
         record_enhanced('errors', context)
         raise e

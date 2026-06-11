@@ -41,6 +41,9 @@ describe Datadog::Lambda do
 
     context 'when previous invocation successful response followed by a failing invocation' do
       before do
+        # NOTE: we don't need appsec here
+        allow(listener).to receive(:with_appsec) { |&block| block.call }
+
         Datadog::Lambda.instance_variable_set(:@listener, listener)
         Datadog::Lambda.wrap('1', ctx) { {'statusCode' => 200} }
         Datadog::Lambda.wrap('1', ctx) { raise 'boom' } rescue nil
