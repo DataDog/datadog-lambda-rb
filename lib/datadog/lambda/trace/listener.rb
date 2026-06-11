@@ -61,6 +61,10 @@ module Datadog
       end
       # rubocop:enable Metrics/AbcSize
 
+      def with_appsec(&block)
+        @response_override || Datadog::Lambda::AppSec.catch_interrupt(&block)
+      end
+
       def on_end(response:, request_context:)
         if (override = Datadog::Lambda::AppSec.on_finish(response))
           @response_override = override

@@ -89,6 +89,18 @@ module Datadog
         end
         # rubocop:enable Metrics/AbcSize
 
+        def catch_interrupt
+          interrupt_params = catch(Datadog::AppSec::Ext::INTERRUPT) do
+            return yield
+          end
+
+          if (context = Datadog::AppSec::Context.active)
+            context.mark_as_interrupted!
+          end
+
+          response_override(interrupt_params, headers: @request.headers)
+        end
+
         private
 
         def extract_api_security_schema(context, request:, response:)
