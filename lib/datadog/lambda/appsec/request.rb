@@ -43,10 +43,6 @@ module Datadog
           @request_method = request_method
           @path = path
         end
-
-        def env
-          @env ||= { 'SCRIPT_NAME' => '', 'PATH_INFO' => @path.to_s }
-        end
       end
     end
   end
