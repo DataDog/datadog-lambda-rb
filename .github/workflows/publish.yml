@@ -1,0 +1,30 @@
+name: Publish gem
+
+on: # yamllint disable-line rule:truthy
+  push:
+    tags:
+      - "v*"
+
+concurrency: rubygems
+
+permissions: {}
+
+jobs:
+  publish:
+    name: Build and push gem to RubyGems.org
+    runs-on: ubuntu-latest
+    environment: rubygems.org # see: https://github.com/DataDog/datadog-lambda-rb/settings/environments
+    permissions:
+      id-token: write # request an OIDC token for RubyGems Trusted Publishing
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@3ff19f5e2baf30647122352b96108b1fbe250c64 # v1.299.0
+        with:
+          ruby-version: 3.2
+          bundler-cache: true
+
+      - uses: rubygems/release-gem@052cc82692552de3ef2b81fd670e41d13cba8092 # v1.4.0

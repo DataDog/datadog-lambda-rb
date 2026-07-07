@@ -147,20 +147,6 @@ publish layer {{ $environment_name }} ({{ $runtime.ruby_version }}, {{ $runtime.
 
 {{- end }}
 
-publish rubygems:
-  stage: publish
-  tags: ["arch:amd64"]
-  image: ${CI_DOCKER_TARGET_IMAGE}:${CI_DOCKER_TARGET_VERSION}
-  cache: []
-  rules:
-    - if: '$CI_COMMIT_TAG =~ /^v.*/'
-  when: manual
-  needs: {{ range $runtime := (ds "runtimes").runtimes }}
-    - sign layer ({{ $runtime.ruby_version }}, {{ $runtime.arch}})
-  {{- end }}
-  script:
-    - .gitlab/scripts/publish_rubygems.sh
-
 layer bundle:
   stage: build
   tags: ["arch:amd64"]
