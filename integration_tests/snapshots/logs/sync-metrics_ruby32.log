@@ -16,7 +16,7 @@ START
 START
 START
 START
-W, [XXXX]  WARN XXXX[datadog] Unable to patch Datadog::Tracing::Contrib::Aws::Integration (Available?: false, Loaded? false, Compatible? true, Patchable? false)
+W, [XXXX]  WARN XXXX[datadog] Unable to patch Datadog::Tracing::Contrib::Aws::Integration (Available?: false, Loaded? false, Compatible? false, Patchable? false)
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby32","functionname:integration-tests-rb-XXXX-sync-metrics_ruby32","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 3.2.X","resource:integration-tests-rb-XXXX-sync-metrics_ruby32","datadog_lambda:X.X.X","dd_trace:2.XX.X"],"v":1}
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby32","functionname:integration-tests-rb-XXXX-sync-metrics_ruby32","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 3.2.X","resource:integration-tests-rb-XXXX-sync-metrics_ruby32","datadog_lambda:X.X.X","dd_trace:2.XX.X"],"v":1}
 {"e":XXXX,"m":"aws.lambda.enhanced.invocations","t":["dd_lambda_layer:datadog-ruby32","functionname:integration-tests-rb-XXXX-sync-metrics_ruby32","region:eu-west-1","account_id:XXXX","memorysize:1024","cold_start:false","runtime:Ruby 3.2.X","resource:integration-tests-rb-XXXX-sync-metrics_ruby32","datadog_lambda:X.X.X","dd_trace:2.XX.X"],"v":1}
