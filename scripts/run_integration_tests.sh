@@ -225,6 +225,8 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 sed '/XRAY TraceId:/d' |
                 # Warning Log for unresolved bug in dd-trace
                 perl -p -e 's/(WARN |W, \[|Client:)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
+                # Normalize flaky AWS integration patch flags (gem load order varies on cold start)
+                perl -p -e 's/\(Available\?: (true|false), Loaded\? (true|false), Compatible\? (true|false), Patchable\? (true|false)\)/(Available?: X, Loaded? X, Compatible? X, Patchable? X)/g' |
                 # Information Log for Datadog Configuration
                 perl -p -e 's/(INFO |I, \[)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
                 # Debug Log for Datadog Configuration
