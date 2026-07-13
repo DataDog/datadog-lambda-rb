@@ -1,11 +1,16 @@
 name: Publish gem
 
 on: # yamllint disable-line rule:truthy
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Expected gem version (must match lib/datadog/lambda/version.rb)'
+        required: true
+        type: string
 
-concurrency: rubygems
+concurrency:
+  group: rubygems-publish
+  cancel-in-progress: false
 
 permissions: {}
 
@@ -19,6 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          ref: main
+          fetch-tags: true
           persist-credentials: false
 
       - name: Set up Ruby
@@ -27,12 +34,35 @@ jobs:
           ruby-version: 3.2
           bundler-cache: true
 
+      - name: Verify version format
+        run: |
+          if [[ ! '${{ inputs.version }}' =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must be semver (e.g. 3.30.0)"
+            exit 1
+          fi
+
+      - name: Verify version matches version.rb
+        run: |
+          expected='${{ inputs.version }}'
+          actual=$(ruby -Ilib -r datadog/lambda/version -e 'puts Datadog::Lambda::VERSION::STRING')
+          if [ "$expected" != "$actual" ]; then
+            echo "Version mismatch: input=$expected version.rb=$actual"
+            exit 1
+          fi
+
+      - name: Verify release tag does not exist
+        run: |
+          if git rev-parse "refs/tags/v${{ inputs.version }}" >/dev/null 2>&1; then
+            echo "Tag v${{ inputs.version }} already exists"
+            exit 1
+          fi
+
       - uses: DataDog/dd-octo-sts-action@96a25462dbcb10ebf0bfd6e2ccc917d2ab235b9a # v1.0.4
         id: octo-sts
         with:
-          scope: DataDog/datadog-lambda-rb  
+          scope: DataDog/datadog-lambda-rb
           policy: self.publish
-      
+
       - name: Publish to RubyGems.org
         uses: rubygems/release-gem@052cc82692552de3ef2b81fd670e41d13cba8092 # v1.4.0
         with:
