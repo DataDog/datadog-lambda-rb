@@ -5,7 +5,11 @@
 # This product includes software developed at Datadog (https://www.datadoghq.com/).
 # Copyright 2019 Datadog, Inc
 #
+# DO NOT USE FOR RELEASES. 
+# TODO: This script is deprecated. Use the GitHub Actions workflow instead.
+#
 # Use with `./publish_prod.sh <DESIRED_NEW_VERSION>
+
 
 set -eo pipefail
 
