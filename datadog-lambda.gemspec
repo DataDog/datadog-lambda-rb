@@ -37,7 +37,7 @@ Gem::Specification.new do |spec|
   # native modules that are difficult to package for lambda.
   #
   # NOTE: 2.24 is the floor for Ruby 4.0 install support
-  spec.add_development_dependency 'datadog', '~> 2.35'
+  spec.add_development_dependency 'datadog', '~> 2.39'
 
   # Development dependencies
   # NOTE: rake >= 13 is required for Ruby 4.0 support — rake 12.x pulls in
