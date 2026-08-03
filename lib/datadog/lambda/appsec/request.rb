@@ -10,17 +10,14 @@ module Datadog
       # @see Datadog::AppSec::Event.record
       # @see Datadog::AppSec::Contrib::Rack::Gateway::Request
       class Request
-        attr_reader :host, :user_agent, :remote_addr, :headers, :request_method, :path
+        attr_reader :host, :user_agent, :remote_addr, :headers,
+                    :request_method, :path
 
         class << self
           def from_normalized(event)
-            headers = lowercase_headers(event)
-
             new(
-              host: headers['host'],
-              user_agent: headers['user-agent'],
               remote_addr: event['source_ip'],
-              headers: headers,
+              headers: lowercase_headers(event),
               request_method: event['method'],
               path: event['path']
             )
@@ -35,11 +32,11 @@ module Datadog
           end
         end
 
-        def initialize(host:, user_agent:, remote_addr:, headers:, request_method: nil, path: nil)
-          @host = host
-          @user_agent = user_agent
-          @remote_addr = remote_addr
+        def initialize(remote_addr:, headers:, request_method:, path:)
           @headers = headers
+          @host = headers['host']
+          @user_agent = headers['user-agent']
+          @remote_addr = remote_addr
           @request_method = request_method
           @path = path
         end
