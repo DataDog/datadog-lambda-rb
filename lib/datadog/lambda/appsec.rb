@@ -13,7 +13,7 @@ module Datadog
     # AppSec integration for AWS Lambda invocations.
     module AppSec
       class << self
-        # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
         def on_start(event, trace:, span:, cold_start: false)
           @request = nil
           return unless enabled?
@@ -44,9 +44,9 @@ module Datadog
           Datadog::AppSec::Context.deactivate if context
           Datadog::Utils.logger.debug("failed to start AppSec: #{e}")
         end
-        # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
-        # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
         def on_finish(response)
           return unless enabled?
 
@@ -83,12 +83,10 @@ module Datadog
         ensure
           Datadog::AppSec::Context.deactivate if context
         end
-        # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
 
         def catch_interrupt
-          interrupt_params = catch(Datadog::AppSec::Ext::INTERRUPT) do
-            return yield
-          end
+          interrupt_params = catch(Datadog::AppSec::Ext::INTERRUPT) { return yield }
 
           if (context = Datadog::AppSec::Context.active)
             context.mark_as_interrupted!
