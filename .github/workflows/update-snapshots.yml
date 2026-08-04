@@ -2,11 +2,6 @@ name: update-snapshots
 
 on:
   workflow_dispatch:
-    inputs:
-      base-runtime:
-        description: Ruby runtime to generate against; other runtimes are derived
-        required: false
-        default: "3.3"
 
 jobs:
   update-snapshots:
@@ -49,11 +44,7 @@ jobs:
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          RUNTIME_PARAM: ${{ inputs.base-runtime }}
         run: ./scripts/run_integration_tests.sh
-
-      - name: Derive appsec-request snapshots for other runtimes
-        run: ./scripts/derive_appsec_snapshots.sh "${{ inputs.base-runtime }}"
 
       - name: Upload snapshots
         if: always()
