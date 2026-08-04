@@ -6,6 +6,10 @@ on:
 jobs:
   update-snapshots:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        runtime-param: ["3.2", "3.3", "3.4", "4.0"]
 
     steps:
       - name: Checkout
@@ -44,12 +48,13 @@ jobs:
           DD_API_KEY: ${{ secrets.DD_API_KEY }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          RUNTIME_PARAM: ${{ matrix.runtime-param }}
         run: ./scripts/run_integration_tests.sh
 
       - name: Upload snapshots
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: snapshots
+          name: snapshots-${{ matrix.runtime-param }}
           path: |
             integration_tests/snapshots/
