@@ -60,7 +60,7 @@ module Datadog
     # @param event [Object] event sent to lambda
     # @param context [Object] lambda context
     # @param block [Proc] implementation of the handler function.
-    # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    # rubocop:disable Metrics/CyclomaticComplexity
     def self.wrap(event, context, &block)
       @response = nil
       @listener ||= initialize_listener
@@ -68,7 +68,7 @@ module Datadog
       begin
         cold = @is_cold_start
         @listener&.on_start(event:, request_context: context, cold_start: cold)
-        @response = @listener&.response_override || block.call
+        @response = @listener ? @listener.with_appsec(&block) : block.call
       rescue StandardError => e
         record_enhanced('errors', context)
         raise e
@@ -80,7 +80,7 @@ module Datadog
       end
       @response
     end
-    # rubocop:enable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+    # rubocop:enable Metrics/CyclomaticComplexity
 
     # Gets the current tracing context
     def self.trace_context

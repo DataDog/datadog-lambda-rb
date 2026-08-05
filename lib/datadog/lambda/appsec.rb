@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
-require 'json'
+require 'datadog/appsec/api_security'
+
+require_relative 'appsec/tagging'
 require_relative 'appsec/request'
+require_relative 'appsec/response'
 require_relative 'appsec/event_normalizer'
 require_relative 'appsec/response_normalizer'
 
@@ -10,7 +13,7 @@ module Datadog
     # AppSec integration for AWS Lambda invocations.
     module AppSec
       class << self
-        # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
         def on_start(event, trace:, span:, cold_start: false)
           @request = nil
           return unless enabled?
@@ -18,11 +21,12 @@ module Datadog
           context = create_context(trace, span)
           return unless Datadog::AppSec::Context.active
 
-          tag_and_keep(context, cold_start: cold_start)
+          Tagging.tag_and_keep(context, cold_start: cold_start)
 
           event = EventNormalizer.normalize(event)
           @request = Request.from_normalized(event)
 
+          Tagging.tag_request(@request, context: context)
           payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
             event, context: context
           )
@@ -40,26 +44,34 @@ module Datadog
           Datadog::AppSec::Context.deactivate if context
           Datadog::Utils.logger.debug("failed to start AppSec: #{e}")
         end
-        # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
-        # rubocop:disable Metrics/AbcSize
+        # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
         def on_finish(response)
           return unless enabled?
 
           context = Datadog::AppSec::Context.active
           return unless context
 
-          response = ResponseNormalizer.normalize(response)
-          payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
-            response, context: context
-          )
+          normalized = ResponseNormalizer.normalize(response)
+          response = Response.from_normalized(normalized)
 
-          interrupt_params = catch(Datadog::AppSec::Ext::INTERRUPT) do
-            Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.response.start', payload)
-            nil
+          interrupt_params = nil
+          unless context.interrupted?
+            Tagging.tag_response(response, context: context)
+            payload = Datadog::AppSec::Instrumentation::Gateway::DataContainer.new(
+              normalized, context: context
+            )
+
+            interrupt_params = catch(Datadog::AppSec::Ext::INTERRUPT) do
+              Datadog::AppSec::Instrumentation.gateway.push('aws_lambda.response.start', payload)
+              nil
+            end
+
+            context.mark_as_interrupted! if interrupt_params
           end
 
-          context.mark_as_interrupted! if interrupt_params
+          extract_api_security_schema(context, request: @request, response: response)
 
           Datadog::AppSec::Event.record(context, request: @request)
           context.export_metrics
@@ -71,9 +83,29 @@ module Datadog
         ensure
           Datadog::AppSec::Context.deactivate if context
         end
-        # rubocop:enable Metrics/AbcSize
+        # rubocop:enable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
+
+        def catch_interrupt
+          interrupt_params = catch(Datadog::AppSec::Ext::INTERRUPT) { return yield }
+
+          if (context = Datadog::AppSec::Context.active)
+            context.mark_as_interrupted!
+          end
+
+          response_override(interrupt_params, headers: @request.headers)
+        end
 
         private
+
+        def extract_api_security_schema(context, request:, response:)
+          return unless request && response
+
+          if Datadog::AppSec::APISecurity.enabled? &&
+             Datadog::AppSec::APISecurity.sample_trace?(context.trace) &&
+             Datadog::AppSec::APISecurity.sample?(request, response)
+            context.extract_schema!
+          end
+        end
 
         def enabled?
           defined?(Datadog::AppSec) &&
@@ -91,34 +123,6 @@ module Datadog
           Datadog::AppSec::Context.activate(context)
 
           context
-        end
-
-        def tag_and_keep(context, cold_start:)
-          span = context.span
-          trace = context.trace
-
-          return unless trace && span
-
-          span.set_metric(Datadog::AppSec::Ext::TAG_APPSEC_ENABLED, 1)
-          span.set_tag('_dd.runtime_family', 'ruby')
-          span.set_tag('_dd.appsec.waf.version', Datadog::AppSec::WAF::VERSION::BASE_STRING)
-
-          ruleset_version = context.waf_runner_ruleset_version
-          return unless ruleset_version
-
-          span.set_tag('_dd.appsec.event_rules.version', ruleset_version)
-
-          return unless cold_start
-
-          span.set_tag(
-            '_dd.appsec.event_rules.addresses', JSON.dump(context.waf_runner_known_addresses)
-          )
-
-          trace.keep!
-          trace.set_tag(
-            Datadog::Tracing::Metadata::Ext::Distributed::TAG_DECISION_MAKER,
-            Datadog::Tracing::Sampling::Ext::Decision::ASM
-          )
         end
 
         def response_override(interrupt_params, headers:)
