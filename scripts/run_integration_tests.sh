@@ -233,6 +233,9 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 perl -p -e 's/(D, \[)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
                 # Filter out INIT runtime logs
                 perl -p -e "s/INIT_START.*//g" |
+                # NOTE: Async metric flush emits a non-deterministic empty log line.
+                #       We drop blank lines so the comparison doesn't flake on it
+                sed '/^$/d' |
                 sort
         )
 
