@@ -20,7 +20,7 @@ RUN set -eux; \
     if [ -z "${git_ref:-}" ]; then \
         # NOTE: datadog gem must be >= 2.24 to install on Ruby 4.0.x.
         MAKEFLAGS="-j$(nproc)" \
-        gem install datadog -v 2.39 --install-dir "/opt/ruby/gems/$runtime" --no-document; \
+        gem install datadog -v 2.40 --install-dir "/opt/ruby/gems/$runtime" --no-document; \
     else \
         echo "building tracer from ref: $git_ref\n"; \
         git clone https://github.com/DataDog/dd-trace-rb.git --depth 1 --single-branch -b $git_ref /tmp/dd-trace-rb; \
