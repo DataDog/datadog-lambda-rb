@@ -180,15 +180,21 @@ thread, this agent session's history, and the Confluence release process page.
 - [ ] Fix or remove `DDCI Status` check (issue #13)
 
 ### Docs (Confluence "Lambda Layer Ruby" page)
-- [ ] RC section: state RC layers must publish to `us-west-2` (not `sa-east-1`) for e2e (issue #1)
+- [x] RC section: state RC layers must publish to `us-west-2` (not `sa-east-1`) for e2e (issue #1)
+      — ✅ Done in Confluence v35 (RC step 1 updated).
 - [ ] RC section: warn that omitting `LANGUAGES_SUBSET=ruby` tests all languages (issue #4)
 - [ ] Note per-region layer versions are independent; `1` in a fresh region is expected (issue #2)
-- [ ] Release section: prominently document the 1-hour sign deadline and that sign jobs are
+- [~] Release section: prominently document the 1-hour sign deadline and that sign jobs are
       manual (and *why*) (issues #9, #10)
+      — 🟡 Partial in Confluence v35: step 2 NOTE + step 5 NOTE state the 1-hour deadline and
+      that signing is manual. The *why* is still missing — pending the retro.
 - [ ] Release section: note `me-south-1` is unavailable and its publish failures are expected
       (issue #11)
-- [ ] GovCloud section: document access/training prerequisites and how to verify before
+- [~] GovCloud section: document access/training prerequisites and how to verify before
       starting the release (issue #12)
+      — 🟡 Partial in Confluence v35: step 6 mentions gov cloud access + the
+      `[profile sso-govcloud-us1-fed-engineering]` profile. Missing: yearly training currency +
+      how to verify access before starting (log into the govcloud Google profile, try to access AWS).
 
 ### Retro (suggested by Rey, Slack #72)
 - [ ] Schedule a retro on the rb release process; use this doc as the agenda.

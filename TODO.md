@@ -33,12 +33,15 @@
 
 ## Docs improvements (Confluence "Lambda Layer Ruby" page — from 3.30.0 release retro)
 
-- [ ] Doc 1 — RC section: state that RC layers must publish to `us-west-2` (not `sa-east-1`) for e2e tests. The current "Manual Tests" section says `sa-east-1` "for speed", which misled the 3.30.0 RC.
+- [x] Doc 1 — RC section: state that RC layers must publish to `us-west-2` (not `sa-east-1`) for e2e tests. The current "Manual Tests" section says `sa-east-1` "for speed", which misled the 3.30.0 RC.
+  - ✅ Done in Confluence v35: RC step 1 now says "...to the `us-west-2` region. This region is required to run the e2e tests in the next step."
 - [ ] Doc 2 — RC section: warn that omitting `LANGUAGES_SUBSET=ruby` tests all languages, dramatically increasing runtime and AWS throttling risk.
 - [ ] Doc 3 — Note that per-region layer versions are independent counters; `1` in a fresh region (e.g. sa-east-1) is expected, not a bug.
 - [ ] Doc 4 — Release section: prominently document the 1-hour sign deadline and that `sign layer` jobs are manual (and why), so operators don't lose artifacts by stepping away.
+  - 🟡 Partial in Confluence v35: step 2 NOTE + step 5 NOTE both state the 1-hour deadline and that signing is manual. The *why* (why signing is manual at all) is still missing — pending the retro (see Fix 8 / Retro).
 - [ ] Doc 5 — Release section: note `me-south-1` is unavailable and its publish failures are expected.
 - [ ] Doc 6 — GovCloud section: document access/training prerequisites and how to verify access before starting the release (log into the govcloud Google profile and try to access AWS), so operators can refresh access in parallel with earlier steps instead of discovering lapsed access at step 6.
+  - 🟡 Partial in Confluence v35: step 6 mentions gov cloud access + the `[profile sso-govcloud-us1-fed-engineering]` profile. Missing: yearly training currency + how to verify access before starting (log into the govcloud Google profile, try to access AWS).
 
 ## Process
 
