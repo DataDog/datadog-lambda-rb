@@ -1,6 +1,9 @@
 name: build
 
-on: [push, pull_request]
+on: # yamllint disable-line rule:truthy
+  pull_request:
+  push:
+    branches: [main]
 
 jobs:
   lint:
