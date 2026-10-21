@@ -41,6 +41,10 @@ RUN gem uninstall ffi --all --ignore-dependencies --executables --force \
 RUN MAKEFLAGS="-j$(nproc)" \
     gem install ffi --platform ruby --install-dir "/opt/ruby/gems/$runtime" --no-document
 
+# Pin multi_json floor
+RUN MAKEFLAGS="-j$(nproc)" \
+    gem install multi_json -v '>= 1.21.2' --install-dir "/opt/ruby/gems/$runtime" --no-document
+
 WORKDIR /opt
 # Remove native extension debase-ruby_core_source (25MB) runtimes below Ruby 2.6
 RUN rm -rf ./ruby/gems/$runtime/gems/debase-ruby_core_source*/
