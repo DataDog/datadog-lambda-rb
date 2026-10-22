@@ -10,7 +10,7 @@ set -e
 
 # These values need to be in sync with serverless.yml, where there needs to be a function
 # defined for every handler_runtime combination
-LAMBDA_HANDLERS=("async-metrics" "sync-metrics" "http-requests" "process-input-traced")
+LAMBDA_HANDLERS=("async-metrics" "sync-metrics" "http-requests" "process-input-traced" "appsec-request")
 RUNTIMES=("ruby32" "ruby33" "ruby34" "ruby40")
 
 LOGS_WAIT_SECONDS=45
@@ -190,6 +190,8 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 sed '/Serverless: Recoverable error occurred/d' |
                 # Normalize Lambda runtime report logs
                 perl -p -e 's/(RequestId|Duration|Memory Used|"e"|init):( )?[a-z0-9\.\-]+/\1:\2XXXX/g' |
+                # Warm starts omit init duration in END lines; strip it for stable snapshots
+                perl -p -e 's/^END Duration: XXXX ms \(init: XXXX( ms)?\) /END Duration: XXXX ms /' |
                 # Normalize DD APM headers and AWS account ID
                 perl -p -e "s/(x-datadog-parent-id:|x-datadog-trace-id:|account_id:)[0-9]+/\1XXXX/g" |
                 # Strip API key from logged requests
@@ -223,12 +225,17 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 sed '/XRAY TraceId:/d' |
                 # Warning Log for unresolved bug in dd-trace
                 perl -p -e 's/(WARN |W, \[|Client:)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
+                # Normalize flaky AWS integration patch flags (gem load order varies on cold start)
+                perl -p -e 's/\(Available\?: (true|false), Loaded\? (true|false), Compatible\? (true|false), Patchable\? (true|false)\)/(Available?: X, Loaded? X, Compatible? X, Patchable? X)/g' |
                 # Information Log for Datadog Configuration
                 perl -p -e 's/(INFO |I, \[)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
                 # Debug Log for Datadog Configuration
                 perl -p -e 's/(D, \[)( )?[a-zA-Z0-9\.\:\s\-\#]+/\1XXXX/g' |
                 # Filter out INIT runtime logs
                 perl -p -e "s/INIT_START.*//g" |
+                # NOTE: Async metric flush emits a non-deterministic empty log line.
+                #       We drop blank lines so the comparison doesn't flake on it
+                sed '/^$/d' |
                 sort
         )
 

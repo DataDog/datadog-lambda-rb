@@ -41,9 +41,12 @@ function docker_build_zip {
 
     # Install datadog ruby in a docker container to avoid the mess from switching
     # between different ruby runtimes.
+    #
+    # NOTE: using the Lambda base image so native extensions (FFI, libddwaf)
+    #       compile against the same libffi available at runtime on Lambda.
     temp_dir=$(mktemp -d)
     docker buildx build -t datadog-lambda-ruby-${arch}:$1 . --no-cache \
-        --build-arg "image=ruby:${1}" \
+        --build-arg "image=public.ecr.aws/lambda/ruby:${1}" \
         --build-arg "runtime=${1}.0" \
         --build-arg "git_ref=${ref}" \
         --platform linux/${arch} \
