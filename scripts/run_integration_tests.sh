@@ -205,6 +205,8 @@ for handler_name in "${LAMBDA_HANDLERS[@]}"; do
                 # Normalize minor package version tag so that these snapshots aren't broken on version bumps
                 perl -p -e "s/(dd_lambda_layer:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
                 perl -p -e "s/(dd_trace:[0-9]+\.)[0-9]+\.[0-9]+/\1XX\.X/g" |
+                # Normalize tracer version
+                perl -p -e 's/"version":"[0-9]+\.[0-9]+\.[0-9]+"/"version":"XXXX"/g' |
                 # Normalize integrations_loaded gem versions (e.g. aws-sdk-core version
                 # appears here on Ruby 4 where the AWS contrib detects as Available)
                 perl -p -e 's/aws@[0-9.]+/aws@/g' |
