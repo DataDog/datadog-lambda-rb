@@ -2,7 +2,7 @@ dist
 coverage
 .layers
 .DS_Store
-**/DS_Store
+**/.DS_Store
 
 *.gem
 *.rbc
