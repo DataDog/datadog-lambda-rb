@@ -11,6 +11,7 @@ set -e
 LAYER_DIR=".layers"
 LAYER_FILES_PREFIX="datadog-lambda_ruby"
 RUBY_VERSIONS=("3.2" "3.3" "3.4" "4.0")
+ARCHITECTURES=("arm64" "amd64")
 
 if [ -z "$RUBY_VERSION" ]; then
     echo "Ruby version not specified, running for all ruby versions."
@@ -20,6 +21,18 @@ else
         RUBY_VERSIONS=($RUBY_VERSION)
     else
         echo "Unsupported version found, valid options are : ${RUBY_VERSIONS[@]}"
+        exit 1
+    fi
+fi
+
+if [ -z "$ARCH" ]; then
+    echo "Architecture not specified, running for all architectures."
+else
+    echo "Architecture is specified: $ARCH"
+    if (printf '%s\n' "${ARCHITECTURES[@]}" | grep -xq $ARCH); then
+        ARCHITECTURES=($ARCH)
+    else
+        echo "Unsupported architecture found, valid options are : ${ARCHITECTURES[@]}"
         exit 1
     fi
 fi
@@ -61,11 +74,11 @@ mkdir $LAYER_DIR
 
 for ruby_version in "${RUBY_VERSIONS[@]}"
 do
-    echo "Building layer for Ruby ${ruby_version} arch=arm64"
-    docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}-arm64-${ruby_version}.zip arm64 $GIT_REF
-
-    echo "Building layer for Ruby ${ruby_version} arch=amd64"
-    docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}-amd64-${ruby_version}.zip amd64 $GIT_REF
+    for arch in "${ARCHITECTURES[@]}"
+    do
+        echo "Building layer for Ruby ${ruby_version} arch=${arch}"
+        docker_build_zip ${ruby_version} $LAYER_DIR/${LAYER_FILES_PREFIX}-${arch}-${ruby_version}.zip ${arch} $GIT_REF
+    done
 done
 
 

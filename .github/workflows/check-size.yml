@@ -3,35 +3,36 @@ name: check-size
 on: pull_request
 
 jobs:
-  check-size:
-    runs-on: ubuntu-latest
+  build:
+    name: ruby ${{ matrix.ruby }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.2", "3.3", "3.4", "4.0"]
+        arch: ["amd64", "arm64"]
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Set up Node 14.15
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
-        with:
-          node-version: 14.15
-
-      - name: Cache Node modules
-        id: cache-node-modules
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-        with:
-          path: "**/node_modules"
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: yarn install
-
-      - name: Install Crossbuild dependencies
-        run: |
-          sudo apt-get update --allow-releaseinfo-change --fix-missing
-          sudo apt install -y qemu-user-static binfmt-support
-
       - name: Build Layers
+        env:
+          RUBY_VERSION: ${{ matrix.ruby }}
+          ARCH: ${{ matrix.arch }}
         run: ./scripts/build_layers.sh
 
       - name: Check Size
+        env:
+          RUBY_VERSION: ${{ matrix.ruby }}
+          ARCH: ${{ matrix.arch }}
         run: ./scripts/check_layer_size.sh
+
+  # Keeps the required status check name stable. Matrix jobs are reported
+  # individually, so branch protection that requires "check-size" still matches.
+  check-size:
+    needs: build
+    runs-on: ubuntu-24.04
+    if: always()
+    steps:
+      - name: Require all layer builds
+        run: test "${{ needs.build.result }}" = "success"
