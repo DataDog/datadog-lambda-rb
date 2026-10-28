@@ -5,7 +5,7 @@ on: pull_request
 jobs:
   build:
     name: ruby ${{ matrix.ruby }} ${{ matrix.arch }}
-    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     strategy:
       fail-fast: false
       matrix:
@@ -31,7 +31,7 @@ jobs:
   # individually, so branch protection that requires "check-size" still matches.
   check-size:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: always()
     steps:
       - name: Require all layer builds
