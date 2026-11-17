@@ -39,6 +39,15 @@ module Datadog
       # Needed to keep trace flushes on a single line
       $stdout.sync = true
 
+      # The extension forwards feature flag config requests with the API key it
+      # resolved (e.g. from DD_API_KEY_SECRET_ARN). Only use it when DD_API_KEY is
+      # unset: an extension without that route returns 404, and the tracer does
+      # not fall back to the default endpoint.
+      ff_url = 'DD_FEATURE_FLAGS_CONFIGURATION_SOURCE_AGENTLESS_BASE_URL'
+      if Datadog::Utils.extension_running? && ENV['DD_API_KEY'].to_s.strip.empty? && ENV[ff_url].to_s.strip.empty?
+        ENV[ff_url] = 'http://127.0.0.1:8126'
+      end
+
       Datadog.configure do |c|
         unless Datadog::Utils.extension_running?
           c.tracing.writer = Datadog::Tracing::SyncWriter.new(
