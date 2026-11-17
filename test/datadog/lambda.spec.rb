@@ -255,6 +255,29 @@ describe Datadog::Lambda do
       # rubocop:enable Metrics/LineLength
     end
   end
+
+  describe '#configure_apm feature flags base URL' do
+    ff_url = 'DD_FEATURE_FLAGS_CONFIGURATION_SOURCE_AGENTLESS_BASE_URL'
+    [
+      [true, {}, 'http://127.0.0.1:8126'],
+      [true, { 'DD_API_KEY' => '' }, 'http://127.0.0.1:8126'],
+      [true, { 'DD_API_KEY' => '  ' }, 'http://127.0.0.1:8126'],
+      [true, { 'DD_API_KEY_SECRET_ARN' => 'arn' }, 'http://127.0.0.1:8126'],
+      [true, { 'DD_API_KEY' => 'key' }, nil],
+      [true, { ff_url => 'http://custom' }, 'http://custom'],
+      [false, {}, nil]
+    ].each do |extension, env, expected|
+      it "extension=#{extension} env=#{env} sets #{expected.inspect}" do
+        stub_const('ENV', env.dup)
+        allow(Datadog::Utils).to receive(:extension_running?).and_return(extension)
+        allow(Datadog).to receive(:configure)
+
+        Datadog::Lambda.configure_apm
+
+        expect(ENV[ff_url]).to eq(expected)
+      end
+    end
+  end
 end
 
 # rubocop:enable Metrics/BlockLength
